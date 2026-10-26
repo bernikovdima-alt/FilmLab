@@ -8,170 +8,170 @@
 <style>
 :root {
   color-scheme: dark;
-  --bg: #17191d;
-  --panel: #22252b;
-  --panel2: #2b2f36;
-  --border: #414650;
-  --text: #f0f1f4;
-  --muted: #aeb4bf;
-  --accent: #67b7ff;
-  --green: #70d6a0;
+  --bg:#17191d;
+  --panel:#22252b;
+  --panel2:#2b2f36;
+  --border:#414650;
+  --text:#f0f1f4;
+  --muted:#aeb4bf;
+  --accent:#67b7ff;
+  --green:#70d6a0;
 }
-* { box-sizing: border-box; }
+* { box-sizing:border-box; }
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 14px/1.45 Arial, sans-serif;
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font:14px/1.45 Arial,sans-serif;
 }
 header {
-  padding: 15px 20px;
-  border-bottom: 1px solid var(--border);
-  background: #202329;
-  position: sticky;
-  top: 0;
-  z-index: 5;
+  padding:15px 20px;
+  border-bottom:1px solid var(--border);
+  background:#202329;
+  position:sticky;
+  top:0;
+  z-index:5;
 }
-h1 { margin: 0; font-size: 22px; }
-header p { margin: 4px 0 0; color: var(--muted); }
+h1 { margin:0; font-size:22px; }
+header p { margin:4px 0 0; color:var(--muted); }
 main {
-  display: grid;
-  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
-  gap: 15px;
-  padding: 15px;
-  max-width: 1600px;
-  margin: auto;
+  display:grid;
+  grid-template-columns:minmax(280px,340px) minmax(0,1fr);
+  gap:15px;
+  padding:15px;
+  max-width:1600px;
+  margin:auto;
 }
-.panel {
-  min-width: 0;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 12px;
+.panel,.image-panel {
+  min-width:0;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:12px;
 }
-h2 { font-size: 16px; margin: 0 0 12px; }
-h3 { font-size: 14px; margin: 15px 0 8px; }
-button, select, input[type="text"] {
-  background: var(--panel2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 9px 10px;
-  font: inherit;
+h2 { font-size:16px; margin:0 0 12px; }
+h3 { font-size:14px; margin:15px 0 8px; }
+button,select,input[type="text"] {
+  background:var(--panel2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:9px 10px;
+  font:inherit;
 }
-button { cursor: pointer; }
-button:hover { border-color: var(--accent); }
-button.primary { background: #235580; border-color: #397cb6; }
-button.active { background: #76531d; border-color: #ffcf6b; }
-button.danger { background: #602d32; }
-button:disabled { opacity: .45; cursor: default; }
-input[type="file"] { display: none; }
+button { cursor:pointer; }
+button:hover { border-color:var(--accent); }
+button.primary { background:#235580; border-color:#397cb6; }
+button.active { background:#76531d; border-color:#ffcf6b; }
+button.danger { background:#602d32; }
+button:disabled { opacity:.45; cursor:default; }
+input[type="file"] { display:none; }
 .file-button {
-  display: block;
-  text-align: center;
-  cursor: pointer;
-  padding: 10px;
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  margin-bottom: 8px;
+  display:block;
+  text-align:center;
+  cursor:pointer;
+  padding:10px;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:6px;
+  margin-bottom:8px;
 }
-.row { display: flex; gap: 7px; flex-wrap: wrap; }
-.row > * { flex: 1; }
-.small { font-size: 12px; color: var(--muted); }
-.control { margin: 12px 0; }
+.row { display:flex; gap:7px; flex-wrap:wrap; }
+.row>* { flex:1; min-width:0; }
+.small { font-size:12px; color:var(--muted); }
+.control { margin:12px 0; }
 .control label {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 5px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:5px;
 }
-.control input[type="range"] { width: 100%; accent-color: var(--accent); }
-.control-buttons { display: flex; gap: 6px; }
-.control-buttons input { min-width: 0; flex: 1; }
-.control-buttons button { flex-shrink: 0; padding: 5px 9px; }
+.control input[type="range"] { width:100%; accent-color:var(--accent); }
+.control-buttons { display:flex; gap:6px; }
+.control-buttons button { flex-shrink:0; padding:5px 9px; }
 .status {
-  border-radius: 6px;
-  padding: 9px;
-  background: #171a1f;
-  color: var(--muted);
-  overflow-wrap: anywhere;
+  border-radius:6px;
+  padding:9px;
+  background:#171a1f;
+  color:var(--muted);
+  overflow-wrap:anywhere;
 }
-.status.good { color: var(--green); }
+.status.good { color:var(--green); }
 #gallery {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-  margin-top: 10px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+  margin-top:10px;
 }
 .thumb {
-  min-width: 0;
-  border: 2px solid transparent;
-  border-radius: 6px;
-  overflow: hidden;
-  background: #111;
-  cursor: pointer;
+  min-width:0;
+  border:2px solid transparent;
+  border-radius:6px;
+  overflow:hidden;
+  background:#111;
+  cursor:pointer;
 }
-.thumb.selected { border-color: var(--accent); }
-.thumb img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.thumb.selected { border-color:var(--accent); }
+.thumb img {
+  width:100%;
+  aspect-ratio:1;
+  object-fit:cover;
+  display:block;
+}
 .thumb span {
-  display: block; padding: 4px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-size: 11px;
+  display:block;
+  padding:4px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:11px;
 }
-.workspace { min-width: 0; }
+.workspace { min-width:0; }
 .canvases {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
 }
-.image-panel {
-  min-width: 0;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-}
-.image-panel h2 { margin-bottom: 8px; }
+.image-panel { margin-bottom:12px; }
+.image-panel h2 { margin-bottom:8px; }
 .canvas-wrap {
-  position: relative;
-  width: 100%;
-  min-height: 220px;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 5px;
+  position:relative;
+  width:100%;
+  min-height:220px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border-radius:5px;
   background:
     linear-gradient(45deg,#30343a 25%,transparent 25%),
     linear-gradient(-45deg,#30343a 25%,transparent 25%),
     linear-gradient(45deg,transparent 75%,#30343a 75%),
     linear-gradient(-45deg,transparent 75%,#30343a 75%);
-  background-size: 20px 20px;
-  background-position: 0 0,0 10px,10px -10px,-10px 0;
+  background-size:20px 20px;
+  background-position:0 0,0 10px,10px -10px,-10px 0;
 }
 .canvas-wrap canvas {
-  display: block;
-  width: 100%;
-  height: auto;
+  display:block;
+  width:100%;
+  height:auto;
 }
 .canvas-wrap canvas.overlay {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
 }
-.canvas-wrap.picking { cursor: crosshair; outline: 2px solid #ffcf6b; }
-.canvas-wrap.picking canvas.base { cursor: crosshair; }
-#source, #result { max-width: 100%; }
-.image-note { margin-top: 8px; min-height: 18px; }
-.bottom-actions { margin-top: 12px; }
-.bottom-actions button { margin: 0 5px 5px 0; }
-@media (max-width: 900px) {
-  main { grid-template-columns: 1fr; }
-  .canvases { grid-template-columns: 1fr; }
-  .canvas-wrap { min-height: 160px; }
+.canvas-wrap.picking { outline:2px solid #ffcf6b; cursor:crosshair; }
+.canvas-wrap.picking canvas.base { cursor:crosshair; }
+.image-note { margin-top:8px; min-height:18px; }
+.bottom-actions { margin-top:12px; }
+.bottom-actions button { margin:0 5px 5px 0; }
+@media(max-width:900px) {
+  main { grid-template-columns:1fr; }
+  .canvases { grid-template-columns:1fr; }
+  .canvas-wrap { min-height:160px; }
 }
 </style>
 </head>
@@ -210,9 +210,7 @@ input[type="file"] { display: none; }
     <div class="control">
       <label for="maskStrength">Удаление цветной основы <span id="maskStrengthVal">100%</span></label>
       <input id="maskStrength" type="range" min="0" max="100" value="100">
-      <div class="control-buttons">
-        <button id="resetMaskStrength">Сбросить</button>
-      </div>
+      <div class="control-buttons"><button id="resetMaskStrength">Сбросить</button></div>
     </div>
     <div class="control">
       <label for="exposure">Экспозиция <span id="exposureVal">0</span></label>
@@ -245,14 +243,12 @@ input[type="file"] { display: none; }
       <input id="blue" type="range" min="-100" max="100" value="0">
       <div class="control-buttons"><button data-reset="blue">Сбросить</button></div>
     </div>
-    <div class="row">
-      <button id="resetAll">Сбросить все настройки</button>
-    </div>
+    <button id="resetAll" style="width:100%">Сбросить все настройки</button>
   </section>
 
   <section class="panel">
     <h2>3. Пипетка основы плёнки</h2>
-    <p class="small">Выбери участок пустой плёнки или рамки с равномерной основой. Можно менять точку сколько угодно раз.</p>
+    <p class="small">Выбирай разные участки цветной основы. Каждое нажатие обновляет выбранную точку.</p>
     <div class="row">
       <button id="maskPicker" class="primary">Пипетка основы: выкл.</button>
       <button id="resetMask">Сбросить точку</button>
@@ -262,7 +258,7 @@ input[type="file"] { display: none; }
 
   <section class="panel">
     <h2>4. Баланс белого</h2>
-    <p class="small">Включи пипетку и выбирай на позитиве участок, который должен быть нейтрально-серым или белым. Каждое нажатие обновляет баланс.</p>
+    <p class="small">Выбирай на позитиве участок, который должен быть нейтрально-серым или белым. Пипетка остаётся активной.</p>
     <div class="row">
       <button id="wbPicker" class="primary">Пипетка баланса: выкл.</button>
       <button id="resetWB">Сбросить баланс</button>
@@ -272,23 +268,52 @@ input[type="file"] { display: none; }
 
   <section class="panel">
     <h2>5. Профили</h2>
-    <input id="profileName" type="text" placeholder="Название профиля" style="width:100%;margin-bottom:8px">
-    <div class="row">
-      <button id="saveProfile">Сохранить профиль</button>
-      <button id="deleteProfile">Удалить профиль</button>
-    </div>
+    <input id="profileName" type="text" placeholder="Название профиля"
+      style="width:100%;margin-bottom:8px">
+
+    <button id="saveProfile" style="width:100%">Сохранить профиль</button>
+
     <div class="control">
       <label for="profiles">Сохранённые профили</label>
-      <select id="profiles" style="width:100%"><option value="">— Выбери профиль —</option></select>
+      <select id="profiles" style="width:100%">
+        <option value="">— Выбери профиль —</option>
+      </select>
     </div>
-    <button id="loadProfile" style="width:100%">Применить профиль</button>
+
+    <div class="row">
+      <button id="loadProfile">Применить</button>
+      <button id="deleteProfile" class="danger">Удалить</button>
+    </div>
+
+    <h3>Резервная копия на телефоне</h3>
+    <button id="exportProfile" style="width:100%;margin-bottom:8px">
+      Сохранить выбранный профиль в файл
+    </button>
+
+    <label for="importProfileFile" class="file-button">
+      Загрузить профиль с телефона
+    </label>
+    <input id="importProfileFile" type="file" accept=".json,application/json">
+
+    <button id="exportAllProfiles" style="width:100%">
+      Сохранить все профили в один файл
+    </button>
+
+    <p class="small">
+      Профили можно хранить в папке «Загрузки» и переносить на другие устройства.
+      Импорт не заменяет существующий профиль без подтверждения.
+    </p>
   </section>
 
   <section class="panel">
     <h2>6. Сохранение</h2>
-    <button id="saveJpeg" class="primary" style="width:100%">Сохранить позитив JPEG</button>
-    <button id="batchSave" style="width:100%;margin-top:8px">Обработать все фотографии</button>
-    <p class="small">Пакетная обработка сохраняет отдельный JPEG для каждой фотографии с текущими настройками.</p>
+    <button id="saveJpeg" class="primary" style="width:100%">
+      Сохранить позитив JPEG
+    </button>
+    <button id="batchSave" style="width:100%;margin-top:8px">
+      Обработать все фотографии
+    </button>
+    <p class="small">Для каждой фотографии создаётся отдельный JPEG с текущими настройками.</p>
   </section>
 </aside>
 
@@ -320,21 +345,26 @@ input[type="file"] { display: none; }
 
 <script>
 (() => {
-'use strict';
+"use strict";
 
 const $ = id => document.getElementById(id);
-const source = $('source');
-const result = $('result');
-const sourceCtx = source.getContext('2d', {willReadFrequently:true});
-const resultCtx = result.getContext('2d', {willReadFrequently:true});
-const sourceOverlay = $('sourceOverlay');
-const resultOverlay = $('resultOverlay');
-const sourceOverlayCtx = sourceOverlay.getContext('2d');
-const resultOverlayCtx = resultOverlay.getContext('2d');
+const source = $("source");
+const result = $("result");
+const sourceCtx = source.getContext("2d", {willReadFrequently:true});
+const resultCtx = result.getContext("2d", {willReadFrequently:true});
+const sourceOverlay = $("sourceOverlay");
+const resultOverlay = $("resultOverlay");
+const sourceOverlayCtx = sourceOverlay.getContext("2d");
+const resultOverlayCtx = resultOverlay.getContext("2d");
 
 const defaults = {
-  maskStrength:100, exposure:0, contrast:0, saturation:0,
-  red:0, green:0, blue:0
+  maskStrength:100,
+  exposure:0,
+  contrast:0,
+  saturation:0,
+  red:0,
+  green:0,
+  blue:0
 };
 
 let photos = [];
@@ -349,195 +379,247 @@ let pickerMode = null;
 let renderQueued = false;
 
 function setStatus(message, good=false) {
-  $('status').textContent = message;
-  $('status').classList.toggle('good', good);
+  $("status").textContent = message;
+  $("status").classList.toggle("good", good);
 }
+
 function clamp(v,min=0,max=255) {
-  return Math.max(min, Math.min(max, v));
+  return Math.max(min,Math.min(max,v));
 }
+
 function activePhoto() {
-  return photos.find(p => p.id === selectedId) || null;
+  return photos.find(p=>p.id===selectedId)||null;
 }
+
 function updateGallery() {
-  const gallery = $('gallery');
+  const gallery=$("gallery");
   gallery.replaceChildren();
-  photos.forEach(photo => {
-    const item = document.createElement('div');
-    item.className = 'thumb' + (photo.id === selectedId ? ' selected' : '');
-    const img = document.createElement('img');
-    img.src = photo.url;
-    img.alt = photo.name;
-    const name = document.createElement('span');
-    name.textContent = photo.name;
-    item.append(img, name);
-    item.addEventListener('click', () => selectPhoto(photo.id));
+
+  photos.forEach(photo=>{
+    const item=document.createElement("div");
+    item.className="thumb"+(photo.id===selectedId?" selected":"");
+
+    const img=document.createElement("img");
+    img.src=photo.url;
+    img.alt=photo.name;
+
+    const name=document.createElement("span");
+    name.textContent=photo.name;
+
+    item.append(img,name);
+    item.addEventListener("click",()=>selectPhoto(photo.id));
     gallery.append(item);
   });
 }
+
 function loadPhotoToCanvas(photo) {
-  const img = new Image();
-  img.onload = () => {
-    const maxDim = 1800;
-    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
-    const w = Math.max(1, Math.round(img.naturalWidth * scale));
-    const h = Math.max(1, Math.round(img.naturalHeight * scale));
-    source.width = result.width = w;
-    source.height = result.height = h;
-    sourceOverlay.width = resultOverlay.width = w;
-    sourceOverlay.height = resultOverlay.height = h;
+  const img=new Image();
+
+  img.onload=()=>{
+    const maxDim=1800;
+    const scale=Math.min(1,maxDim/Math.max(img.naturalWidth,img.naturalHeight));
+    const w=Math.max(1,Math.round(img.naturalWidth*scale));
+    const h=Math.max(1,Math.round(img.naturalHeight*scale));
+
+    source.width=result.width=w;
+    source.height=result.height=h;
+    sourceOverlay.width=resultOverlay.width=w;
+    sourceOverlay.height=resultOverlay.height=h;
+
     sourceCtx.clearRect(0,0,w,h);
     sourceCtx.drawImage(img,0,0,w,h);
-    originalPixels = sourceCtx.getImageData(0,0,w,h);
-    maskColor = null;
-    wbGains = null;
-    maskPoint = null;
-    wbPoint = null;
-    $('maskInfo').textContent = 'Цвет основы не выбран.';
-    $('wbInfo').textContent = 'Баланс белого не настроен.';
+    originalPixels=sourceCtx.getImageData(0,0,w,h);
+
+    maskColor=null;
+    wbGains=null;
+    maskPoint=null;
+    wbPoint=null;
+
+    $("maskInfo").textContent="Цвет основы не выбран.";
+    $("wbInfo").textContent="Баланс белого не настроен.";
+    $("maskInfo").classList.remove("good");
+    $("wbInfo").classList.remove("good");
+
     stopPicking();
     drawMarkers();
     render();
-    $('sourceNote').textContent = photo.name;
-    $('resultNote').textContent = 'Предварительный просмотр';
-    setStatus('Загружено: ' + photo.name, true);
+
+    $("sourceNote").textContent=photo.name;
+    $("resultNote").textContent="Предварительный просмотр";
+    setStatus("Загружено: "+photo.name,true);
   };
-  img.onerror = () => setStatus('Не удалось открыть изображение.');
-  img.src = photo.url;
+
+  img.onerror=()=>setStatus("Не удалось открыть изображение.");
+  img.src=photo.url;
 }
+
 function selectPhoto(id) {
-  selectedId = id;
+  selectedId=id;
   updateGallery();
-  const photo = activePhoto();
-  if (photo) loadPhotoToCanvas(photo);
+  const photo=activePhoto();
+  if(photo) loadPhotoToCanvas(photo);
 }
+
 function addFiles(files) {
-  [...files].filter(f => f.type.startsWith('image/')).forEach(file => {
+  [...files].filter(f=>f.type.startsWith("image/")).forEach(file=>{
     photos.push({
       id:nextId++,
-      name:file.name || ('Фото ' + nextId),
+      name:file.name||("Фото "+nextId),
       url:URL.createObjectURL(file)
     });
   });
+
   updateGallery();
-  if (selectedId === null && photos.length) selectPhoto(photos[0].id);
-  if (!photos.length) setStatus('Выбери изображение.');
+  if(selectedId===null&&photos.length) selectPhoto(photos[0].id);
 }
-$('fileInput').addEventListener('change', e => {
+
+$("fileInput").addEventListener("change",e=>{
   addFiles(e.target.files);
-  e.target.value = '';
+  e.target.value="";
 });
-$('cameraInput').addEventListener('change', e => {
+
+$("cameraInput").addEventListener("change",e=>{
   addFiles(e.target.files);
-  e.target.value = '';
+  e.target.value="";
 });
-$('deleteBtn').addEventListener('click', () => {
-  const index = photos.findIndex(p => p.id === selectedId);
-  if (index < 0) return;
+
+$("deleteBtn").addEventListener("click",()=>{
+  const index=photos.findIndex(p=>p.id===selectedId);
+  if(index<0) return;
+
   URL.revokeObjectURL(photos[index].url);
   photos.splice(index,1);
-  selectedId = photos.length ? photos[Math.min(index,photos.length-1)].id : null;
+  selectedId=photos.length?photos[Math.min(index,photos.length-1)].id:null;
   updateGallery();
-  if (activePhoto()) selectPhoto(selectedId);
-  else {
-    originalPixels = null;
+
+  if(activePhoto()) {
+    selectPhoto(selectedId);
+  } else {
+    originalPixels=null;
     sourceCtx.clearRect(0,0,source.width,source.height);
     resultCtx.clearRect(0,0,result.width,result.height);
     sourceOverlayCtx.clearRect(0,0,sourceOverlay.width,sourceOverlay.height);
     resultOverlayCtx.clearRect(0,0,resultOverlay.width,resultOverlay.height);
-    $('sourceNote').textContent = 'Загрузи фотографию.';
-    $('resultNote').textContent = 'Здесь появится позитив.';
-    setStatus('Список фотографий пуст.');
+    $("sourceNote").textContent="Загрузи фотографию.";
+    $("resultNote").textContent="Здесь появится позитив.";
+    setStatus("Список фотографий пуст.");
   }
 });
-$('clearBtn').addEventListener('click', () => {
-  photos.forEach(p => URL.revokeObjectURL(p.url));
-  photos = [];
-  selectedId = null;
-  originalPixels = null;
+
+$("clearBtn").addEventListener("click",()=>{
+  if(photos.length&&!confirm("Удалить все фотографии из текущего списка?")) return;
+
+  photos.forEach(p=>URL.revokeObjectURL(p.url));
+  photos=[];
+  selectedId=null;
+  originalPixels=null;
   updateGallery();
   sourceCtx.clearRect(0,0,source.width,source.height);
   resultCtx.clearRect(0,0,result.width,result.height);
   sourceOverlayCtx.clearRect(0,0,sourceOverlay.width,sourceOverlay.height);
   resultOverlayCtx.clearRect(0,0,resultOverlay.width,resultOverlay.height);
   stopPicking();
-  setStatus('Список очищен.');
+  setStatus("Список очищен.");
 });
 
 function getSliderValues() {
-  const v = {};
-  Object.keys(defaults).forEach(k => v[k] = Number($(k).value));
+  const v={};
+  Object.keys(defaults).forEach(k=>v[k]=Number($(k).value));
   return v;
 }
+
 function updateSliderLabels() {
-  Object.keys(defaults).forEach(k => {
-    const out = $(k + 'Val');
-    if (out) out.textContent = $(k).value + (k === 'maskStrength' ? '%' : '');
+  Object.keys(defaults).forEach(k=>{
+    const out=$(k+"Val");
+    if(out) out.textContent=$(k).value+(k==="maskStrength"?"%":"");
   });
 }
+
 function scheduleRender() {
   updateSliderLabels();
-  if (renderQueued) return;
-  renderQueued = true;
-  requestAnimationFrame(() => {
-    renderQueued = false;
+  if(renderQueued) return;
+  renderQueued=true;
+
+  requestAnimationFrame(()=>{
+    renderQueued=false;
     render();
   });
 }
-Object.keys(defaults).forEach(k => $(k).addEventListener('input', scheduleRender));
-$('mode').addEventListener('change', scheduleRender);
-document.querySelectorAll('[data-reset]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const k = btn.dataset.reset;
-    $(k).value = defaults[k];
+
+Object.keys(defaults).forEach(k=>{
+  $(k).addEventListener("input",scheduleRender);
+});
+
+$("mode").addEventListener("change",scheduleRender);
+
+document.querySelectorAll("[data-reset]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const k=btn.dataset.reset;
+    $(k).value=defaults[k];
     scheduleRender();
   });
 });
-$('resetMaskStrength').addEventListener('click', () => {
-  $('maskStrength').value = defaults.maskStrength;
+
+$("resetMaskStrength").addEventListener("click",()=>{
+  $("maskStrength").value=defaults.maskStrength;
   scheduleRender();
 });
-$('resetAll').addEventListener('click', () => {
-  Object.keys(defaults).forEach(k => $(k).value = defaults[k]);
-  maskColor = null;
-  wbGains = null;
-  maskPoint = null;
-  wbPoint = null;
-  $('maskInfo').textContent = 'Цвет основы не выбран.';
-  $('wbInfo').textContent = 'Баланс белого не настроен.';
+
+$("resetAll").addEventListener("click",()=>{
+  if(!confirm("Сбросить все настройки обработки, включая выбранные точки и баланс белого?")) return;
+
+  Object.keys(defaults).forEach(k=>$(k).value=defaults[k]);
+  maskColor=null;
+  wbGains=null;
+  maskPoint=null;
+  wbPoint=null;
+
+  $("maskInfo").textContent="Цвет основы не выбран.";
+  $("wbInfo").textContent="Баланс белого не настроен.";
+  $("maskInfo").classList.remove("good");
+  $("wbInfo").classList.remove("good");
+
   drawMarkers();
   scheduleRender();
-  setStatus('Все настройки сброшены.');
+  setStatus("Все настройки сброшены.");
 });
 
 function render() {
-  if (!originalPixels) return;
-  const w = originalPixels.width, h = originalPixels.height;
-  const src = originalPixels.data;
-  const out = new ImageData(new Uint8ClampedArray(src),w,h);
-  const d = out.data;
-  const vals = getSliderValues();
-  const mode = $('mode').value;
-  const strength = vals.maskStrength / 100;
-  const exp = Math.pow(2, vals.exposure / 100);
-  const contrast = (259 * (vals.contrast + 255)) / (255 * (259 - vals.contrast));
-  const sat = 1 + vals.saturation / 100;
-  const rgb = [vals.red, vals.green, vals.blue].map(v => Math.pow(2,v/100));
-  const mask = maskColor || [255,255,255];
+  if(!originalPixels) return;
 
-  for (let i=0; i<d.length; i+=4) {
-    let r=src[i], g=src[i+1], b=src[i+2];
-    if (mode === 'negative' || mode === 'mono') {
-      if (maskColor) {
-        r = clamp((r - mask[0]*strength) * 1.8 + 128*strength);
-        g = clamp((g - mask[1]*strength) * 1.8 + 128*strength);
-        b = clamp((b - mask[2]*strength) * 1.8 + 128*strength);
+  const w=originalPixels.width;
+  const h=originalPixels.height;
+  const src=originalPixels.data;
+  const out=new ImageData(new Uint8ClampedArray(src),w,h);
+  const d=out.data;
+  const vals=getSliderValues();
+  const mode=$("mode").value;
+  const strength=vals.maskStrength/100;
+  const exp=Math.pow(2,vals.exposure/100);
+  const contrast=(259*(vals.contrast+255))/(255*(259-vals.contrast));
+  const sat=1+vals.saturation/100;
+  const rgb=[vals.red,vals.green,vals.blue].map(v=>Math.pow(2,v/100));
+  const mask=maskColor||[255,255,255];
+
+  for(let i=0;i<d.length;i+=4) {
+    let r=src[i],g=src[i+1],b=src[i+2];
+
+    if(mode==="negative"||mode==="mono") {
+      if(maskColor) {
+        r=clamp((r-mask[0]*strength)*1.8+128*strength);
+        g=clamp((g-mask[1]*strength)*1.8+128*strength);
+        b=clamp((b-mask[2]*strength)*1.8+128*strength);
       }
-      r=255-r; g=255-g; b=255-b;
+      r=255-r;
+      g=255-g;
+      b=255-b;
     }
-    if (mode === 'mono') {
-      const y=0.2126*r+0.7152*g+0.0722*b;
+
+    if(mode==="mono") {
+      const y=.2126*r+.7152*g+.0722*b;
       r=g=b=y;
     }
+
     r=clamp(r*exp*rgb[0]);
     g=clamp(g*exp*rgb[1]);
     b=clamp(b*exp*rgb[2]);
@@ -546,42 +628,52 @@ function render() {
     g=clamp(contrast*(g-128)+128);
     b=clamp(contrast*(b-128)+128);
 
-    const lum=0.2126*r+0.7152*g+0.0722*b;
+    const lum=.2126*r+.7152*g+.0722*b;
     r=clamp(lum+(r-lum)*sat);
     g=clamp(lum+(g-lum)*sat);
     b=clamp(lum+(b-lum)*sat);
 
-    if (wbGains) {
+    if(wbGains) {
       r=clamp(r*wbGains[0]);
       g=clamp(g*wbGains[1]);
       b=clamp(b*wbGains[2]);
     }
-    d[i]=r; d[i+1]=g; d[i+2]=b; d[i+3]=src[i+3];
+
+    d[i]=r;
+    d[i+1]=g;
+    d[i+2]=b;
+    d[i+3]=src[i+3];
   }
+
   resultCtx.putImageData(out,0,0);
   drawMarkers();
 }
 
-function getCanvasPoint(event, canvas) {
+function getCanvasPoint(event,canvas) {
   const rect=canvas.getBoundingClientRect();
-  const x=Math.floor((event.clientX-rect.left)*canvas.width/rect.width);
-  const y=Math.floor((event.clientY-rect.top)*canvas.height/rect.height);
+
   return {
-    x:Math.max(0,Math.min(canvas.width-1,x)),
-    y:Math.max(0,Math.min(canvas.height-1,y))
+    x:Math.max(0,Math.min(canvas.width-1,
+      Math.floor((event.clientX-rect.left)*canvas.width/rect.width))),
+    y:Math.max(0,Math.min(canvas.height-1,
+      Math.floor((event.clientY-rect.top)*canvas.height/rect.height)))
   };
 }
-function samplePixel(canvas, point) {
-  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+
+function samplePixel(canvas,point) {
+  const ctx=canvas.getContext("2d",{willReadFrequently:true});
   const p=ctx.getImageData(point.x,point.y,1,1).data;
   return [p[0],p[1],p[2]];
 }
-function drawCross(ctx, point, color) {
-  if (!point) return;
+
+function drawCross(ctx,point,color) {
+  if(!point) return;
+
   ctx.save();
   ctx.strokeStyle=color;
   ctx.lineWidth=Math.max(2,Math.min(source.width,source.height)/300);
   const r=Math.max(8,Math.min(source.width,source.height)/45);
+
   ctx.beginPath();
   ctx.arc(point.x,point.y,r,0,Math.PI*2);
   ctx.moveTo(point.x-r*1.5,point.y);
@@ -591,238 +683,646 @@ function drawCross(ctx, point, color) {
   ctx.stroke();
   ctx.restore();
 }
+
 function drawMarkers() {
   sourceOverlayCtx.clearRect(0,0,sourceOverlay.width,sourceOverlay.height);
   resultOverlayCtx.clearRect(0,0,resultOverlay.width,resultOverlay.height);
-  drawCross(sourceOverlayCtx,maskPoint,'#ffcf6b');
-  drawCross(resultOverlayCtx,wbPoint,'#70ffb0');
+  drawCross(sourceOverlayCtx,maskPoint,"#ffcf6b");
+  drawCross(resultOverlayCtx,wbPoint,"#70ffb0");
 }
+
 function updatePickUI() {
-  $('maskPicker').textContent = pickerMode==='mask' ? 'Пипетка основы: ВКЛ.' : 'Пипетка основы: выкл.';
-  $('wbPicker').textContent = pickerMode==='wb' ? 'Пипетка баланса: ВКЛ.' : 'Пипетка баланса: выкл.';
-  $('maskPicker').classList.toggle('active',pickerMode==='mask');
-  $('wbPicker').classList.toggle('active',pickerMode==='wb');
-  $('sourceWrap').classList.toggle('picking',pickerMode==='mask');
-  $('resultWrap').classList.toggle('picking',pickerMode==='wb');
+  $("maskPicker").textContent=pickerMode==="mask"
+    ?"Пипетка основы: ВКЛ.":"Пипетка основы: выкл.";
+  $("wbPicker").textContent=pickerMode==="wb"
+    ?"Пипетка баланса: ВКЛ.":"Пипетка баланса: выкл.";
+
+  $("maskPicker").classList.toggle("active",pickerMode==="mask");
+  $("wbPicker").classList.toggle("active",pickerMode==="wb");
+  $("sourceWrap").classList.toggle("picking",pickerMode==="mask");
+  $("resultWrap").classList.toggle("picking",pickerMode==="wb");
 }
+
 function stopPicking() {
   pickerMode=null;
   updatePickUI();
 }
+
 function togglePicker(type) {
-  // Повторное нажатие выключает текущую пипетку.
-  // Нажатие другой кнопки переключает режим.
-  pickerMode = pickerMode===type ? null : type;
+  pickerMode=pickerMode===type?null:type;
   updatePickUI();
-  if (pickerMode==='mask') {
-    setStatus('Пипетка основы активна. Нажимай на разные точки исходного изображения.');
-  } else if (pickerMode==='wb') {
-    setStatus('Пипетка баланса белого активна. Нажимай на разные точки позитивного изображения.');
+
+  if(pickerMode==="mask") {
+    setStatus("Пипетка основы активна. Нажимай на разные точки исходного изображения.");
+  } else if(pickerMode==="wb") {
+    setStatus("Пипетка баланса активна. Нажимай на разные точки позитивного изображения.");
   } else {
-    setStatus('Выбор точки завершён.');
+    setStatus("Выбор точки завершён.");
   }
 }
-$('maskPicker').addEventListener('click',()=>togglePicker('mask'));
-$('wbPicker').addEventListener('click',()=>togglePicker('wb'));
 
-source.addEventListener('click',event=>{
-  if (pickerMode!=='mask' || !originalPixels) return;
+$("maskPicker").addEventListener("click",()=>togglePicker("mask"));
+$("wbPicker").addEventListener("click",()=>togglePicker("wb"));
+
+source.addEventListener("click",event=>{
+  if(pickerMode!=="mask"||!originalPixels) return;
+
   maskPoint=getCanvasPoint(event,source);
   maskColor=samplePixel(source,maskPoint);
-  $('maskInfo').textContent=`RGB(${maskColor.join(', ')}) — X: ${maskPoint.x}, Y: ${maskPoint.y}`;
-  $('maskInfo').classList.add('good');
-  // ВАЖНО: не выключаем пипетку после выбора точки.
-  // Она остаётся активной для следующих нажатий.
+
+  $("maskInfo").textContent=
+    "RGB("+maskColor.join(", ")+") — X: "+maskPoint.x+", Y: "+maskPoint.y;
+  $("maskInfo").classList.add("good");
+
+  // Пипетка остаётся активной для следующего нажатия.
   updatePickUI();
   drawMarkers();
   render();
-  setStatus('Точка основы обновлена. Выбери следующую точку или повторно нажми кнопку пипетки.',true);
+
+  setStatus("Точка основы обновлена. Выбери следующую точку или повторно нажми кнопку пипетки.",true);
 });
 
-result.addEventListener('click',event=>{
-  if (pickerMode!=='wb' || !originalPixels) return;
+result.addEventListener("click",event=>{
+  if(pickerMode!=="wb"||!originalPixels) return;
+
   wbPoint=getCanvasPoint(event,result);
   const sampled=samplePixel(result,wbPoint);
   const avg=(sampled[0]+sampled[1]+sampled[2])/3;
   const safe=v=>Math.max(0.1,v);
+
   wbGains=[
-    Math.min(4,Math.max(0.25,avg/safe(sampled[0]))),
-    Math.min(4,Math.max(0.25,avg/safe(sampled[1]))),
-    Math.min(4,Math.max(0.25,avg/safe(sampled[2])))
+    Math.min(4,Math.max(.25,avg/safe(sampled[0]))),
+    Math.min(4,Math.max(.25,avg/safe(sampled[1]))),
+    Math.min(4,Math.max(.25,avg/safe(sampled[2])))
   ];
-  $('wbInfo').textContent=`Выбран RGB(${sampled.join(', ')}). Баланс пересчитан.`;
-  $('wbInfo').classList.add('good');
-  // ВАЖНО: пипетка продолжает работать после каждого выбора.
+
+  $("wbInfo").textContent=
+    "Выбран RGB("+sampled.join(", ")+"). Баланс пересчитан.";
+  $("wbInfo").classList.add("good");
+
+  // Не выключаем пипетку после выбора точки.
   updatePickUI();
   drawMarkers();
   render();
-  setStatus('Баланс белого обновлён. Выбери следующую точку или повторно нажми кнопку пипетки.',true);
+
+  setStatus("Баланс белого обновлён. Выбери следующую точку или повторно нажми кнопку пипетки.",true);
 });
 
-$('resetMask').addEventListener('click',()=>{
+$("resetMask").addEventListener("click",()=>{
   maskColor=null;
   maskPoint=null;
-  $('maskInfo').textContent='Цвет основы не выбран.';
-  $('maskInfo').classList.remove('good');
+  $("maskInfo").textContent="Цвет основы не выбран.";
+  $("maskInfo").classList.remove("good");
   drawMarkers();
   render();
-  setStatus('Точка основы сброшена. Пипетка остаётся в текущем режиме.');
+  setStatus("Точка основы сброшена. Пипетка остаётся в текущем режиме.");
 });
-$('resetWB').addEventListener('click',()=>{
+
+$("resetWB").addEventListener("click",()=>{
   wbGains=null;
   wbPoint=null;
-  $('wbInfo').textContent='Баланс белого не настроен.';
-  $('wbInfo').classList.remove('good');
+  $("wbInfo").textContent="Баланс белого не настроен.";
+  $("wbInfo").classList.remove("good");
   drawMarkers();
   render();
-  setStatus('Баланс белого сброшен. Пипетка остаётся в текущем режиме.');
+  setStatus("Баланс белого сброшен. Пипетка остаётся в текущем режиме.");
 });
+
+/* ==============================
+   ПРОФИЛИ И РЕЗЕРВНЫЕ КОПИИ
+   ============================== */
 
 function currentProfile() {
   return {
+    format:"FilmLabProfile",
+    version:1,
     settings:getSliderValues(),
-    mode:$('mode').value,
-    maskColor:maskColor ? [...maskColor] : null,
-    wbGains:wbGains ? [...wbGains] : null
+    mode:$("mode").value,
+    maskColor:maskColor?[...maskColor]:null,
+    wbGains:wbGains?[...wbGains]:null
   };
 }
+
 function getProfiles() {
-  try { return JSON.parse(localStorage.getItem('filmlab_profiles')||'{}'); }
-  catch(e) { return {}; }
+  try {
+    const data=JSON.parse(localStorage.getItem("filmlab_profiles")||"{}");
+    return data&&typeof data==="object"&&!Array.isArray(data)?data:{};
+  } catch(e) {
+    return {};
+  }
 }
-function refreshProfiles() {
+
+function writeProfiles(profiles) {
+  try {
+    localStorage.setItem("filmlab_profiles",JSON.stringify(profiles));
+    return true;
+  } catch(e) {
+    alert("Не удалось сохранить профили. Возможно, закончилось место в браузере.");
+    return false;
+  }
+}
+
+function refreshProfiles(selectName="") {
   const profiles=getProfiles();
-  const select=$('profiles');
-  select.replaceChildren(new Option('— Выбери профиль —',''));
-  Object.keys(profiles).sort().forEach(name=>select.add(new Option(name,name)));
+  const select=$("profiles");
+  select.replaceChildren(new Option("— Выбери профиль —",""));
+
+  Object.keys(profiles).sort((a,b)=>a.localeCompare(b,"ru"))
+    .forEach(name=>select.add(new Option(name,name)));
+
+  if(selectName&&profiles[selectName]) select.value=selectName;
 }
-$('saveProfile').addEventListener('click',()=>{
-  const name=$('profileName').value.trim();
-  if (!name) {
-    setStatus('Введи название профиля.');
-    $('profileName').focus();
+
+function downloadJSON(data,filename) {
+  const blob=new Blob(
+    [JSON.stringify(data,null,2)],
+    {type:"application/json;charset=utf-8"}
+  );
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+
+  a.href=url;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+
+function safeProfileFilename(name) {
+  return name.replace(/[<>:"/\\|?*\x00-\x1F]/g,"_")||"FilmLab";
+}
+
+function validProfile(profile) {
+  if(!profile||typeof profile!=="object"||Array.isArray(profile)) return false;
+  if(!profile.settings||typeof profile.settings!=="object") return false;
+
+  if(profile.mode!==undefined&&
+     !["negative","mono","slide"].includes(profile.mode)) return false;
+
+  const keys=["maskStrength","exposure","contrast","saturation","red","green","blue"];
+
+  for(const key of keys) {
+    if(!Number.isFinite(Number(profile.settings[key]))) return false;
+  }
+
+  if(profile.maskColor!==null&&profile.maskColor!==undefined) {
+    if(!Array.isArray(profile.maskColor)||profile.maskColor.length!==3||
+       !profile.maskColor.every(v=>Number.isFinite(v)&&v>=0&&v<=255)) return false;
+  }
+
+  if(profile.wbGains!==null&&profile.wbGains!==undefined) {
+    if(!Array.isArray(profile.wbGains)||profile.wbGains.length!==3||
+       !profile.wbGains.every(v=>Number.isFinite(v)&&v>0&&v<=10)) return false;
+  }
+
+  return true;
+}
+
+// Сохранение профиля с обязательной защитой от перезаписи.
+$("saveProfile").addEventListener("click",()=>{
+  const typedName=$("profileName").value.trim();
+
+  if(!typedName) {
+    alert("Сначала введи название профиля.");
+    $("profileName").focus();
     return;
   }
+
   const profiles=getProfiles();
-  profiles[name]=currentProfile();
-  localStorage.setItem('filmlab_profiles',JSON.stringify(profiles));
-  refreshProfiles();
-  $('profiles').value=name;
-  setStatus('Профиль «'+name+'» сохранён.',true);
+  let finalName=typedName;
+
+  if(Object.prototype.hasOwnProperty.call(profiles,typedName)) {
+    const choice=prompt(
+      'Профиль "'+typedName+'" уже существует.\n\n'+
+      "Введи номер действия:\n"+
+      "1 — перезаписать существующий профиль\n"+
+      "2 — сохранить как новый профиль\n"+
+      "3 — отмена",
+      "3"
+    );
+
+    if(choice==="1") {
+      if(!confirm(
+        'Последнее подтверждение!\n\nПерезаписать профиль "'+
+        typedName+'"? Старые настройки будут заменены.'
+      )) {
+        alert("Сохранение отменено. Старый профиль не изменён.");
+        return;
+      }
+      finalName=typedName;
+    } else if(choice==="2") {
+      const newName=prompt("Введи название нового профиля:",typedName+" — копия");
+
+      if(newName===null||!newName.trim()) {
+        alert("Сохранение отменено.");
+        return;
+      }
+
+      finalName=newName.trim();
+
+      if(Object.prototype.hasOwnProperty.call(profiles,finalName)) {
+        alert("Профиль с таким названием уже существует. Выбери другое имя.");
+        return;
+      }
+    } else {
+      alert("Сохранение отменено. Ничего не изменено.");
+      return;
+    }
+  }
+
+  profiles[finalName]=currentProfile();
+
+  if(writeProfiles(profiles)) {
+    $("profileName").value=finalName;
+    refreshProfiles(finalName);
+    alert('Профиль "'+finalName+'" сохранён.');
+  }
 });
-$('loadProfile').addEventListener('click',()=>{
-  const name=$('profiles').value;
+
+// Применение профиля.
+$("loadProfile").addEventListener("click",()=>{
+  const name=$("profiles").value;
   const profile=getProfiles()[name];
-  if (!profile) { setStatus('Сначала выбери сохранённый профиль.'); return; }
-  Object.keys(defaults).forEach(k=>{
-    if (profile.settings && profile.settings[k]!==undefined) $(k).value=profile.settings[k];
+
+  if(!profile) {
+    alert("Сначала выбери профиль.");
+    return;
+  }
+
+  if(!validProfile(profile)) {
+    alert("Профиль содержит некорректные настройки.");
+    return;
+  }
+
+  Object.keys(defaults).forEach(key=>{
+    if(profile.settings[key]!==undefined) {
+      const min=Number($(key).min);
+      const max=Number($(key).max);
+      $(key).value=Math.max(min,Math.min(max,Number(profile.settings[key])));
+    }
   });
-  $('mode').value=profile.mode||'negative';
-  maskColor=profile.maskColor ? [...profile.maskColor] : null;
-  wbGains=profile.wbGains ? [...profile.wbGains] : null;
+
+  $("mode").value=profile.mode||"negative";
+  maskColor=profile.maskColor?[...profile.maskColor]:null;
+  wbGains=profile.wbGains?[...profile.wbGains]:null;
   maskPoint=null;
   wbPoint=null;
-  $('maskInfo').textContent=maskColor ? `RGB(${maskColor.join(', ')}) — из профиля` : 'Цвет основы не выбран.';
-  $('wbInfo').textContent=wbGains ? 'Баланс белого загружен из профиля.' : 'Баланс белого не настроен.';
+
+  $("maskInfo").textContent=maskColor
+    ?"Цвет основы: RGB("+maskColor.join(", ")+")"
+    :"Цвет основы не выбран.";
+
+  $("wbInfo").textContent=wbGains
+    ?"Баланс белого загружен из профиля."
+    :"Баланс белого не настроен.";
+
+  $("maskInfo").classList.toggle("good",!!maskColor);
+  $("wbInfo").classList.toggle("good",!!wbGains);
+
   updateSliderLabels();
   drawMarkers();
   render();
-  setStatus('Профиль «'+name+'» применён.',true);
-});
-$('deleteProfile').addEventListener('click',()=>{
-  const name=$('profiles').value;
-  if (!name) { setStatus('Выбери профиль для удаления.'); return; }
-  const profiles=getProfiles();
-  delete profiles[name];
-  localStorage.setItem('filmlab_profiles',JSON.stringify(profiles));
-  refreshProfiles();
-  setStatus('Профиль «'+name+'» удалён.');
+  setStatus('Профиль "'+name+'" применён.',true);
 });
 
-function downloadCanvas(canvas, filename) {
+// Удаление профиля с подтверждением.
+$("deleteProfile").addEventListener("click",()=>{
+  const name=$("profiles").value;
+
+  if(!name) {
+    alert("Выбери профиль для удаления.");
+    return;
+  }
+
+  if(!confirm('Удалить профиль "'+name+'"? Это действие нельзя отменить.')) return;
+
+  const profiles=getProfiles();
+  delete profiles[name];
+
+  if(writeProfiles(profiles)) {
+    refreshProfiles();
+    if($("profileName").value.trim()===name) $("profileName").value="";
+    alert("Профиль удалён.");
+  }
+});
+
+// Экспорт выбранного профиля в JSON-файл телефона.
+$("exportProfile").addEventListener("click",()=>{
+  const name=$("profiles").value;
+
+  if(!name) {
+    alert("Сначала выбери профиль для сохранения в файл.");
+    return;
+  }
+
+  const profile=getProfiles()[name];
+
+  if(!profile||!validProfile(profile)) {
+    alert("Не удалось прочитать выбранный профиль.");
+    return;
+  }
+
+  downloadJSON({
+    format:"FilmLabProfile",
+    version:1,
+    profiles:{[name]:profile}
+  },safeProfileFilename(name)+".json");
+});
+
+// Экспорт всей коллекции профилей в один файл.
+$("exportAllProfiles").addEventListener("click",()=>{
+  const profiles=getProfiles();
+  const names=Object.keys(profiles);
+
+  if(!names.length) {
+    alert("Нет сохранённых профилей для экспорта.");
+    return;
+  }
+
+  if(!confirm("Сохранить все "+names.length+" профилей в один резервный JSON-файл?")) return;
+
+  downloadJSON({
+    format:"FilmLabBackup",
+    version:1,
+    profiles:profiles
+  },"FilmLab_backup.json");
+});
+
+// Импорт одного профиля или резервной копии.
+$("importProfileFile").addEventListener("change",async event=>{
+  const file=event.target.files[0];
+  event.target.value="";
+  if(!file) return;
+
+  try {
+    if(file.size>5*1024*1024) {
+      alert("Файл слишком большой. Максимальный размер — 5 МБ.");
+      return;
+    }
+
+    const data=JSON.parse(await file.text());
+    let incoming;
+
+    if(data&&
+       (data.format==="FilmLabProfile"||data.format==="FilmLabBackup")&&
+       data.profiles) {
+      incoming=data.profiles;
+    } else if(validProfile(data)) {
+      const suggested=file.name.replace(/\.json$/i,"");
+      incoming={[suggested]:data};
+    } else {
+      alert("Это не распознанный файл профиля FilmLab.");
+      return;
+    }
+
+    if(!incoming||typeof incoming!=="object"||Array.isArray(incoming)) {
+      alert("Неверная структура файла.");
+      return;
+    }
+
+    const entries=Object.entries(incoming);
+
+    if(!entries.length||entries.length>500) {
+      alert("В файле нет профилей или их количество превышает 500.");
+      return;
+    }
+
+    const existing=getProfiles();
+    const validEntries=entries.filter(([name,profile])=>
+      typeof name==="string"&&name.trim()&&validProfile(profile)
+    );
+
+    if(!validEntries.length) {
+      alert("В файле не найдено корректных профилей.");
+      return;
+    }
+
+    let added=0;
+    let replaced=0;
+    let skipped=entries.length-validEntries.length;
+    let lastImportedName="";
+
+    for(const [originalName,profile] of validEntries) {
+      let name=originalName.trim();
+
+      if(Object.prototype.hasOwnProperty.call(existing,name)) {
+        const action=prompt(
+          'Профиль "'+name+'" уже существует.\n\n'+
+          "1 — заменить существующий профиль\n"+
+          "2 — импортировать под новым именем\n"+
+          "3 — пропустить этот профиль",
+          "3"
+        );
+
+        if(action==="1") {
+          if(!confirm(
+            'Подтверди замену профиля "'+name+
+            '". Его текущие настройки будут потеряны.'
+          )) {
+            skipped++;
+            continue;
+          }
+
+          existing[name]=profile;
+          replaced++;
+          lastImportedName=name;
+        } else if(action==="2") {
+          const newName=prompt("Название нового профиля:",name+" — импорт");
+
+          if(newName===null||!newName.trim()) {
+            skipped++;
+            continue;
+          }
+
+          name=newName.trim();
+
+          if(Object.prototype.hasOwnProperty.call(existing,name)) {
+            alert('Профиль "'+name+'" уже существует. Этот профиль пропущен.');
+            skipped++;
+            continue;
+          }
+
+          existing[name]=profile;
+          added++;
+          lastImportedName=name;
+        } else {
+          skipped++;
+          continue;
+        }
+      } else {
+        existing[name]=profile;
+        added++;
+        lastImportedName=name;
+      }
+    }
+
+    if(added+replaced>0) {
+      if(!writeProfiles(existing)) return;
+    }
+
+    refreshProfiles(lastImportedName);
+
+    alert(
+      "Импорт завершён.\n\n"+
+      "Добавлено: "+added+"\n"+
+      "Заменено: "+replaced+"\n"+
+      "Пропущено: "+skipped
+    );
+  } catch(error) {
+    alert("Не удалось прочитать файл. Проверь, что это корректный JSON.");
+  }
+});
+
+/* ==============================
+   СОХРАНЕНИЕ И ПАКЕТНАЯ ОБРАБОТКА
+   ============================== */
+
+function downloadCanvas(canvas,filename) {
   canvas.toBlob(blob=>{
-    if (!blob) { setStatus('Не удалось подготовить JPEG.'); return; }
+    if(!blob) {
+      setStatus("Не удалось подготовить JPEG.");
+      return;
+    }
+
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
+    const a=document.createElement("a");
     a.href=url;
     a.download=filename;
-    document.body.append(a);
+    document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),2000);
-  },'image/jpeg',0.95);
+  },"image/jpeg",0.95);
 }
+
 function safeFilename(name) {
-  return name.replace(/\.[^.]+$/,'').replace(/[<>:"/\\|?*\x00-\x1F]/g,'_')||'FilmLab';
+  return name.replace(/\.[^.]+$/,"").replace(/[<>:"/\\|?*\x00-\x1F]/g,"_")||"FilmLab";
 }
-$('saveJpeg').addEventListener('click',()=>{
-  if (!originalPixels) { setStatus('Сначала загрузи фотографию.'); return; }
+
+$("saveJpeg").addEventListener("click",()=>{
+  if(!originalPixels) {
+    setStatus("Сначала загрузи фотографию.");
+    return;
+  }
+
   const photo=activePhoto();
-  downloadCanvas(result,safeFilename(photo?.name||'FilmLab')+'_positive.jpg');
+  downloadCanvas(result,safeFilename(photo?.name||"FilmLab")+"_positive.jpg");
 });
-$('batchSave').addEventListener('click',async()=>{
-  if (!photos.length) { setStatus('Сначала добавь фотографии.'); return; }
+
+$("batchSave").addEventListener("click",async()=>{
+  if(!photos.length) {
+    setStatus("Сначала добавь фотографии.");
+    return;
+  }
+
+  if(!confirm(
+    "Будут сохранены обработанные копии всех фотографий с текущими настройками. Продолжить?"
+  )) return;
+
   const startId=selectedId;
   const ids=photos.map(p=>p.id);
-  setStatus('Пакетная обработка: подготовка…');
-  for (let i=0;i<ids.length;i++) {
+  const settings=getSliderValues();
+  const mode=$("mode").value;
+  const strength=settings.maskStrength/100;
+  const exp=Math.pow(2,settings.exposure/100);
+  const con=(259*(settings.contrast+255))/(255*(259-settings.contrast));
+  const sat=1+settings.saturation/100;
+  const gains=[settings.red,settings.green,settings.blue].map(v=>Math.pow(2,v/100));
+  const mask=maskColor||[255,255,255];
+  const selectedMask=maskColor?[...maskColor]:null;
+  const selectedWB=wbGains?[...wbGains]:null;
+
+  for(let i=0;i<ids.length;i++) {
     const photo=photos.find(p=>p.id===ids[i]);
-    if (!photo) continue;
+    if(!photo) continue;
+
     await new Promise(resolve=>{
       const img=new Image();
+
       img.onload=()=>{
         const maxDim=1800;
         const scale=Math.min(1,maxDim/Math.max(img.naturalWidth,img.naturalHeight));
         const w=Math.max(1,Math.round(img.naturalWidth*scale));
         const h=Math.max(1,Math.round(img.naturalHeight*scale));
-        const temp=document.createElement('canvas');
-        temp.width=w; temp.height=h;
-        const ctx=temp.getContext('2d',{willReadFrequently:true});
+        const temp=document.createElement("canvas");
+        temp.width=w;
+        temp.height=h;
+
+        const ctx=temp.getContext("2d",{willReadFrequently:true});
         ctx.drawImage(img,0,0,w,h);
+
         const pixels=ctx.getImageData(0,0,w,h);
-        const settings=getSliderValues();
-        const mode=$('mode').value;
-        const strength=settings.maskStrength/100;
-        const exp=Math.pow(2,settings.exposure/100);
-        const con=(259*(settings.contrast+255))/(255*(259-settings.contrast));
-        const sat=1+settings.saturation/100;
-        const gains=[settings.red,settings.green,settings.blue].map(v=>Math.pow(2,v/100));
-        const mask=maskColor||[255,255,255];
         const d=pixels.data;
-        for(let j=0;j<d.length;j+=4){
+
+        for(let j=0;j<d.length;j+=4) {
           let r=d[j],g=d[j+1],b=d[j+2];
-          if(mode==='negative'||mode==='mono'){
-            if(maskColor){
+
+          if(mode==="negative"||mode==="mono") {
+            if(selectedMask) {
               r=clamp((r-mask[0]*strength)*1.8+128*strength);
               g=clamp((g-mask[1]*strength)*1.8+128*strength);
               b=clamp((b-mask[2]*strength)*1.8+128*strength);
             }
-            r=255-r;g=255-g;b=255-b;
+            r=255-r;
+            g=255-g;
+            b=255-b;
           }
-          if(mode==='mono'){const y=.2126*r+.7152*g+.0722*b;r=g=b=y;}
-          r=clamp(r*exp*gains[0]);g=clamp(g*exp*gains[1]);b=clamp(b*exp*gains[2]);
-          r=clamp(con*(r-128)+128);g=clamp(con*(g-128)+128);b=clamp(con*(b-128)+128);
+
+          if(mode==="mono") {
+            const y=.2126*r+.7152*g+.0722*b;
+            r=g=b=y;
+          }
+
+          r=clamp(r*exp*gains[0]);
+          g=clamp(g*exp*gains[1]);
+          b=clamp(b*exp*gains[2]);
+
+          r=clamp(con*(r-128)+128);
+          g=clamp(con*(g-128)+128);
+          b=clamp(con*(b-128)+128);
+
           const lum=.2126*r+.7152*g+.0722*b;
-          r=clamp(lum+(r-lum)*sat);g=clamp(lum+(g-lum)*sat);b=clamp(lum+(b-lum)*sat);
-          if(wbGains){r=clamp(r*wbGains[0]);g=clamp(g*wbGains[1]);b=clamp(b*wbGains[2]);}
-          d[j]=r;d[j+1]=g;d[j+2]=b;
+          r=clamp(lum+(r-lum)*sat);
+          g=clamp(lum+(g-lum)*sat);
+          b=clamp(lum+(b-lum)*sat);
+
+          if(selectedWB) {
+            r=clamp(r*selectedWB[0]);
+            g=clamp(g*selectedWB[1]);
+            b=clamp(b*selectedWB[2]);
+          }
+
+          d[j]=r;
+          d[j+1]=g;
+          d[j+2]=b;
         }
+
         ctx.putImageData(pixels,0,0);
-        downloadCanvas(temp,safeFilename(photo.name)+'_positive.jpg');
-        setStatus(`Пакетная обработка: ${i+1} из ${ids.length} — ${photo.name}`,true);
+        downloadCanvas(temp,safeFilename(photo.name)+"_positive.jpg");
+        setStatus("Пакетная обработка: "+(i+1)+" из "+ids.length+" — "+photo.name,true);
         resolve();
       };
-      img.onerror=()=>resolve();
+
+      img.onerror=()=>{
+        setStatus("Не удалось обработать: "+photo.name);
+        resolve();
+      };
+
       img.src=photo.url;
     });
   }
-  if(startId!==null && photos.some(p=>p.id===startId)) selectPhoto(startId);
-  setStatus('Пакетная обработка завершена. Проверь сохранённые JPEG-файлы.',true);
+
+  if(startId!==null&&photos.some(p=>p.id===startId)) selectPhoto(startId);
+
+  setStatus("Пакетная обработка завершена. Проверь сохранённые JPEG-файлы.",true);
 });
 
 refreshProfiles();
 updateSliderLabels();
 updatePickUI();
+
 })();
 </script>
 </body>
