@@ -24,7 +24,6 @@
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
   --tool-h:42dvh;
-  --photo-h:58dvh;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -37,68 +36,77 @@ body{
 }
 button,input,select,textarea{font:inherit;color:inherit}
 
-#stage{position:fixed;inset:0;display:flex;flex-direction:column;background:#000}
+/* ========== СТАДИЯ ========== */
+#stage{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  background:#000;
+}
 
+/* ---------- Фото сверху ---------- */
 #photoArea{
-  flex:0 0 var(--photo-h);
-  position:relative;display:flex;flex-direction:column;
-  overflow:hidden;background:#000;
+  flex:1 1 auto;min-height:0;
+  position:relative;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  background:#000;
 }
-#topbar{
-  position:relative;z-index:3;
-  display:flex;align-items:center;gap:6px;
-  padding:calc(6px + var(--safe-t)) 8px 6px;
-  background:linear-gradient(180deg,rgba(0,0,0,.75),rgba(0,0,0,0));
-  flex:0 0 auto;
-}
-#topbar .tb-btn{
-  flex:0 0 auto;height:36px;min-width:36px;padding:0 10px;
-  border-radius:11px;border:0;
-  background:rgba(255,255,255,.12);color:#fff;
-  display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  font-size:13px;font-weight:600;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  cursor:pointer;
-}
-#topbar .tb-btn:active{background:rgba(255,255,255,.2)}
-#topbar .tb-btn:disabled{opacity:.35;cursor:not-allowed}
-#topbar .tb-btn.primary{background:var(--accent);color:#04121f}
-#topbar .tb-title{
-  flex:1 1 auto;min-width:0;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  text-align:center;font-weight:600;font-size:13px;color:#fff;
-}
-
-#viewTabs{
-  position:relative;z-index:3;align-self:center;
-  display:inline-flex;background:rgba(255,255,255,.12);
-  border-radius:999px;padding:2px;margin:0 0 4px;flex:0 0 auto;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-}
-#viewTabs button{
-  border:0;background:transparent;color:#cfd6e2;
-  padding:5px 12px;border-radius:999px;
-  font-size:12px;font-weight:600;cursor:pointer;
-}
-#viewTabs button.active{background:#fff;color:#04121f}
 
 #canvasArea{
-  position:relative;flex:1 1 auto;min-height:0;
+  position:relative;
+  flex:1 1 auto;min-height:0;
   display:flex;align-items:center;justify-content:center;
-  overflow:hidden;touch-action:none;
+  overflow:hidden;
+  touch-action:none;
+  padding:calc(8px + var(--safe-t)) 8px 8px;
 }
 #canvasArea .canvas-wrap{
-  position:absolute;inset:0;display:none;
-  align-items:center;justify-content:center;padding:6px;
+  position:absolute;inset:0;
+  display:none;
+  align-items:center;justify-content:center;
+  padding:calc(8px + var(--safe-t)) 8px 8px;
 }
 #canvasArea .canvas-wrap.visible{display:flex}
 #canvasArea canvas.base{
   max-width:100%;max-height:100%;
   width:auto;height:auto;display:block;
-  object-fit:contain;box-shadow:0 4px 20px rgba(0,0,0,.55);
+  object-fit:contain;
+  box-shadow:0 4px 20px rgba(0,0,0,.55);
 }
 #canvasArea canvas.overlay{
-  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  pointer-events:none;
+}
+
+/* Переключатель Результат / Скан — вертикально справа */
+#viewTabs{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:4;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+#viewTabs button{
+  min-width:64px;
+  padding:10px 8px;
+  border:0;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.02em;
+  border-radius:10px;
+  cursor:pointer;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+#viewTabs button.active{
+  background:var(--accent);
+  color:#04121f;
 }
 
 #emptyHint{
@@ -116,6 +124,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 #emptyHint label.ghost{background:rgba(255,255,255,.12);color:#fff}
 
+/* Лупа */
 #loupe{
   position:absolute;width:112px;height:112px;border-radius:50%;
   border:3px solid #fff;
@@ -140,14 +149,15 @@ button,input,select,textarea{font:inherit;color:inherit}
   padding:2px 6px;border-radius:6px;font-variant-numeric:tabular-nums;white-space:nowrap;
 }
 
+/* Верхняя подсказка пипетки */
 #topHint{
-  position:absolute;left:50%;top:calc(6px + var(--safe-t));
+  position:absolute;left:50%;top:calc(8px + var(--safe-t));
   transform:translateX(-50%);z-index:5;display:none;
   align-items:center;gap:8px;padding:6px 10px;
-  border-radius:999px;background:rgba(0,0,0,.75);color:#fff;
+  border-radius:999px;background:rgba(0,0,0,.78);color:#fff;
   font-size:12px;font-weight:600;
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  white-space:nowrap;max-width:calc(100% - 20px);
+  white-space:nowrap;max-width:calc(100% - 24px);
 }
 #topHint.show{display:flex}
 #topHint .dotc{width:8px;height:8px;border-radius:50%;background:var(--warn)}
@@ -156,48 +166,46 @@ button,input,select,textarea{font:inherit;color:inherit}
   padding:4px 10px;border-radius:999px;font-weight:700;font-size:12px;cursor:pointer;
 }
 
+/* ---------- Панель инструмента снизу ---------- */
 #toolPanel{
-  flex:0 0 var(--tool-h);background:var(--panel);
+  flex:0 0 var(--tool-h);
+  background:var(--panel);
   border-top:1px solid var(--line);
   display:flex;flex-direction:column;
-  padding-bottom:var(--safe-b);overflow:hidden;
+  overflow:hidden;
+  padding-top:10px;
 }
-#toolHead{
-  flex:0 0 auto;display:flex;align-items:center;gap:8px;
-  padding:10px 14px 6px;
-}
-#toolHead h2{flex:1 1 auto;margin:0;font-size:15px;font-weight:700}
-#toolHead button{
-  height:34px;padding:0 12px;border-radius:10px;border:0;
-  background:var(--panel-2);color:var(--text);
-  font-size:13px;font-weight:600;cursor:pointer;
-}
-#toolHead button.primary{background:var(--accent);color:#04121f}
-
 #toolBody{
   flex:1 1 auto;min-height:0;
   overflow-y:auto;overscroll-behavior:contain;
-  padding:0 14px 14px;-webkit-overflow-scrolling:touch;
+  padding:0 14px 14px;
+  -webkit-overflow-scrolling:touch;
 }
 
+/* ---------- Нижняя навигация ---------- */
 #bottomNav{
-  position:fixed;left:0;right:0;bottom:0;z-index:5;
+  flex:0 0 auto;
   display:flex;align-items:stretch;justify-content:space-around;
   padding:4px 4px calc(4px + var(--safe-b));
-  background:rgba(15,18,24,.97);
+  background:rgba(15,18,24,.98);
   border-top:1px solid rgba(255,255,255,.06);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
 }
 #bottomNav button{
-  flex:1 1 0;min-width:0;border:0;background:transparent;color:var(--muted);
-  padding:6px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  flex:1 1 0;min-width:0;
+  border:0;background:transparent;color:var(--muted);
+  padding:6px 2px 4px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
   border-radius:10px;cursor:pointer;
+  transition:color .15s;
 }
-#bottomNav button .ico{font-size:19px;line-height:1}
+#bottomNav button .ico{font-size:19px;line-height:1;filter:grayscale(1) brightness(.7)}
 #bottomNav button .lbl{font-size:10px;font-weight:600;letter-spacing:.01em}
 #bottomNav button.active{color:var(--accent)}
+#bottomNav button.active .ico{filter:none}
 #bottomNav button:active{background:rgba(255,255,255,.05)}
 
+/* ---------- Примитивы ---------- */
 .group{background:var(--bg-2);border-radius:var(--radius);padding:4px 12px;margin:0 0 8px}
 .group-title{
   font-size:10px;font-weight:700;color:var(--muted);
@@ -245,6 +253,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn-row{display:flex;gap:8px;margin:8px 0}
 .btn-row > *{flex:1 1 0;min-width:0}
 .btn.active-mode{background:var(--warn);border-color:transparent;color:#1a1200}
+.btn:disabled{opacity:.35;cursor:not-allowed}
 
 .input,select.input{
   width:100%;height:42px;padding:0 12px;
@@ -296,6 +305,12 @@ select.input{
 }
 #galleryEmpty{font-size:12px;color:var(--muted);padding:6px 2px 2px}
 
+.photo-name{
+  font-size:12px;color:var(--muted);
+  padding:0 2px 6px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
 .pick-panel-info{display:flex;align-items:center;gap:8px;margin:4px 0 8px}
 .pick-panel-info .swatch{
   width:36px;height:36px;border-radius:10px;border:2px solid var(--line);
@@ -325,7 +340,7 @@ select.input{
 .nudge .down{grid-column:2;grid-row:3}
 
 #toast{
-  position:fixed;left:50%;top:calc(6px + var(--safe-t));
+  position:fixed;left:50%;top:calc(8px + var(--safe-t));
   transform:translateX(-50%) translateY(-16px);z-index:50;
   background:rgba(20,24,32,.97);border:1px solid var(--line);
   border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;
@@ -361,20 +376,9 @@ select.input{
 <body>
 
 <div id="stage">
+
+  <!-- ===== ФОТО ===== -->
   <div id="photoArea">
-    <div id="topbar">
-      <button class="tb-btn" id="btnGallery" type="button" aria-label="Галерея">☰</button>
-      <div class="tb-title" id="photoTitle">FilmLab</div>
-      <button class="tb-btn" id="btnAutoTop" type="button" title="Автокоррекция" aria-label="Автокоррекция">✨</button>
-      <button class="tb-btn" id="btnUndoTop" type="button" title="Отменить авто" aria-label="Отменить авто" disabled>↺</button>
-      <button class="tb-btn primary" id="btnSave" type="button">JPEG</button>
-    </div>
-
-    <div id="viewTabs">
-      <button type="button" data-view="result" class="active">Результат</button>
-      <button type="button" data-view="source">Скан</button>
-    </div>
-
     <div id="canvasArea">
       <div class="canvas-wrap visible" id="resultWrap">
         <canvas id="result" class="base"></canvas>
@@ -392,6 +396,12 @@ select.input{
         <label class="ghost" for="cameraInput">📷 Снять</label>
       </div>
 
+      <!-- Вертикальный переключатель справа -->
+      <div id="viewTabs">
+        <button type="button" data-view="result" class="active">Результат</button>
+        <button type="button" data-view="source">Скан</button>
+      </div>
+
       <div id="loupe">
         <canvas id="loupeCanvas" width="220" height="220"></canvas>
         <div class="cross"></div>
@@ -407,22 +417,21 @@ select.input{
     </div>
   </div>
 
+  <!-- ===== ПАНЕЛЬ ИНСТРУМЕНТА ===== -->
   <div id="toolPanel">
-    <div id="toolHead">
-      <h2 id="toolTitle">Кадр</h2>
-      <button type="button" id="toolDone" class="primary">Готово</button>
-    </div>
     <div id="toolBody"></div>
   </div>
-</div>
 
-<div id="bottomNav">
-  <button type="button" data-tool="crop" class="active"><span class="ico">✂️</span><span class="lbl">Кадр</span></button>
-  <button type="button" data-tool="light"><span class="ico">☀️</span><span class="lbl">Свет</span></button>
-  <button type="button" data-tool="color"><span class="ico">🎨</span><span class="lbl">Цвет</span></button>
-  <button type="button" data-tool="pick"><span class="ico">🎯</span><span class="lbl">Точки</span></button>
-  <button type="button" data-tool="profiles"><span class="ico">👤</span><span class="lbl">Профили</span></button>
-  <button type="button" data-tool="save"><span class="ico">💾</span><span class="lbl">Файлы</span></button>
+  <!-- ===== НИЖНЯЯ НАВИГАЦИЯ ===== -->
+  <div id="bottomNav">
+    <button type="button" data-tool="crop" class="active"><span class="ico">✂️</span><span class="lbl">Кадр</span></button>
+    <button type="button" data-tool="light"><span class="ico">☀️</span><span class="lbl">Свет</span></button>
+    <button type="button" data-tool="color"><span class="ico">🎨</span><span class="lbl">Цвет</span></button>
+    <button type="button" data-tool="pick"><span class="ico">🎯</span><span class="lbl">Точки</span></button>
+    <button type="button" data-tool="profiles"><span class="ico">👤</span><span class="lbl">Профили</span></button>
+    <button type="button" data-tool="save"><span class="ico">💾</span><span class="lbl">Файлы</span></button>
+  </div>
+
 </div>
 
 <div id="toast"></div>
@@ -468,12 +477,10 @@ let originalPixels=null,basePixels=null;
 let cropEnabled=false,cropRect=null,cropDrag=null;
 let maskColor=null,wbGains=null,maskPoint=null,wbPoint=null,pickerMode=null;
 let renderQueued=false,autoSnapshot=null;
-let currentView="result";
 let activeTool="crop";
 
 const clamp=(v,a=0,b=255)=>Math.max(a,Math.min(b,v));
 
-/* ---------- Toast ---------- */
 function toast(msg,type){
   const t=$("toast");
   t.textContent=msg;t.className="";
@@ -487,14 +494,13 @@ function setStatus(id,msg,good){
   el.textContent=msg;el.classList.toggle("good",!!good);
 }
 function updateUndoAvailability(){
-  const btn=$("btnUndoTop");
-  if(!btn)return;
-  btn.disabled=!autoSnapshot;
+  document.querySelectorAll(".undo-auto").forEach(btn=>{
+    btn.disabled=!autoSnapshot;
+  });
 }
 
 /* ---------- View tabs ---------- */
 function setView(v){
-  currentView=v;
   $("resultWrap").classList.toggle("visible",v==="result");
   $("sourceWrap").classList.toggle("visible",v==="source");
   document.querySelectorAll("#viewTabs [data-view]").forEach(b=>{
@@ -525,6 +531,12 @@ function updateGallery(){
     item.addEventListener("click",()=>selectPhoto(photo.id));
     g.append(item);
   });
+  // имя файла
+  const nameEl=$("photoName");
+  if(nameEl){
+    const p=photos.find(p=>p.id===selectedId);
+    nameEl.textContent=p?""+p.name:"";
+  }
 }
 
 /* ---------- Load / Select ---------- */
@@ -556,8 +568,8 @@ function loadPhotoToCanvas(photo){
       drawMarkers();
       render();
       updateUndoAvailability();
+      updateGallery();
 
-      $("photoTitle").textContent=photo.name;
       $("emptyHint").style.display="none";
       toast("Загружено: "+photo.name,"good");
     }catch(err){
@@ -572,7 +584,6 @@ function selectPhoto(id){
   selectedId=id;updateGallery();
   const photo=photos.find(p=>p.id===selectedId);
   if(photo)loadPhotoToCanvas(photo);
-  renderToolPanel();
 }
 
 /* ---------- Add / remove ---------- */
@@ -623,7 +634,6 @@ function resetStage(){
   sourceOverlayCtx.clearRect(0,0,sourceOverlay.width,sourceOverlay.height);
   resultOverlayCtx.clearRect(0,0,resultOverlay.width,resultOverlay.height);
   $("emptyHint").style.display="flex";
-  $("photoTitle").textContent="FilmLab";
   autoSnapshot=null;updateUndoAvailability();
   stopPicking();
 }
@@ -928,7 +938,7 @@ function restoreAutoState(s){
   drawMarkers();render();refreshUIFromState();
 }
 
-/* --- Глобальный «Авто» (всё сразу) --- */
+/* Глобальная авто (всё сразу) */
 function applyAuto(){
   if(!originalPixels){toast("Сначала добавь фото","err");return}
   autoSnapshot=snapshotAutoState();
@@ -949,7 +959,7 @@ function applyAuto(){
   toast("Автокоррекция применена","good");
 }
 
-/* --- «Авто свет» (только экспо/контраст/основа) --- */
+/* Авто свет (только экспо/контраст/основа) */
 function applyAutoLight(){
   if(!originalPixels){toast("Сначала добавь фото","err");return}
   if(!autoSnapshot)autoSnapshot=snapshotAutoState();
@@ -969,7 +979,7 @@ function applyAutoLight(){
   toast("Автосвет применён","good");
 }
 
-/* --- «Авто ББ» (только баланс белого) --- */
+/* Авто ББ (только баланс белого) */
 function applyAutoWB(){
   if(!originalPixels){toast("Сначала добавь фото","err");return}
   if(!autoSnapshot)autoSnapshot=snapshotAutoState();
@@ -981,7 +991,6 @@ function applyAutoWB(){
   toast("Автобаланс белого применён","good");
 }
 
-/* --- Отмена авто --- */
 function undoAuto(){
   if(!autoSnapshot){toast("Нечего отменять","err");return}
   restoreAutoState(autoSnapshot);
@@ -1139,17 +1148,13 @@ function downloadCanvas(canvas,filename){
   },"image/jpeg",.95);
 }
 function safeFilename(name){return name.replace(/\.[^.]+$/,"").replace(/[<>:"/\\|?*\x00-\x1F]/g,"_")||"FilmLab"}
-$("btnSave").addEventListener("click",()=>{
+function saveCurrentJpeg(){
   if(!originalPixels){toast("Нет фото","err");return}
   downloadCanvas(result,safeFilename(photos.find(p=>p.id===selectedId)?.name||"FilmLab")+"_positive.jpg");
   toast("JPEG сохраняется","good");
-});
+}
 
-/* ---------- Верхние глобальные кнопки ---------- */
-$("btnAutoTop").addEventListener("click",applyAuto);
-$("btnUndoTop").addEventListener("click",undoAuto);
-
-/* ---------- Refresh UI state ---------- */
+/* ---------- Refresh UI ---------- */
 function refreshUIFromState(){
   updateSliderLabels();
   const seg=$("modeSeg");
@@ -1163,13 +1168,10 @@ function refreshUIFromState(){
   updateUndoAvailability();
 }
 
-/* ---------- Tool panels ---------- */
-const TOOL_TITLES={crop:"Кадр",light:"Свет",color:"Цвет",pick:"Точки",profiles:"Профили",save:"Файлы"};
-
+/* ---------- Панели инструментов ---------- */
 function renderToolPanel(){
   const body=$("toolBody");
   body.replaceChildren();
-  $("toolTitle").textContent=TOOL_TITLES[activeTool]||"Настройки";
   if(activeTool==="crop")renderCropPanel(body);
   else if(activeTool==="light")renderLightPanel(body);
   else if(activeTool==="color")renderColorPanel(body);
@@ -1204,6 +1206,7 @@ function renderCropPanel(body){
   const g3=document.createElement("div");g3.className="group";
   g3.innerHTML=`
     <div class="group-title">Фотографии</div>
+    <div class="photo-name" id="photoName"></div>
     <div id="gallery"></div>
     <div id="galleryEmpty">Пока пусто — добавь скан.</div>
     <label for="fileInput" class="file-btn">＋ Добавить фото</label>
@@ -1277,6 +1280,15 @@ function renderCropPanel(body){
 
 /* --- LIGHT --- */
 function renderLightPanel(body){
+  const gTop=document.createElement("div");gTop.className="group";
+  gTop.innerHTML=`
+    <div class="group-title">Автокоррекция</div>
+    <div class="btn-row">
+      <button class="btn primary" id="autoAllBtn">✨ Авто</button>
+      <button class="btn undo-auto" id="autoUndoBtn">↺ Отмена</button>
+    </div>`;
+  body.append(gTop);
+
   const g1=document.createElement("div");g1.className="group";
   g1.innerHTML=`
     <div class="group-title">Режим</div>
@@ -1297,10 +1309,7 @@ function renderLightPanel(body){
 
   const g3=document.createElement("div");g3.className="group";
   g3.innerHTML=`
-    <div class="btn-row">
-      <button class="btn primary" id="autoLightBtn">✨ Авто свет</button>
-      <button class="btn" id="autoUndoBtn">↺ Отменить</button>
-    </div>
+    <button class="btn block" id="autoLightBtn">✨ Авто свет</button>
     <p class="status" id="autoStatus">Автосвет не применялся.</p>`;
   body.append(g3);
 
@@ -1314,6 +1323,7 @@ function renderLightPanel(body){
       refreshUIFromState();
     });
   });
+  $("autoAllBtn").onclick=applyAuto;
   $("autoLightBtn").onclick=()=>{
     applyAutoLight();
     setStatus("autoStatus","Автосвет применён.","good");
@@ -1322,10 +1332,20 @@ function renderLightPanel(body){
     undoAuto();
     setStatus("autoStatus","Отменено.","");
   };
+  updateUndoAvailability();
 }
 
 /* --- COLOR --- */
 function renderColorPanel(body){
+  const gTop=document.createElement("div");gTop.className="group";
+  gTop.innerHTML=`
+    <div class="group-title">Баланс белого</div>
+    <div class="btn-row">
+      <button class="btn" id="autoBbBtn">⚪ Авто ББ</button>
+      <button class="btn undo-auto" id="autoBbUndoBtn">↺ Отмена</button>
+    </div>`;
+  body.append(gTop);
+
   const g1=document.createElement("div");g1.className="group";
   g1.innerHTML=`
     <div class="group-title">Насыщенность и температура</div>
@@ -1341,15 +1361,6 @@ function renderColorPanel(body){
     ${sliderHTML("blue","Синий")}`;
   body.append(g2);
 
-  const gBb=document.createElement("div");gBb.className="group";
-  gBb.innerHTML=`
-    <div class="group-title">Баланс белого</div>
-    <div class="btn-row">
-      <button class="btn" id="autoBbBtn">⚪ Авто ББ</button>
-      <button class="btn" id="autoBbUndoBtn">↺ Отменить</button>
-    </div>`;
-  body.append(gBb);
-
   const g3=document.createElement("div");
   g3.innerHTML=`<button class="btn block danger" id="resetAllBtn">Сбросить все настройки</button>`;
   body.append(g3);
@@ -1358,8 +1369,8 @@ function renderColorPanel(body){
   bindSlider("temperature");
   bindSlider("red");bindSlider("green");bindSlider("blue");
 
-  $("autoBbBtn").onclick=()=>applyAutoWB();
-  $("autoBbUndoBtn").onclick=()=>undoAuto();
+  $("autoBbBtn").onclick=applyAutoWB;
+  $("autoBbUndoBtn").onclick=undoAuto;
   $("resetAllBtn").onclick=()=>{
     if(!confirm("Сбросить все настройки обработки?"))return;
     setSliderValues(defaults);
@@ -1368,6 +1379,7 @@ function renderColorPanel(body){
     drawMarkers();render();refreshUIFromState();
     toast("Сброшено","good");
   };
+  updateUndoAvailability();
 }
 
 /* --- PICK --- */
@@ -1442,14 +1454,12 @@ function renderPickPanel(body){
     setStatus("wbInfo","","");
     drawMarkers();render();refreshUIFromState();
   };
-
   document.querySelectorAll("[data-mask-dir]").forEach(b=>{
     b.onclick=()=>nudgePoint("mask",b.dataset.maskDir);
   });
   document.querySelectorAll("[data-wb-dir]").forEach(b=>{
     b.onclick=()=>nudgePoint("wb",b.dataset.wbDir);
   });
-
   refreshUIFromState();
 }
 
@@ -1567,7 +1577,7 @@ function renderSavePanel(body){
     <button class="btn block" id="batchBtn">Обработать все фото</button>
     <p class="status">Для каждой фотографии создаётся отдельный JPEG с текущими настройками.</p>`;
   body.append(g);
-  $("saveJpegBtn").onclick=()=>$("btnSave").click();
+  $("saveJpegBtn").onclick=saveCurrentJpeg;
   $("batchBtn").onclick=async()=>{
     if(!photos.length){toast("Нет фото","err");return}
     if(!confirm("Сохранить обработанные копии всех фото?"))return;
@@ -1659,11 +1669,6 @@ function switchTool(tool){
 document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
   b.addEventListener("click",()=>switchTool(b.dataset.tool));
 });
-$("toolDone").addEventListener("click",()=>{
-  if(pickerMode)stopPicking();
-  switchTool("crop");
-});
-$("btnGallery").addEventListener("click",()=>switchTool("crop"));
 
 /* ---------- Init ---------- */
 setView("result");
