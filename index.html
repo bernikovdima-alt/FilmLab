@@ -6,181 +6,315 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FilmLab — плёнка</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#101820;color:#f1f5f8;font:16px Arial,sans-serif}
-header{padding:16px;background:#18232d;border-bottom:1px solid #344655}
-h1{font-size:23px;margin:0 0 5px}
-h2{font-size:18px;margin:0 0 12px}
-main{max-width:900px;margin:auto;padding:12px}
-.panel{background:#18232d;border:1px solid #344655;border-radius:12px;padding:14px;margin-bottom:12px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-button,.filebtn,select{font:inherit;color:#fff;background:#263846;border:1px solid #496174;border-radius:8px;padding:10px;cursor:pointer}
-button:disabled{opacity:.45;cursor:not-allowed}
-.primary{background:#1769aa}
-.active{background:#8a6510;border-color:#ffd45a;color:#fff}
-input[type=file]{display:none}
-.control{display:block;font-size:13px;color:#c2ced8;margin-bottom:12px;min-width:0}
-.control input[type=range],.control select{display:block;width:100%;margin-top:6px}
-input[type=range]{accent-color:#58a6ff}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-canvas{display:block;width:100%;height:auto;background:#080c10;border-radius:8px}
-.canvas-wrap{position:relative}
-.canvas-wrap.picking canvas{cursor:crosshair;outline:2px solid #ffd45a}
-.small{font-size:13px;color:#a9b8c5;line-height:1.5}
-#thumbs{display:flex;gap:8px;overflow:auto;margin-top:10px}
-.thumb{min-width:75px;width:75px;padding:3px}
-.thumb img{width:100%;height:55px;object-fit:cover}
-#cameraPanel video{width:100%;max-height:50vh;background:#000}
-.status{font-size:13px;color:#70d6a5;margin-top:8px;overflow-wrap:anywhere}
-.tool-head{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
-.tool-head h2{margin:0}
-.slider-line{display:flex;gap:8px;align-items:center;justify-content:space-between}
-.slider-line span{font-size:13px;color:#d5e0e8}
-.reset{padding:5px 8px;font-size:12px;flex-shrink:0}
-.range{width:100%}
-@media(max-width:450px){main{padding:8px}.panel{padding:10px}.preview{grid-template-columns:1fr}}
+:root {
+  color-scheme: dark;
+  --bg: #17191d;
+  --panel: #22252b;
+  --panel2: #2b2f36;
+  --border: #414650;
+  --text: #f0f1f4;
+  --muted: #aeb4bf;
+  --accent: #67b7ff;
+  --green: #70d6a0;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 Arial, sans-serif;
+}
+header {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border);
+  background: #202329;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+h1 { margin: 0; font-size: 22px; }
+header p { margin: 4px 0 0; color: var(--muted); }
+main {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 15px;
+  padding: 15px;
+  max-width: 1600px;
+  margin: auto;
+}
+.panel {
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+h2 { font-size: 16px; margin: 0 0 12px; }
+h3 { font-size: 14px; margin: 15px 0 8px; }
+button, select, input[type="text"] {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 10px;
+  font: inherit;
+}
+button { cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary { background: #235580; border-color: #397cb6; }
+button.active { background: #76531d; border-color: #ffcf6b; }
+button.danger { background: #602d32; }
+button:disabled { opacity: .45; cursor: default; }
+input[type="file"] { display: none; }
+.file-button {
+  display: block;
+  text-align: center;
+  cursor: pointer;
+  padding: 10px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.row { display: flex; gap: 7px; flex-wrap: wrap; }
+.row > * { flex: 1; }
+.small { font-size: 12px; color: var(--muted); }
+.control { margin: 12px 0; }
+.control label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.control input[type="range"] { width: 100%; accent-color: var(--accent); }
+.control-buttons { display: flex; gap: 6px; }
+.control-buttons input { min-width: 0; flex: 1; }
+.control-buttons button { flex-shrink: 0; padding: 5px 9px; }
+.status {
+  border-radius: 6px;
+  padding: 9px;
+  background: #171a1f;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.status.good { color: var(--green); }
+#gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 10px;
+}
+.thumb {
+  min-width: 0;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #111;
+  cursor: pointer;
+}
+.thumb.selected { border-color: var(--accent); }
+.thumb img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.thumb span {
+  display: block; padding: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 11px;
+}
+.workspace { min-width: 0; }
+.canvases {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.image-panel {
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+.image-panel h2 { margin-bottom: 8px; }
+.canvas-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 5px;
+  background:
+    linear-gradient(45deg,#30343a 25%,transparent 25%),
+    linear-gradient(-45deg,#30343a 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#30343a 75%),
+    linear-gradient(-45deg,transparent 75%,#30343a 75%);
+  background-size: 20px 20px;
+  background-position: 0 0,0 10px,10px -10px,-10px 0;
+}
+.canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.canvas-wrap canvas.overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.canvas-wrap.picking { cursor: crosshair; outline: 2px solid #ffcf6b; }
+.canvas-wrap.picking canvas.base { cursor: crosshair; }
+#source, #result { max-width: 100%; }
+.image-note { margin-top: 8px; min-height: 18px; }
+.bottom-actions { margin-top: 12px; }
+.bottom-actions button { margin: 0 5px 5px 0; }
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; }
+  .canvases { grid-template-columns: 1fr; }
+  .canvas-wrap { min-height: 160px; }
+}
 </style>
 </head>
 <body>
 <header>
   <h1>FilmLab — плёнка</h1>
-  <div class="small">Конвертация негативов и коррекция фотографий</div>
+  <p>Преобразование сканов цветных негативов в позитивы</p>
 </header>
+
 <main>
-<section class="panel">
-<h2>1. Фотография</h2>
-<div class="row">
-<label class="filebtn primary" for="gallery">Выбрать из галереи</label>
-<input id="gallery" type="file" accept="image/*" multiple>
-<label class="filebtn" for="cameraFile">Снять фото</label>
-<input id="cameraFile" type="file" accept="image/*" capture="environment">
-<button id="cameraButton">Камера в приложении</button>
-<button id="remove">Удалить выбранное</button>
-</div>
-<div id="thumbs"></div>
-<div id="status" class="status">Выберите фотографию.</div>
-<div id="cameraPanel" hidden>
-  <video id="video" autoplay playsinline></video>
-  <div class="row">
-    <button class="primary" id="capture">Сделать снимок</button>
-    <button id="closeCamera">Закрыть камеру</button>
+<aside>
+  <section class="panel">
+    <h2>1. Изображения</h2>
+    <label class="file-button" for="fileInput">＋ Добавить фотографии</label>
+    <input id="fileInput" type="file" accept="image/*" multiple>
+    <label class="file-button" for="cameraInput">📷 Сделать снимок</label>
+    <input id="cameraInput" type="file" accept="image/*" capture="environment">
+    <div class="row">
+      <button id="deleteBtn" class="danger">Удалить</button>
+      <button id="clearBtn">Очистить список</button>
+    </div>
+    <div id="gallery"></div>
+    <p class="small">Выбери фотографию, чтобы редактировать её. Исходное изображение не изменяется.</p>
+  </section>
+
+  <section class="panel">
+    <h2>2. Преобразование</h2>
+    <div class="control">
+      <label for="mode">Режим</label>
+      <select id="mode" style="width:100%">
+        <option value="negative">Цветной негатив</option>
+        <option value="mono">Чёрно-белый негатив</option>
+        <option value="slide">Позитив / слайд</option>
+      </select>
+    </div>
+    <div class="control">
+      <label for="maskStrength">Удаление цветной основы <span id="maskStrengthVal">100%</span></label>
+      <input id="maskStrength" type="range" min="0" max="100" value="100">
+      <div class="control-buttons">
+        <button id="resetMaskStrength">Сбросить</button>
+      </div>
+    </div>
+    <div class="control">
+      <label for="exposure">Экспозиция <span id="exposureVal">0</span></label>
+      <input id="exposure" type="range" min="-100" max="100" value="0">
+      <div class="control-buttons"><button data-reset="exposure">Сбросить</button></div>
+    </div>
+    <div class="control">
+      <label for="contrast">Контраст <span id="contrastVal">0</span></label>
+      <input id="contrast" type="range" min="-100" max="100" value="0">
+      <div class="control-buttons"><button data-reset="contrast">Сбросить</button></div>
+    </div>
+    <div class="control">
+      <label for="saturation">Насыщенность <span id="saturationVal">0</span></label>
+      <input id="saturation" type="range" min="-100" max="100" value="0">
+      <div class="control-buttons"><button data-reset="saturation">Сбросить</button></div>
+    </div>
+    <h3>Коррекция каналов RGB</h3>
+    <div class="control">
+      <label for="red">Красный <span id="redVal">0</span></label>
+      <input id="red" type="range" min="-100" max="100" value="0">
+      <div class="control-buttons"><button data-reset="red">Сбросить</button></div>
+    </div>
+    <div class="control">
+      <label for="green">Зелёный <span id="greenVal">0</span></label>
+      <input id="green" type="range" min="-100" max="100" value="0">
+      <div class="control-buttons"><button data-reset="green">Сбросить</button></div>
+    </div>
+    <div class="control">
+      <label for="blue">Синий <span id="blueVal">0</span></label>
+      <input id="blue" type="range" min="-100" max="100" value="0">
+      <div class="control-buttons"><button data-reset="blue">Сбросить</button></div>
+    </div>
+    <div class="row">
+      <button id="resetAll">Сбросить все настройки</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>3. Пипетка основы плёнки</h2>
+    <p class="small">Выбери участок пустой плёнки или рамки с равномерной основой. Можно менять точку сколько угодно раз.</p>
+    <div class="row">
+      <button id="maskPicker" class="primary">Пипетка основы: выкл.</button>
+      <button id="resetMask">Сбросить точку</button>
+    </div>
+    <p id="maskInfo" class="status">Цвет основы не выбран.</p>
+  </section>
+
+  <section class="panel">
+    <h2>4. Баланс белого</h2>
+    <p class="small">Включи пипетку и выбирай на позитиве участок, который должен быть нейтрально-серым или белым. Каждое нажатие обновляет баланс.</p>
+    <div class="row">
+      <button id="wbPicker" class="primary">Пипетка баланса: выкл.</button>
+      <button id="resetWB">Сбросить баланс</button>
+    </div>
+    <p id="wbInfo" class="status">Баланс белого не настроен.</p>
+  </section>
+
+  <section class="panel">
+    <h2>5. Профили</h2>
+    <input id="profileName" type="text" placeholder="Название профиля" style="width:100%;margin-bottom:8px">
+    <div class="row">
+      <button id="saveProfile">Сохранить профиль</button>
+      <button id="deleteProfile">Удалить профиль</button>
+    </div>
+    <div class="control">
+      <label for="profiles">Сохранённые профили</label>
+      <select id="profiles" style="width:100%"><option value="">— Выбери профиль —</option></select>
+    </div>
+    <button id="loadProfile" style="width:100%">Применить профиль</button>
+  </section>
+
+  <section class="panel">
+    <h2>6. Сохранение</h2>
+    <button id="saveJpeg" class="primary" style="width:100%">Сохранить позитив JPEG</button>
+    <button id="batchSave" style="width:100%;margin-top:8px">Обработать все фотографии</button>
+    <p class="small">Пакетная обработка сохраняет отдельный JPEG для каждой фотографии с текущими настройками.</p>
+  </section>
+</aside>
+
+<section class="workspace">
+  <div class="canvases">
+    <div class="image-panel">
+      <h2>Исходный скан</h2>
+      <div id="sourceWrap" class="canvas-wrap">
+        <canvas id="source" class="base" width="800" height="600"></canvas>
+        <canvas id="sourceOverlay" class="overlay" width="800" height="600"></canvas>
+      </div>
+      <div class="image-note small" id="sourceNote">Загрузи фотографию.</div>
+    </div>
+    <div class="image-panel">
+      <h2>Результат</h2>
+      <div id="resultWrap" class="canvas-wrap">
+        <canvas id="result" class="base" width="800" height="600"></canvas>
+        <canvas id="resultOverlay" class="overlay" width="800" height="600"></canvas>
+      </div>
+      <div class="image-note small" id="resultNote">Здесь появится позитив.</div>
+    </div>
   </div>
-</div>
-<p class="small">Если встроенная камера недоступна, используйте «Снять фото» для открытия штатной камеры.</p>
-</section>
-
-<section class="panel">
-<div class="tool-head">
-<h2>2. Настройки обработки</h2>
-<button class="reset" id="reset">Сбросить всё</button>
-</div>
-<div class="grid">
-<label class="control">Режим
-<select id="mode">
-<option value="negative">Цветной негатив → позитив</option>
-<option value="mono">Чёрно-белый негатив</option>
-<option value="slide">Слайд / позитив</option>
-</select>
-</label>
-
-<label class="control">
-<div class="slider-line"><span>Сила компенсации маски</span><button type="button" class="reset" data-reset="maskStrength">Сброс</button></div>
-<input class="range" id="maskStrength" type="range" min="0" max="150" value="100">
-<span id="maskStrengthLabel">100%</span>
-</label>
-
-<label class="control">
-<div class="slider-line"><span>Экспозиция</span><button type="button" class="reset" data-reset="exposure">Сброс</button></div>
-<input class="range" id="exposure" type="range" min="-100" max="100" value="0">
-<span id="exposureLabel">0</span>
-</label>
-
-<label class="control">
-<div class="slider-line"><span>Контраст</span><button type="button" class="reset" data-reset="contrast">Сброс</button></div>
-<input class="range" id="contrast" type="range" min="50" max="180" value="100">
-<span id="contrastLabel">100%</span>
-</label>
-
-<label class="control">
-<div class="slider-line"><span>Насыщенность</span><button type="button" class="reset" data-reset="saturation">Сброс</button></div>
-<input class="range" id="saturation" type="range" min="0" max="200" value="100">
-<span id="saturationLabel">100%</span>
-</label>
-
-<label class="control">
-<div class="slider-line"><span>Красный канал</span><button type="button" class="reset" data-reset="red">Сброс</button></div>
-<input class="range" id="red" type="range" min="50" max="160" value="100">
-<span id="redLabel">100%</span>
-</label>
-
-<label class="control">
-<div class="slider-line"><span>Зелёный канал</span><button type="button" class="reset" data-reset="green">Сброс</button></div>
-<input class="range" id="green" type="range" min="50" max="160" value="100">
-<span id="greenLabel">100%</span>
-</label>
-
-<label class="control">
-<div class="slider-line"><span>Синий канал</span><button type="button" class="reset" data-reset="blue">Сброс</button></div>
-<input class="range" id="blue" type="range" min="50" max="160" value="100">
-<span id="blueLabel">100%</span>
-</label>
-</div>
-
-<div class="row">
-<button class="primary" id="saveProfile">Сохранить профиль</button>
-<select id="profiles"><option value="">Выбрать профиль</option></select>
-<button id="deleteProfile">Удалить профиль</button>
-</div>
-<p class="small">Изменения применяются сразу. Сброс отдельного ползунка не сбрасывает остальные настройки.</p>
-</section>
-
-<section class="panel">
-<div class="tool-head">
-<h2>3. Маска плёнки</h2>
-<button class="reset" id="clearMask">Сбросить маску</button>
-</div>
-<p class="small">Выберите пипетку и укажите на исходном негативе участок прозрачной основы плёнки без изображения, если он доступен. Цвет используется для компенсации цветовой маски негатива.</p>
-<div class="row">
-<button id="sampleMask" class="primary">Пипетка маски</button>
-</div>
-<div id="maskStatus" class="status">Цвет маски не выбран.</div>
-</section>
-
-<section class="panel">
-<div class="tool-head">
-<h2>4. Баланс белого позитива</h2>
-<button class="reset" id="clearWB">Сбросить баланс белого</button>
-</div>
-<p class="small">Нажмите «Пипетка баланса белого», затем выберите на изображении «Результат» участок, который должен быть белым или нейтрально-серым. Цветовые каналы всей фотографии будут скорректированы относительно выбранной точки.</p>
-<div class="row">
-<button id="sampleWB" class="primary">Пипетка баланса белого</button>
-</div>
-<div id="wbStatus" class="status">Баланс белого не задан.</div>
-<p class="small">Для лучшего результата выбирайте участок без пересвета и без выраженного цветового оттенка. Нейтрально-серая область тоже подходит.</p>
-</section>
-
-<section class="panel">
-<h2>5. Предпросмотр</h2>
-<div class="preview">
-<div>
-<div class="small">Исходник</div>
-<div class="canvas-wrap" id="sourceWrap">
-<canvas id="source" width="1" height="1"></canvas>
-</div>
-</div>
-<div>
-<div class="small">Результат — нажмите для выбора точки баланса белого</div>
-<div class="canvas-wrap" id="resultWrap">
-<canvas id="result" width="1" height="1"></canvas>
-</div>
-</div>
-</div>
-<div class="row" style="margin-top:12px">
-<button id="save" class="primary">Сохранить результат JPEG</button>
-<button id="batch" class="primary">Обработать все фотографии</button>
-</div>
-<p class="small">Фотографии обрабатываются локально в браузере. Пакетная обработка использует текущие настройки и выбранные коррекции цвета.</p>
+  <section class="panel bottom-actions">
+    <h2>Состояние</h2>
+    <div id="status" class="status">Готово к работе. Добавь изображение.</div>
+  </section>
 </section>
 </main>
 
@@ -191,258 +325,157 @@ canvas{display:block;width:100%;height:auto;background:#080c10;border-radius:8px
 const $ = id => document.getElementById(id);
 const source = $('source');
 const result = $('result');
-const sc = source.getContext('2d', {willReadFrequently:true});
-const rc = result.getContext('2d', {willReadFrequently:true});
-
-let photos = [];
-let index = -1;
-let maskColor = null;
-let wbGains = null;
-let stream = null;
-let picking = null;
-let maskPoint = null;
-let wbPoint = null;
-let profiles = {};
-let sourceImageData = null;
-let basePositiveData = null;
-let renderQueued = false;
-
-try {
-  profiles = JSON.parse(localStorage.getItem('filmlabProfiles') || '{}') || {};
-} catch(e) {
-  profiles = {};
-}
-
-const sliderIds = [
-  'maskStrength','exposure','contrast','saturation','red','green','blue'
-];
+const sourceCtx = source.getContext('2d', {willReadFrequently:true});
+const resultCtx = result.getContext('2d', {willReadFrequently:true});
+const sourceOverlay = $('sourceOverlay');
+const resultOverlay = $('resultOverlay');
+const sourceOverlayCtx = sourceOverlay.getContext('2d');
+const resultOverlayCtx = resultOverlay.getContext('2d');
 
 const defaults = {
-  mode:'negative',
-  maskStrength:100,
-  exposure:0,
-  contrast:100,
-  saturation:100,
-  red:100,
-  green:100,
-  blue:100
+  maskStrength:100, exposure:0, contrast:0, saturation:0,
+  red:0, green:0, blue:0
 };
 
-function message(text) {
-  $('status').textContent = text;
-}
+let photos = [];
+let selectedId = null;
+let nextId = 1;
+let originalPixels = null;
+let maskColor = null;
+let wbGains = null;
+let maskPoint = null;
+let wbPoint = null;
+let pickerMode = null;
+let renderQueued = false;
 
-function clamp(x) {
-  return Math.max(0, Math.min(255, Math.round(x)));
+function setStatus(message, good=false) {
+  $('status').textContent = message;
+  $('status').classList.toggle('good', good);
 }
-
-function settings() {
-  const s = {mode:$('mode').value};
-  sliderIds.forEach(id => s[id] = Number($(id).value));
-  return s;
+function clamp(v,min=0,max=255) {
+  return Math.max(min, Math.min(max, v));
 }
-
-function updateLabels() {
-  sliderIds.forEach(id => {
-    const label = $(id + 'Label');
-    if (!label) return;
-    label.textContent = $(id).value + (id === 'exposure' ? '' : '%');
+function activePhoto() {
+  return photos.find(p => p.id === selectedId) || null;
+}
+function updateGallery() {
+  const gallery = $('gallery');
+  gallery.replaceChildren();
+  photos.forEach(photo => {
+    const item = document.createElement('div');
+    item.className = 'thumb' + (photo.id === selectedId ? ' selected' : '');
+    const img = document.createElement('img');
+    img.src = photo.url;
+    img.alt = photo.name;
+    const name = document.createElement('span');
+    name.textContent = photo.name;
+    item.append(img, name);
+    item.addEventListener('click', () => selectPhoto(photo.id));
+    gallery.append(item);
   });
 }
-
-function drawImageOnCanvas(canvas, ctx, img, maxSide=1800) {
-  const w = img.naturalWidth || img.width;
-  const h = img.naturalHeight || img.height;
-  const scale = Math.min(1, maxSide / Math.max(w,h));
-  canvas.width = Math.max(1, Math.round(w * scale));
-  canvas.height = Math.max(1, Math.round(h * scale));
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(img,0,0,canvas.width,canvas.height);
-}
-
-function addFile(file) {
-  if (!file) return;
-  const url = URL.createObjectURL(file);
+function loadPhotoToCanvas(photo) {
   const img = new Image();
-
   img.onload = () => {
-    URL.revokeObjectURL(url);
-    photos.push({name:file.name || 'photo.jpg',img});
-    index = photos.length - 1;
-    drawThumbs();
-    showCurrent();
-    message('Загружено: ' + photos[index].name);
+    const maxDim = 1800;
+    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    source.width = result.width = w;
+    source.height = result.height = h;
+    sourceOverlay.width = resultOverlay.width = w;
+    sourceOverlay.height = resultOverlay.height = h;
+    sourceCtx.clearRect(0,0,w,h);
+    sourceCtx.drawImage(img,0,0,w,h);
+    originalPixels = sourceCtx.getImageData(0,0,w,h);
+    maskColor = null;
+    wbGains = null;
+    maskPoint = null;
+    wbPoint = null;
+    $('maskInfo').textContent = 'Цвет основы не выбран.';
+    $('wbInfo').textContent = 'Баланс белого не настроен.';
+    stopPicking();
+    drawMarkers();
+    render();
+    $('sourceNote').textContent = photo.name;
+    $('resultNote').textContent = 'Предварительный просмотр';
+    setStatus('Загружено: ' + photo.name, true);
   };
-
-  img.onerror = () => {
-    URL.revokeObjectURL(url);
-    message('Не удалось открыть изображение.');
-  };
-
-  img.src = url;
+  img.onerror = () => setStatus('Не удалось открыть изображение.');
+  img.src = photo.url;
 }
+function selectPhoto(id) {
+  selectedId = id;
+  updateGallery();
+  const photo = activePhoto();
+  if (photo) loadPhotoToCanvas(photo);
+}
+function addFiles(files) {
+  [...files].filter(f => f.type.startsWith('image/')).forEach(file => {
+    photos.push({
+      id:nextId++,
+      name:file.name || ('Фото ' + nextId),
+      url:URL.createObjectURL(file)
+    });
+  });
+  updateGallery();
+  if (selectedId === null && photos.length) selectPhoto(photos[0].id);
+  if (!photos.length) setStatus('Выбери изображение.');
+}
+$('fileInput').addEventListener('change', e => {
+  addFiles(e.target.files);
+  e.target.value = '';
+});
+$('cameraInput').addEventListener('change', e => {
+  addFiles(e.target.files);
+  e.target.value = '';
+});
+$('deleteBtn').addEventListener('click', () => {
+  const index = photos.findIndex(p => p.id === selectedId);
+  if (index < 0) return;
+  URL.revokeObjectURL(photos[index].url);
+  photos.splice(index,1);
+  selectedId = photos.length ? photos[Math.min(index,photos.length-1)].id : null;
+  updateGallery();
+  if (activePhoto()) selectPhoto(selectedId);
+  else {
+    originalPixels = null;
+    sourceCtx.clearRect(0,0,source.width,source.height);
+    resultCtx.clearRect(0,0,result.width,result.height);
+    sourceOverlayCtx.clearRect(0,0,sourceOverlay.width,sourceOverlay.height);
+    resultOverlayCtx.clearRect(0,0,resultOverlay.width,resultOverlay.height);
+    $('sourceNote').textContent = 'Загрузи фотографию.';
+    $('resultNote').textContent = 'Здесь появится позитив.';
+    setStatus('Список фотографий пуст.');
+  }
+});
+$('clearBtn').addEventListener('click', () => {
+  photos.forEach(p => URL.revokeObjectURL(p.url));
+  photos = [];
+  selectedId = null;
+  originalPixels = null;
+  updateGallery();
+  sourceCtx.clearRect(0,0,source.width,source.height);
+  resultCtx.clearRect(0,0,result.width,result.height);
+  sourceOverlayCtx.clearRect(0,0,sourceOverlay.width,sourceOverlay.height);
+  resultOverlayCtx.clearRect(0,0,resultOverlay.width,resultOverlay.height);
+  stopPicking();
+  setStatus('Список очищен.');
+});
 
-function drawThumbs() {
-  const box = $('thumbs');
-  box.innerHTML = '';
-
-  photos.forEach((p,i) => {
-    const b = document.createElement('button');
-    b.className = 'thumb' + (i === index ? ' primary' : '');
-    b.type = 'button';
-
-    const im = document.createElement('img');
-    im.src = p.img.src;
-    im.alt = 'Фотография ' + (i+1);
-
-    const t = document.createElement('div');
-    t.textContent = String(i+1);
-
-    b.append(im,t);
-    b.onclick = () => {
-      index = i;
-      drawThumbs();
-      showCurrent();
-    };
-    box.appendChild(b);
+function getSliderValues() {
+  const v = {};
+  Object.keys(defaults).forEach(k => v[k] = Number($(k).value));
+  return v;
+}
+function updateSliderLabels() {
+  Object.keys(defaults).forEach(k => {
+    const out = $(k + 'Val');
+    if (out) out.textContent = $(k).value + (k === 'maskStrength' ? '%' : '');
   });
 }
-
-function updatePickUI() {
-  $('sampleMask').classList.toggle('active',picking === 'mask');
-  $('sampleWB').classList.toggle('active',picking === 'wb');
-  $('sourceWrap').classList.toggle('picking',picking === 'mask');
-  $('resultWrap').classList.toggle('picking',picking === 'wb');
-
-  source.style.cursor = picking === 'mask' ? 'crosshair' : 'default';
-  result.style.cursor = picking === 'wb' ? 'crosshair' : 'default';
-}
-
-function stopPicking() {
-  picking = null;
-  updatePickUI();
-}
-
-function showCurrent() {
-  if (index < 0 || !photos[index]) return;
-
-  stopPicking();
-  maskPoint = null;
-  wbPoint = null;
-  maskColor = null;
-  wbGains = null;
-
-  drawImageOnCanvas(source,sc,photos[index].img);
-  sourceImageData = sc.getImageData(0,0,source.width,source.height);
-  basePositiveData = null;
-
-  $('maskStatus').textContent = 'Цвет маски не выбран.';
-  $('wbStatus').textContent = 'Баланс белого не задан.';
-
-  render();
-}
-
-function buildBasePositive() {
-  if (!sourceImageData) return null;
-
-  const s = settings();
-  const input = sourceImageData;
-  const output = new ImageData(input.width,input.height);
-  const d = input.data;
-  const o = output.data;
-  const strength = s.maskStrength / 100;
-
-  for (let i=0;i<d.length;i+=4) {
-    let r=d[i], g=d[i+1], b=d[i+2];
-
-    if (s.mode === 'negative' || s.mode === 'mono') {
-      r=255-r;
-      g=255-g;
-      b=255-b;
-    }
-
-    if (s.mode === 'mono') {
-      const y=.2126*r+.7152*g+.0722*b;
-      r=g=b=y;
-    }
-
-    // Маска определяется по исходному негативу, но вычитается из позитива.
-    if (maskColor && s.mode !== 'slide') {
-      const mr = 255-maskColor[0];
-      const mg = 255-maskColor[1];
-      const mb = 255-maskColor[2];
-
-      r -= (mr-128)*strength;
-      g -= (mg-128)*strength;
-      b -= (mb-128)*strength;
-    }
-
-    o[i]=clamp(r);
-    o[i+1]=clamp(g);
-    o[i+2]=clamp(b);
-    o[i+3]=d[i+3];
-  }
-
-  return output;
-}
-
-function applyControls(input) {
-  const s = settings();
-  const output = new ImageData(input.width,input.height);
-  const d = input.data;
-  const o = output.data;
-
-  const exposure = Math.pow(2,s.exposure/50);
-  const contrast = s.contrast/100;
-  const saturation = s.saturation/100;
-
-  for (let i=0;i<d.length;i+=4) {
-    let r=d[i],g=d[i+1],b=d[i+2];
-
-    // Баланс белого: независимые коэффициенты, рассчитанные по базовому позитиву.
-    if (wbGains) {
-      r *= wbGains[0];
-      g *= wbGains[1];
-      b *= wbGains[2];
-    }
-
-    r *= s.red/100;
-    g *= s.green/100;
-    b *= s.blue/100;
-
-    r=(((r/255-.5)*contrast)+.5)*255*exposure;
-    g=(((g/255-.5)*contrast)+.5)*255*exposure;
-    b=(((b/255-.5)*contrast)+.5)*255*exposure;
-
-    const y=.2126*r+.7152*g+.0722*b;
-    r=y+(r-y)*saturation;
-    g=y+(g-y)*saturation;
-    b=y+(b-y)*saturation;
-
-    o[i]=clamp(r);
-    o[i+1]=clamp(g);
-    o[i+2]=clamp(b);
-    o[i+3]=d[i+3];
-  }
-
-  return output;
-}
-
-function render() {
-  if (index < 0 || !sourceImageData) return;
-
-  basePositiveData = buildBasePositive();
-  if (!basePositiveData) return;
-
-  const output = applyControls(basePositiveData);
-  result.width = output.width;
-  result.height = output.height;
-  rc.putImageData(output,0,0);
-
-  drawMarkers();
-}
-
 function scheduleRender() {
+  updateSliderLabels();
   if (renderQueued) return;
   renderQueued = true;
   requestAnimationFrame(() => {
@@ -450,409 +483,345 @@ function scheduleRender() {
     render();
   });
 }
-
-function drawMarkers() {
-  // Маркеры рисуются на отдельном прозрачном слое поверх canvas.
-  // Пиксели исходника и результата остаются нетронутыми.
-  drawMarkerOverlay('sourceWrap',source,maskPoint,'#ffd45a');
-  drawMarkerOverlay('resultWrap',result,wbPoint,'#70d6a5');
-}
-
-function drawMarkerOverlay(wrapId,canvas,point,color) {
-  const wrap = $(wrapId);
-  let overlay = wrap.querySelector('.marker-overlay');
-
-  if (!overlay) {
-    overlay = document.createElement('canvas');
-    overlay.className = 'marker-overlay';
-    overlay.style.cssText =
-      'position:absolute;left:0;top:0;width:100%;height:100%;' +
-      'pointer-events:none;background:transparent;border-radius:8px';
-    wrap.appendChild(overlay);
-  }
-
-  overlay.width = canvas.width;
-  overlay.height = canvas.height;
-
-  const ctx = overlay.getContext('2d');
-  ctx.clearRect(0,0,overlay.width,overlay.height);
-
-  if (!point) return;
-
-  const x=point.x,y=point.y;
-  ctx.beginPath();
-  ctx.arc(x,y,7,0,Math.PI*2);
-  ctx.strokeStyle=color;
-  ctx.lineWidth=2;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(x-12,y);
-  ctx.lineTo(x+12,y);
-  ctx.moveTo(x,y-12);
-  ctx.lineTo(x,y+12);
-  ctx.strokeStyle='#101820';
-  ctx.lineWidth=4;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(x,y,7,0,Math.PI*2);
-  ctx.strokeStyle=color;
-  ctx.lineWidth=2;
-  ctx.stroke();
-}
-
-function canvasPoint(canvas,ev) {
-  const rect=canvas.getBoundingClientRect();
-  return {
-    x:Math.max(0,Math.min(canvas.width-1,
-      Math.floor((ev.clientX-rect.left)/rect.width*canvas.width))),
-    y:Math.max(0,Math.min(canvas.height-1,
-      Math.floor((ev.clientY-rect.top)/rect.height*canvas.height)))
-  };
-}
-
-function togglePicker(type) {
-  if (index < 0) {
-    message('Сначала выберите фотографию.');
-    return;
-  }
-
-  picking = picking === type ? null : type;
-  updatePickUI();
-
-  if (picking === 'mask') {
-    $('maskStatus').textContent =
-      'Нажмите на точку исходного негатива в левом окне.';
-  } else if (picking === 'wb') {
-    $('wbStatus').textContent =
-      'Нажмите на нейтрально-серую или белую точку в окне результата.';
-  }
-}
-
-$('gallery').onchange = e => {
-  [...e.target.files].forEach(addFile);
-  e.target.value='';
-};
-
-$('cameraFile').onchange = e => {
-  if (e.target.files[0]) addFile(e.target.files[0]);
-  e.target.value='';
-};
-
-$('cameraButton').onclick = async () => {
-  try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw Error('no camera API');
-    }
-
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'}},
-      audio:false
-    });
-
-    $('video').srcObject=stream;
-    $('cameraPanel').hidden=false;
-    message('Камера включена.');
-  } catch(e) {
-    message('Встроенная камера недоступна. Используйте «Снять фото» или откройте страницу через HTTPS.');
-  }
-};
-
-function closeCamera() {
-  if (stream) stream.getTracks().forEach(t=>t.stop());
-  stream=null;
-  $('video').srcObject=null;
-  $('cameraPanel').hidden=true;
-}
-
-$('closeCamera').onclick=closeCamera;
-
-$('capture').onclick=() => {
-  const v=$('video');
-  if (!v.videoWidth) return;
-
-  const c=document.createElement('canvas');
-  c.width=v.videoWidth;
-  c.height=v.videoHeight;
-  c.getContext('2d').drawImage(v,0,0);
-
-  const img=new Image();
-  img.onload=() => {
-    photos.push({name:'FilmLab_camera.jpg',img});
-    index=photos.length-1;
-    drawThumbs();
-    showCurrent();
-    message('Снимок сделан.');
-  };
-  img.src=c.toDataURL('image/jpeg',.95);
-  closeCamera();
-};
-
-$('remove').onclick=() => {
-  if (index<0) return;
-
-  photos.splice(index,1);
-  index=photos.length ? Math.min(index,photos.length-1) : -1;
-  drawThumbs();
-
-  if (index>=0) {
-    showCurrent();
-  } else {
-    stopPicking();
-    maskPoint=wbPoint=null;
-    maskColor=wbGains=null;
-    sourceImageData=basePositiveData=null;
-    source.width=source.height=result.width=result.height=1;
-    $('maskStatus').textContent='Цвет маски не выбран.';
-    $('wbStatus').textContent='Баланс белого не задан.';
-    message('Нет выбранных фотографий.');
-  }
-};
-
-sliderIds.forEach(id => {
-  $(id).oninput=() => {
-    updateLabels();
-    scheduleRender();
-  };
-});
-
-$('mode').onchange=() => {
-  scheduleRender();
-};
-
-function resetSlider(id) {
-  $(id).value=defaults[id];
-  updateLabels();
-  scheduleRender();
-}
-
+Object.keys(defaults).forEach(k => $(k).addEventListener('input', scheduleRender));
+$('mode').addEventListener('change', scheduleRender);
 document.querySelectorAll('[data-reset]').forEach(btn => {
-  btn.addEventListener('click',() => resetSlider(btn.dataset.reset));
+  btn.addEventListener('click', () => {
+    const k = btn.dataset.reset;
+    $(k).value = defaults[k];
+    scheduleRender();
+  });
+});
+$('resetMaskStrength').addEventListener('click', () => {
+  $('maskStrength').value = defaults.maskStrength;
+  scheduleRender();
+});
+$('resetAll').addEventListener('click', () => {
+  Object.keys(defaults).forEach(k => $(k).value = defaults[k]);
+  maskColor = null;
+  wbGains = null;
+  maskPoint = null;
+  wbPoint = null;
+  $('maskInfo').textContent = 'Цвет основы не выбран.';
+  $('wbInfo').textContent = 'Баланс белого не настроен.';
+  drawMarkers();
+  scheduleRender();
+  setStatus('Все настройки сброшены.');
 });
 
-$('reset').onclick=() => {
-  Object.keys(defaults).forEach(id => {
-    if ($(id)) $(id).value=defaults[id];
-  });
+function render() {
+  if (!originalPixels) return;
+  const w = originalPixels.width, h = originalPixels.height;
+  const src = originalPixels.data;
+  const out = new ImageData(new Uint8ClampedArray(src),w,h);
+  const d = out.data;
+  const vals = getSliderValues();
+  const mode = $('mode').value;
+  const strength = vals.maskStrength / 100;
+  const exp = Math.pow(2, vals.exposure / 100);
+  const contrast = (259 * (vals.contrast + 255)) / (255 * (259 - vals.contrast));
+  const sat = 1 + vals.saturation / 100;
+  const rgb = [vals.red, vals.green, vals.blue].map(v => Math.pow(2,v/100));
+  const mask = maskColor || [255,255,255];
 
-  maskColor=null;
-  wbGains=null;
-  maskPoint=null;
-  wbPoint=null;
-  stopPicking();
+  for (let i=0; i<d.length; i+=4) {
+    let r=src[i], g=src[i+1], b=src[i+2];
+    if (mode === 'negative' || mode === 'mono') {
+      if (maskColor) {
+        r = clamp((r - mask[0]*strength) * 1.8 + 128*strength);
+        g = clamp((g - mask[1]*strength) * 1.8 + 128*strength);
+        b = clamp((b - mask[2]*strength) * 1.8 + 128*strength);
+      }
+      r=255-r; g=255-g; b=255-b;
+    }
+    if (mode === 'mono') {
+      const y=0.2126*r+0.7152*g+0.0722*b;
+      r=g=b=y;
+    }
+    r=clamp(r*exp*rgb[0]);
+    g=clamp(g*exp*rgb[1]);
+    b=clamp(b*exp*rgb[2]);
 
-  $('maskStatus').textContent='Цвет маски не выбран.';
-  $('wbStatus').textContent='Баланс белого не задан.';
+    r=clamp(contrast*(r-128)+128);
+    g=clamp(contrast*(g-128)+128);
+    b=clamp(contrast*(b-128)+128);
 
-  updateLabels();
-  render();
-};
+    const lum=0.2126*r+0.7152*g+0.0722*b;
+    r=clamp(lum+(r-lum)*sat);
+    g=clamp(lum+(g-lum)*sat);
+    b=clamp(lum+(b-lum)*sat);
 
-function refreshProfiles() {
-  const sel=$('profiles');
-  const old=sel.value;
-  sel.innerHTML='<option value="">Выбрать профиль</option>';
-
-  Object.keys(profiles).sort().forEach(n => {
-    const op=document.createElement('option');
-    op.value=n;
-    op.textContent=n;
-    sel.appendChild(op);
-  });
-
-  if (profiles[old]) sel.value=old;
+    if (wbGains) {
+      r=clamp(r*wbGains[0]);
+      g=clamp(g*wbGains[1]);
+      b=clamp(b*wbGains[2]);
+    }
+    d[i]=r; d[i+1]=g; d[i+2]=b; d[i+3]=src[i+3];
+  }
+  resultCtx.putImageData(out,0,0);
+  drawMarkers();
 }
 
-$('saveProfile').onclick=() => {
-  const name=prompt('Название профиля плёнки:');
-  if (!name || !name.trim()) return;
+function getCanvasPoint(event, canvas) {
+  const rect=canvas.getBoundingClientRect();
+  const x=Math.floor((event.clientX-rect.left)*canvas.width/rect.width);
+  const y=Math.floor((event.clientY-rect.top)*canvas.height/rect.height);
+  return {
+    x:Math.max(0,Math.min(canvas.width-1,x)),
+    y:Math.max(0,Math.min(canvas.height-1,y))
+  };
+}
+function samplePixel(canvas, point) {
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const p=ctx.getImageData(point.x,point.y,1,1).data;
+  return [p[0],p[1],p[2]];
+}
+function drawCross(ctx, point, color) {
+  if (!point) return;
+  ctx.save();
+  ctx.strokeStyle=color;
+  ctx.lineWidth=Math.max(2,Math.min(source.width,source.height)/300);
+  const r=Math.max(8,Math.min(source.width,source.height)/45);
+  ctx.beginPath();
+  ctx.arc(point.x,point.y,r,0,Math.PI*2);
+  ctx.moveTo(point.x-r*1.5,point.y);
+  ctx.lineTo(point.x+r*1.5,point.y);
+  ctx.moveTo(point.x,point.y-r*1.5);
+  ctx.lineTo(point.x,point.y+r*1.5);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawMarkers() {
+  sourceOverlayCtx.clearRect(0,0,sourceOverlay.width,sourceOverlay.height);
+  resultOverlayCtx.clearRect(0,0,resultOverlay.width,resultOverlay.height);
+  drawCross(sourceOverlayCtx,maskPoint,'#ffcf6b');
+  drawCross(resultOverlayCtx,wbPoint,'#70ffb0');
+}
+function updatePickUI() {
+  $('maskPicker').textContent = pickerMode==='mask' ? 'Пипетка основы: ВКЛ.' : 'Пипетка основы: выкл.';
+  $('wbPicker').textContent = pickerMode==='wb' ? 'Пипетка баланса: ВКЛ.' : 'Пипетка баланса: выкл.';
+  $('maskPicker').classList.toggle('active',pickerMode==='mask');
+  $('wbPicker').classList.toggle('active',pickerMode==='wb');
+  $('sourceWrap').classList.toggle('picking',pickerMode==='mask');
+  $('resultWrap').classList.toggle('picking',pickerMode==='wb');
+}
+function stopPicking() {
+  pickerMode=null;
+  updatePickUI();
+}
+function togglePicker(type) {
+  // Повторное нажатие выключает текущую пипетку.
+  // Нажатие другой кнопки переключает режим.
+  pickerMode = pickerMode===type ? null : type;
+  updatePickUI();
+  if (pickerMode==='mask') {
+    setStatus('Пипетка основы активна. Нажимай на разные точки исходного изображения.');
+  } else if (pickerMode==='wb') {
+    setStatus('Пипетка баланса белого активна. Нажимай на разные точки позитивного изображения.');
+  } else {
+    setStatus('Выбор точки завершён.');
+  }
+}
+$('maskPicker').addEventListener('click',()=>togglePicker('mask'));
+$('wbPicker').addEventListener('click',()=>togglePicker('wb'));
 
-  profiles[name.trim()] = {
-    ...settings(),
+source.addEventListener('click',event=>{
+  if (pickerMode!=='mask' || !originalPixels) return;
+  maskPoint=getCanvasPoint(event,source);
+  maskColor=samplePixel(source,maskPoint);
+  $('maskInfo').textContent=`RGB(${maskColor.join(', ')}) — X: ${maskPoint.x}, Y: ${maskPoint.y}`;
+  $('maskInfo').classList.add('good');
+  // ВАЖНО: не выключаем пипетку после выбора точки.
+  // Она остаётся активной для следующих нажатий.
+  updatePickUI();
+  drawMarkers();
+  render();
+  setStatus('Точка основы обновлена. Выбери следующую точку или повторно нажми кнопку пипетки.',true);
+});
+
+result.addEventListener('click',event=>{
+  if (pickerMode!=='wb' || !originalPixels) return;
+  wbPoint=getCanvasPoint(event,result);
+  const sampled=samplePixel(result,wbPoint);
+  const avg=(sampled[0]+sampled[1]+sampled[2])/3;
+  const safe=v=>Math.max(0.1,v);
+  wbGains=[
+    Math.min(4,Math.max(0.25,avg/safe(sampled[0]))),
+    Math.min(4,Math.max(0.25,avg/safe(sampled[1]))),
+    Math.min(4,Math.max(0.25,avg/safe(sampled[2])))
+  ];
+  $('wbInfo').textContent=`Выбран RGB(${sampled.join(', ')}). Баланс пересчитан.`;
+  $('wbInfo').classList.add('good');
+  // ВАЖНО: пипетка продолжает работать после каждого выбора.
+  updatePickUI();
+  drawMarkers();
+  render();
+  setStatus('Баланс белого обновлён. Выбери следующую точку или повторно нажми кнопку пипетки.',true);
+});
+
+$('resetMask').addEventListener('click',()=>{
+  maskColor=null;
+  maskPoint=null;
+  $('maskInfo').textContent='Цвет основы не выбран.';
+  $('maskInfo').classList.remove('good');
+  drawMarkers();
+  render();
+  setStatus('Точка основы сброшена. Пипетка остаётся в текущем режиме.');
+});
+$('resetWB').addEventListener('click',()=>{
+  wbGains=null;
+  wbPoint=null;
+  $('wbInfo').textContent='Баланс белого не настроен.';
+  $('wbInfo').classList.remove('good');
+  drawMarkers();
+  render();
+  setStatus('Баланс белого сброшен. Пипетка остаётся в текущем режиме.');
+});
+
+function currentProfile() {
+  return {
+    settings:getSliderValues(),
+    mode:$('mode').value,
     maskColor:maskColor ? [...maskColor] : null,
     wbGains:wbGains ? [...wbGains] : null
   };
-
-  try {
-    localStorage.setItem('filmlabProfiles',JSON.stringify(profiles));
-    refreshProfiles();
-    $('profiles').value=name.trim();
-    message('Профиль сохранён.');
-  } catch(e) {
-    message('Не удалось сохранить профиль в браузере.');
-  }
-};
-
-$('profiles').onchange=() => {
-  const s=profiles[$('profiles').value];
-  if (!s) return;
-
-  Object.keys(defaults).forEach(id => {
-    if (s[id] !== undefined && $(id)) $(id).value=s[id];
-  });
-
-  maskColor=Array.isArray(s.maskColor) ? [...s.maskColor] : null;
-  wbGains=Array.isArray(s.wbGains) ? [...s.wbGains] : null;
-
-  maskPoint=null;
-  wbPoint=null;
-  stopPicking();
-  $('maskStatus').textContent=maskColor
-    ? 'Маска загружена из профиля.'
-    : 'Цвет маски не выбран.';
-  $('wbStatus').textContent=wbGains
-    ? 'Баланс белого загружен из профиля.'
-    : 'Баланс белого не задан.';
-
-  updateLabels();
-  render();
-};
-
-$('deleteProfile').onclick=() => {
-  const n=$('profiles').value;
-  if (!n) return;
-
-  delete profiles[n];
-
-  try {
-    localStorage.setItem('filmlabProfiles',JSON.stringify(profiles));
-    refreshProfiles();
-    message('Профиль удалён.');
-  } catch(e) {
-    message('Не удалось обновить список профилей.');
-  }
-};
-
-$('sampleMask').onclick=() => togglePicker('mask');
-$('sampleWB').onclick=() => togglePicker('wb');
-
-source.addEventListener('click',ev => {
-  if (picking !== 'mask' || index<0 || !sourceImageData) return;
-
-  const p=canvasPoint(source,ev);
-  const i=(p.y*source.width+p.x)*4;
-  const d=sourceImageData.data;
-
-  maskPoint=p;
-  maskColor=[d[i],d[i+1],d[i+2]];
-
-  stopPicking();
-  $('maskStatus').textContent=
-    'Цвет основы RGB: '+maskColor.join(', ')+'.';
-  render();
-});
-
-result.addEventListener('click',ev => {
-  if (picking !== 'wb' || index<0 || !basePositiveData) return;
-
-  const p=canvasPoint(result,ev);
-  const i=(p.y*result.width+p.x)*4;
-  const d=basePositiveData.data;
-
-  const r=d[i],g=d[i+1],b=d[i+2];
-  const target=(r+g+b)/3;
-
-  // Защита от деления на почти чёрные значения.
-  if (Math.min(r,g,b)<8 || target<12) {
-    $('wbStatus').textContent=
-      'Выбранная точка слишком тёмная. Выберите более светлый нейтральный участок.';
+}
+function getProfiles() {
+  try { return JSON.parse(localStorage.getItem('filmlab_profiles')||'{}'); }
+  catch(e) { return {}; }
+}
+function refreshProfiles() {
+  const profiles=getProfiles();
+  const select=$('profiles');
+  select.replaceChildren(new Option('— Выбери профиль —',''));
+  Object.keys(profiles).sort().forEach(name=>select.add(new Option(name,name)));
+}
+$('saveProfile').addEventListener('click',()=>{
+  const name=$('profileName').value.trim();
+  if (!name) {
+    setStatus('Введи название профиля.');
+    $('profileName').focus();
     return;
   }
-
-  // Усреднённая нейтральная цель без чрезмерного усиления каналов.
-  const minGain=.5,maxGain=2.0;
-  const gains=[
-    Math.max(minGain,Math.min(maxGain,target/r)),
-    Math.max(minGain,Math.min(maxGain,target/g)),
-    Math.max(minGain,Math.min(maxGain,target/b))
-  ];
-
-  // Нормируем коэффициенты, сохраняя среднюю яркость выбранного участка.
-  const mean=(gains[0]+gains[1]+gains[2])/3;
-  wbGains=gains.map(v=>v/mean);
-  wbPoint=p;
-
-  stopPicking();
-  $('wbStatus').textContent=
-    'Точка RGB: '+r+', '+g+', ' + b +
-    '. Баланс белого рассчитан; коррекция применяется ко всему снимку.';
-
+  const profiles=getProfiles();
+  profiles[name]=currentProfile();
+  localStorage.setItem('filmlab_profiles',JSON.stringify(profiles));
+  refreshProfiles();
+  $('profiles').value=name;
+  setStatus('Профиль «'+name+'» сохранён.',true);
+});
+$('loadProfile').addEventListener('click',()=>{
+  const name=$('profiles').value;
+  const profile=getProfiles()[name];
+  if (!profile) { setStatus('Сначала выбери сохранённый профиль.'); return; }
+  Object.keys(defaults).forEach(k=>{
+    if (profile.settings && profile.settings[k]!==undefined) $(k).value=profile.settings[k];
+  });
+  $('mode').value=profile.mode||'negative';
+  maskColor=profile.maskColor ? [...profile.maskColor] : null;
+  wbGains=profile.wbGains ? [...profile.wbGains] : null;
+  maskPoint=null;
+  wbPoint=null;
+  $('maskInfo').textContent=maskColor ? `RGB(${maskColor.join(', ')}) — из профиля` : 'Цвет основы не выбран.';
+  $('wbInfo').textContent=wbGains ? 'Баланс белого загружен из профиля.' : 'Баланс белого не настроен.';
+  updateSliderLabels();
+  drawMarkers();
   render();
+  setStatus('Профиль «'+name+'» применён.',true);
+});
+$('deleteProfile').addEventListener('click',()=>{
+  const name=$('profiles').value;
+  if (!name) { setStatus('Выбери профиль для удаления.'); return; }
+  const profiles=getProfiles();
+  delete profiles[name];
+  localStorage.setItem('filmlab_profiles',JSON.stringify(profiles));
+  refreshProfiles();
+  setStatus('Профиль «'+name+'» удалён.');
 });
 
-$('clearMask').onclick=() => {
-  maskColor=null;
-  maskPoint=null;
-  if (picking==='mask') stopPicking();
-  $('maskStatus').textContent='Компенсация маски отключена.';
-  render();
-};
-
-$('clearWB').onclick=() => {
-  wbGains=null;
-  wbPoint=null;
-  if (picking==='wb') stopPicking();
-  $('wbStatus').textContent='Баланс белого отключён.';
-  render();
-};
-
-function download(canvas,name) {
-  canvas.toBlob(blob => {
-    if (!blob) {
-      message('Не удалось подготовить JPEG.');
-      return;
-    }
-
+function downloadCanvas(canvas, filename) {
+  canvas.toBlob(blob=>{
+    if (!blob) { setStatus('Не удалось подготовить JPEG.'); return; }
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    a.download=name.replace(/\.[^.]+$/,'')+'_FilmLab.jpg';
-    document.body.appendChild(a);
+    a.download=filename;
+    document.body.append(a);
     a.click();
     a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),3000);
-  },'image/jpeg',.95);
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+  },'image/jpeg',0.95);
 }
-
-$('save').onclick=() => {
-  if (index<0) {
-    message('Сначала выберите фотографию.');
-    return;
+function safeFilename(name) {
+  return name.replace(/\.[^.]+$/,'').replace(/[<>:"/\\|?*\x00-\x1F]/g,'_')||'FilmLab';
+}
+$('saveJpeg').addEventListener('click',()=>{
+  if (!originalPixels) { setStatus('Сначала загрузи фотографию.'); return; }
+  const photo=activePhoto();
+  downloadCanvas(result,safeFilename(photo?.name||'FilmLab')+'_positive.jpg');
+});
+$('batchSave').addEventListener('click',async()=>{
+  if (!photos.length) { setStatus('Сначала добавь фотографии.'); return; }
+  const startId=selectedId;
+  const ids=photos.map(p=>p.id);
+  setStatus('Пакетная обработка: подготовка…');
+  for (let i=0;i<ids.length;i++) {
+    const photo=photos.find(p=>p.id===ids[i]);
+    if (!photo) continue;
+    await new Promise(resolve=>{
+      const img=new Image();
+      img.onload=()=>{
+        const maxDim=1800;
+        const scale=Math.min(1,maxDim/Math.max(img.naturalWidth,img.naturalHeight));
+        const w=Math.max(1,Math.round(img.naturalWidth*scale));
+        const h=Math.max(1,Math.round(img.naturalHeight*scale));
+        const temp=document.createElement('canvas');
+        temp.width=w; temp.height=h;
+        const ctx=temp.getContext('2d',{willReadFrequently:true});
+        ctx.drawImage(img,0,0,w,h);
+        const pixels=ctx.getImageData(0,0,w,h);
+        const settings=getSliderValues();
+        const mode=$('mode').value;
+        const strength=settings.maskStrength/100;
+        const exp=Math.pow(2,settings.exposure/100);
+        const con=(259*(settings.contrast+255))/(255*(259-settings.contrast));
+        const sat=1+settings.saturation/100;
+        const gains=[settings.red,settings.green,settings.blue].map(v=>Math.pow(2,v/100));
+        const mask=maskColor||[255,255,255];
+        const d=pixels.data;
+        for(let j=0;j<d.length;j+=4){
+          let r=d[j],g=d[j+1],b=d[j+2];
+          if(mode==='negative'||mode==='mono'){
+            if(maskColor){
+              r=clamp((r-mask[0]*strength)*1.8+128*strength);
+              g=clamp((g-mask[1]*strength)*1.8+128*strength);
+              b=clamp((b-mask[2]*strength)*1.8+128*strength);
+            }
+            r=255-r;g=255-g;b=255-b;
+          }
+          if(mode==='mono'){const y=.2126*r+.7152*g+.0722*b;r=g=b=y;}
+          r=clamp(r*exp*gains[0]);g=clamp(g*exp*gains[1]);b=clamp(b*exp*gains[2]);
+          r=clamp(con*(r-128)+128);g=clamp(con*(g-128)+128);b=clamp(con*(b-128)+128);
+          const lum=.2126*r+.7152*g+.0722*b;
+          r=clamp(lum+(r-lum)*sat);g=clamp(lum+(g-lum)*sat);b=clamp(lum+(b-lum)*sat);
+          if(wbGains){r=clamp(r*wbGains[0]);g=clamp(g*wbGains[1]);b=clamp(b*wbGains[2]);}
+          d[j]=r;d[j+1]=g;d[j+2]=b;
+        }
+        ctx.putImageData(pixels,0,0);
+        downloadCanvas(temp,safeFilename(photo.name)+'_positive.jpg');
+        setStatus(`Пакетная обработка: ${i+1} из ${ids.length} — ${photo.name}`,true);
+        resolve();
+      };
+      img.onerror=()=>resolve();
+      img.src=photo.url;
+    });
   }
-  render();
-  download(result,photos[index].name);
-  message('Результат подготовлен к сохранению.');
-};
+  if(startId!==null && photos.some(p=>p.id===startId)) selectPhoto(startId);
+  setStatus('Пакетная обработка завершена. Проверь сохранённые JPEG-файлы.',true);
+});
 
-$('batch').onclick=async() => {
-  if (!photos.length) {
-    message('Сначала выберите фотографии.');
-    return;
-  }
-
-  stopPicking();
-  const old=index;
-
-  for (let i=0;i<photos.length;i++) {
-    index=i;
-    drawImageOnCanvas(source,sc,photos[i].img);
-    sourceImageData=sc.getImageData(0,0,source.width,source.height);
-    render();
-
-    await new Promise(resolve=>setTimeout(resolve,150));
-    download(result,photos[i].name);
-    await new Promise(resolve=>setTimeout(resolve,300));
-  }
-
-  index=old;
-  drawThumbs();
-  showCurrent();
-  message('Пакетная обработка завершена. При необходимости разрешите несколько загрузок в браузере.');
-};
-
-updateLabels();
 refreshProfiles();
+updateSliderLabels();
 updatePickUI();
 })();
 </script>
