@@ -51,12 +51,13 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
 }
 
+/* П.3 — очень быстрый fade */
 #fadeOverlay{
   position:absolute;inset:0;z-index:30;
   background:#000;
   opacity:0;
   pointer-events:none;
-  transition:opacity .12s ease;
+  transition:opacity .08s ease;
 }
 #fadeOverlay.show{opacity:1}
 
@@ -180,7 +181,6 @@ button,input,select,textarea{font:inherit;color:inherit}
   padding:0 12px 8px;-webkit-overflow-scrolling:touch;
 }
 
-/* Нижняя навигация — активная вкладка с постоянным фоном */
 #bottomNav{
   flex:0 0 auto;
   display:flex;align-items:stretch;justify-content:space-around;
@@ -702,8 +702,8 @@ function currentProfileSettingsTemplate(){
 }
 
 const fadeOverlay=$("fadeOverlay");
-function fadeOut(){return new Promise(r=>{fadeOverlay.classList.add("show");setTimeout(r,120)})}
-function fadeIn(){return new Promise(r=>{fadeOverlay.classList.remove("show");setTimeout(r,120)})}
+function fadeOut(){return new Promise(r=>{fadeOverlay.classList.add("show");setTimeout(r,80)})}
+function fadeIn(){return new Promise(r=>{fadeOverlay.classList.remove("show");setTimeout(r,80)})}
 
 async function loadPhotoToCanvas(photo){
   if(!photo||!photo.url){toast("Нет файла","err");return}
@@ -791,7 +791,7 @@ function addFiles(fileList){
   const accepted = files.slice(0, remaining);
   const overflow = files.length - accepted.length;
 
-  let added=0;const firstNewIndex=photos.length;const errs=[];
+  let added=0;const errs=[];
   for(const f of accepted){
     if(!f.type||!f.type.startsWith("image/")){errs.push(f.name);continue}
     if(f.size===0){errs.push(f.name);continue}
@@ -810,11 +810,10 @@ function addFiles(fileList){
 
   updateGallery();
   if(added>0){
-    if(selectedId===null||!photos.some(p=>p.id===selectedId)){
-      selectedId=photos[firstNewIndex].id;
-      updateGallery();
-      loadPhotoToCanvas(photos[firstNewIndex]);
-    }
+    // П.2 — всегда открывать последний добавленный файл
+    const newPhoto = photos[photos.length-1];
+    selectPhoto(newPhoto.id);
+
     let msg="Добавлено: "+added;
     if(overflow>0)msg+=". Пропущено (лимит "+MAX_PHOTOS+"): "+overflow;
     toast(msg, overflow||errs.length ? "" : "good");
@@ -1614,7 +1613,7 @@ function renderTargetsPanel(body){
         <button class="btn" id="pickMaskBtn" type="button">🎯 Пипетка</button>
         <button class="btn" id="resetMaskBtn" type="button">Сброс</button>
       </div>
-      <div class="target-hint" id="maskHint">Цвет с исходного файла. Тапать можно по любому виду.</div>
+      <div class="target-hint" id="maskHint">Нажми на самую тёмную область</div>
       <p class="status" id="maskInfo" style="display:none"></p>
     </div>
     <div class="target-col">
@@ -1625,7 +1624,7 @@ function renderTargetsPanel(body){
         <button class="btn" id="pickWbBtn" type="button">⚪ Пипетка</button>
         <button class="btn" id="resetWbBtn" type="button">Сброс</button>
       </div>
-      <div class="target-hint" id="wbHint">Цвет с результата. Тапать можно по любому виду.</div>
+      <div class="target-hint" id="wbHint">Нажми на самую светлую область</div>
       <p class="status" id="wbInfo" style="display:none"></p>
     </div>`;
   wrap.append(grid);body.append(wrap);
@@ -1633,11 +1632,11 @@ function renderTargetsPanel(body){
 
   $("pickMaskBtn").onclick=()=>{
     pickerMode=pickerMode==="mask"?null:"mask";updatePickUI();
-    if(pickerMode)toast("Тапни по основе","good");
+    if(pickerMode)toast("Тапни по тёмной области","good");
   };
   $("pickWbBtn").onclick=()=>{
     pickerMode=pickerMode==="wb"?null:"wb";updatePickUI();
-    if(pickerMode)toast("Тапни по нейтральному","good");
+    if(pickerMode)toast("Тапни по светлой области","good");
   };
   $("resetMaskBtn").onclick=()=>{
     maskColor=null;maskPoint=null;setStatus("maskInfo","","");
