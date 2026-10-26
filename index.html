@@ -51,23 +51,76 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
 }
 
-#viewToggle{
-  position:absolute;right:10px;top:50%;transform:translateY(-50%);
-  z-index:4;width:56px;height:56px;border-radius:50%;border:0;
+/* П.2 — оверлей перехода между файлами */
+#fadeOverlay{
+  position:absolute;inset:0;z-index:30;
+  background:#000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+#fadeOverlay.show{opacity:1}
+
+/* Вертикальная панель справа поверх фото */
+#rightRail{
+  position:absolute;
+  right:10px;top:50%;transform:translateY(-50%);
+  z-index:4;
+  display:flex;flex-direction:column;gap:8px;
+}
+.rail-btn{
+  width:56px;height:56px;border-radius:50%;border:0;
   background:rgba(0,0,0,.65);color:#fff;
   display:inline-flex;align-items:center;justify-content:center;
   cursor:pointer;
   box-shadow:0 4px 14px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.08);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  padding:0;transition:background .2s, transform .15s;
+  padding:0;
+  transition:background .2s, transform .15s;
 }
-#viewToggle:active{transform:translateY(-50%) scale(.94)}
+.rail-btn:active{transform:scale(.94)}
+.rail-btn svg{width:26px;height:26px;display:block;transition:transform .2s}
+
+#addBtn{
+  /* верхняя — просто «+» */
+  font-size:28px;line-height:1;font-weight:600;
+}
+
 #viewToggle.active{
   background:var(--accent);color:#04121f;
   box-shadow:0 4px 14px rgba(78,168,255,.5),inset 0 0 0 2px rgba(0,0,0,.1);
 }
-#viewToggle svg{width:26px;height:26px;display:block;transition:transform .2s}
 #viewToggle.active svg{transform:rotate(180deg)}
+
+#saveBtn{
+  color:#fff;
+}
+
+/* Простое меню «+» — открыть камеру / галерею */
+#addMenu{
+  position:absolute;
+  right:76px;top:50%;transform:translateY(-50%) scale(.9);
+  z-index:40;
+  display:none;
+  flex-direction:column;
+  gap:6px;
+  opacity:0;
+  transition:opacity .18s ease, transform .18s ease;
+}
+#addMenu.show{
+  display:flex;
+  opacity:1;
+  transform:translateY(-50%) scale(1);
+}
+#addMenu .menu-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(20,24,32,.97);color:var(--text);
+  font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(0,0,0,.4);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+#addMenu .menu-btn:active{background:var(--panel-2)}
 
 #emptyHint{
   position:absolute;inset:0;
@@ -135,6 +188,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   padding:0 12px 8px;-webkit-overflow-scrolling:touch;
 }
 
+/* П.6 — активная вкладка сливается с фоном окна */
 #bottomNav{
   flex:0 0 auto;
   display:flex;align-items:stretch;justify-content:space-around;
@@ -146,11 +200,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 #bottomNav button{
   flex:1 1 0;min-width:0;border:0;background:transparent;color:var(--muted);
   padding:6px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;
-  border-radius:10px;cursor:pointer;transition:color .15s;
+  border-radius:10px;cursor:pointer;transition:color .15s, background .15s;
 }
 #bottomNav button .ico{font-size:19px;line-height:1;filter:grayscale(1) brightness(.7)}
 #bottomNav button .lbl{font-size:10px;font-weight:600;letter-spacing:.01em}
-#bottomNav button.active{color:var(--accent)}
+#bottomNav button.active{
+  color:var(--accent);
+  background:var(--bg);
+}
 #bottomNav button.active .ico{filter:none}
 #bottomNav button:active{background:rgba(255,255,255,.05)}
 
@@ -399,13 +456,32 @@ select.input{
         <label class="ghost" for="cameraInput">📷 Снять</label>
       </div>
 
-      <button id="viewToggle" type="button" class="active" aria-label="Результат/Скан">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="16" rx="2"/>
-          <path d="M3 15l4-4 4 4 3-3 7 7"/>
-          <circle cx="9" cy="9" r="1.5"/>
-        </svg>
-      </button>
+      <!-- П.4, П.5 — правая вертикальная панель: + / результат-скан / сохранить -->
+      <div id="rightRail">
+        <button id="addBtn" class="rail-btn" type="button" aria-label="Добавить">＋</button>
+        <button id="viewToggle" class="rail-btn active" type="button" aria-label="Результат/Скан">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/>
+            <path d="M3 15l4-4 4 4 3-3 7 7"/>
+            <circle cx="9" cy="9" r="1.5"/>
+          </svg>
+        </button>
+        <button id="saveBtn" class="rail-btn" type="button" aria-label="Сохранить JPEG">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Меню «+» -->
+      <div id="addMenu">
+        <button class="menu-btn" id="addCamera" type="button">📷 Камера</button>
+        <button class="menu-btn" id="addGallery" type="button">🖼 Галерея</button>
+      </div>
+
+      <div id="fadeOverlay"></div>
 
       <div id="loupe">
         <canvas id="loupeCanvas" width="220" height="220"></canvas>
@@ -477,7 +553,9 @@ const ALL_SLIDERS=["exposure","contrast","maskStrength","saturation","temperatur
 const MAX_PHOTOS = 24;
 
 let photos=[],selectedId=null,nextId=1;
-let originalPixels=null,basePixels=null;
+/* Активные пиксели активного фото */
+let originalPixels=null;   // рабочие пиксели (после поворота/кропа)
+let basePixels=null;       // исходные пиксели файла (для пипеток)
 let cropEnabled=false,cropRect=null,cropDrag=null;
 let currentRatio="free";
 let maskColor=null,wbGains=null,maskPoint=null,wbPoint=null,pickerMode=null;
@@ -539,6 +617,29 @@ $("viewToggle").addEventListener("click",()=>{
   setView(currentView==="result"?"source":"result");
 });
 
+/* ---------- П.4 — «+» меню ---------- */
+const addMenu=$("addMenu");
+$("addBtn").addEventListener("click",e=>{
+  e.stopPropagation();
+  addMenu.classList.toggle("show");
+});
+document.addEventListener("click",e=>{
+  if(!addMenu.classList.contains("show"))return;
+  if(addMenu.contains(e.target) || e.target.closest("#addBtn"))return;
+  addMenu.classList.remove("show");
+});
+$("addCamera").addEventListener("click",()=>{
+  addMenu.classList.remove("show");
+  $("cameraInput").click();
+});
+$("addGallery").addEventListener("click",()=>{
+  addMenu.classList.remove("show");
+  $("fileInput").click();
+});
+
+/* ---------- П.5 — сохранить с правой панели ---------- */
+$("saveBtn").addEventListener("click",()=>saveCurrentJpeg());
+
 /* ---------- Галерея ---------- */
 function updateGallery(){
   const g=$("gallery");if(!g)return;
@@ -566,7 +667,7 @@ function updateGallery(){
 }
 
 /* ======================================================
-   НАСТРОЙКИ НА КАЖДОЕ ФОТО
+   НАСТРОЙКИ И РАБОЧИЕ ПИКСЕЛИ НА КАЖДОЕ ФОТО (П.1)
    ====================================================== */
 function snapshotCurrentSettings(){
   return {
@@ -577,6 +678,23 @@ function snapshotCurrentSettings(){
     maskPoint: maskPoint?{...maskPoint}:null,
     wbPoint: wbPoint?{...wbPoint}:null
   };
+}
+function saveCurrentPhotoState(){
+  if(selectedId===null)return;
+  const photo=photos.find(p=>p.id===selectedId);
+  if(!photo)return;
+  photo.settings = snapshotCurrentSettings();
+  photo.ratio = currentRatio;
+  photo.cropEnabled = false; // не сохраняем активную рамку — при возврате просто чистый кроп уже применён
+  /* ВАЖНО: рабочие пиксели сохраняем, чтобы вернуть кроп/поворот */
+  if(originalPixels){
+    photo.workingPixels = new ImageData(
+      new Uint8ClampedArray(originalPixels.data),
+      originalPixels.width, originalPixels.height
+    );
+    photo.workingW = originalPixels.width;
+    photo.workingH = originalPixels.height;
+  }
 }
 function applySettingsToUI(s){
   const src = s || currentProfileSettingsTemplate();
@@ -603,57 +721,83 @@ function currentProfileSettingsTemplate(){
     maskColor:null,wbGains:null,maskPoint:null,wbPoint:null
   };
 }
-function saveCurrentPhotoSettings(){
-  if(selectedId===null)return;
-  const photo=photos.find(p=>p.id===selectedId);
-  if(!photo)return;
-  photo.settings = snapshotCurrentSettings();
-}
 
-/* ---------- Загрузка/выбор фото ---------- */
-function loadPhotoToCanvas(photo){
+/* ---------- Загрузка фото с fade-переходом (П.2) ---------- */
+const fadeOverlay=$("fadeOverlay");
+function fadeOut(){return new Promise(r=>{fadeOverlay.classList.add("show");setTimeout(r,250)})}
+function fadeIn(){return new Promise(r=>{fadeOverlay.classList.remove("show");setTimeout(r,250)})}
+
+async function loadPhotoToCanvas(photo){
   if(!photo||!photo.url){toast("Нет файла","err");return}
+
+  // Очищаем текущее
   originalPixels = null;
   basePixels = null;
   cropRect=null;cropDrag=null;cropEnabled=false;
   currentRatio="free";
   stopPicking();
 
-  const img=new Image();
-  img.onload=()=>{
-    try{
-      if(!img.naturalWidth||!img.naturalHeight)throw new Error("Размер 0");
-      const maxDim=1800;
-      const scale=Math.min(1,maxDim/Math.max(img.naturalWidth,img.naturalHeight));
-      const w=Math.max(1,Math.round(img.naturalWidth*scale));
-      const h=Math.max(1,Math.round(img.naturalHeight*scale));
+  await fadeOut();
 
-      source.width=result.width=w;
-      source.height=result.height=h;
-      sourceOverlay.width=resultOverlay.width=w;
-      sourceOverlay.height=resultOverlay.height=h;
+  try{
+    // Загружаем оригинал, чтобы сделать basePixels (источник для пипеток)
+    const img = await new Promise((resolve,reject)=>{
+      const im=new Image();
+      im.onload=()=>resolve(im);
+      im.onerror=()=>reject(new Error("Не удалось прочитать файл"));
+      im.src=photo.url;
+    });
 
-      sourceCtx.clearRect(0,0,w,h);
-      sourceCtx.drawImage(img,0,0,w,h);
-      originalPixels=sourceCtx.getImageData(0,0,w,h);
-      basePixels=new ImageData(new Uint8ClampedArray(originalPixels.data),w,h);
+    if(!img.naturalWidth||!img.naturalHeight)throw new Error("Размер 0");
+    const maxDim=1800;
+    const scale=Math.min(1,maxDim/Math.max(img.naturalWidth,img.naturalHeight));
+    const baseW=Math.max(1,Math.round(img.naturalWidth*scale));
+    const baseH=Math.max(1,Math.round(img.naturalHeight*scale));
 
-      applySettingsToUI(photo.settings || null);
+    // 1) basePixels — ИСХОДНЫЕ пиксели (для пипеток и для сброса кропа)
+    const tmpCanvas=document.createElement("canvas");
+    tmpCanvas.width=baseW;tmpCanvas.height=baseH;
+    const tmpCtx=tmpCanvas.getContext("2d",{willReadFrequently:true});
+    tmpCtx.drawImage(img,0,0,baseW,baseH);
+    basePixels=tmpCtx.getImageData(0,0,baseW,baseH);
 
-      drawMarkers();render();
-      updateGallery();setStackRatio(w,h);
-      $("emptyHint").style.display="none";
-      toast("Загружено: "+photo.name,"good");
-    }catch(err){
-      originalPixels=null;basePixels=null;
-      toast("Ошибка: "+err.message,"err");
+    // 2) Восстанавливаем рабочие пиксели: если они сохранены у фото (после кропа/поворота)
+    let workPixels, workW, workH;
+    if(photo.workingPixels && photo.workingPixels.width && photo.workingPixels.height){
+      workPixels = new ImageData(
+        new Uint8ClampedArray(photo.workingPixels.data),
+        photo.workingPixels.width, photo.workingPixels.height
+      );
+      workW = photo.workingPixels.width;
+      workH = photo.workingPixels.height;
+    }else{
+      workPixels = new ImageData(new Uint8ClampedArray(basePixels.data),baseW,baseH);
+      workW = baseW; workH = baseH;
     }
-  };
-  img.onerror=()=>toast("Не удалось прочитать файл","err");
-  img.src=photo.url;
+
+    source.width=result.width=workW;
+    source.height=result.height=workH;
+    sourceOverlay.width=resultOverlay.width=workW;
+    sourceOverlay.height=resultOverlay.height=workH;
+
+    sourceCtx.putImageData(workPixels,0,0);
+    originalPixels = workPixels;
+
+    // Настройки: сохранённые или шаблон
+    applySettingsToUI(photo.settings || null);
+    currentRatio = photo.ratio || "free";
+
+    drawMarkers(); render();
+    updateGallery(); setStackRatio(workW,workH);
+    $("emptyHint").style.display="none";
+  }catch(err){
+    toast("Ошибка: "+err.message,"err");
+  }finally{
+    await fadeIn();
+  }
 }
 function selectPhoto(id){
-  if(selectedId!==null && selectedId!==id) saveCurrentPhotoSettings();
+  if(selectedId!==null && selectedId!==id) saveCurrentPhotoState();
   if(selectedId===id && originalPixels) return;
   selectedId=id;
   updateGallery();
@@ -680,7 +824,14 @@ function addFiles(fileList){
     if(!f.type||!f.type.startsWith("image/")){errs.push(f.name);continue}
     if(f.size===0){errs.push(f.name);continue}
     try{
-      photos.push({id:nextId++,name:f.name||"Фото",url:URL.createObjectURL(f),settings:null});
+      photos.push({
+        id:nextId++,
+        name:f.name||"Фото",
+        url:URL.createObjectURL(f),
+        settings:null,
+        workingPixels:null,
+        ratio:"free"
+      });
       added++;
     }catch(e){errs.push(f.name)}
   }
@@ -836,20 +987,36 @@ function getCanvasPoint(event,canvas){
     y:Math.max(0,Math.min(canvas.height-1,Math.floor((event.clientY-rect.top)*canvas.height/rect.height)))
   };
 }
-function samplePixel(canvas,point){
-  const ctx=canvas===result?resultCtx:sourceCtx;
-  const image=ctx.getImageData(0,0,canvas.width,canvas.height);
-  const w=image.width,h=image.height,data=image.data;
+
+/* П.3 — пипетки снимают показания с ИСХОДНЫХ пикселей (basePixels) */
+function samplePixelFromBase(basePoint){
+  if(!basePixels)return [0,0,0];
+  const w=basePixels.width,h=basePixels.height,data=basePixels.data;
+  const x=Math.max(0,Math.min(w-1,Math.round(basePoint.x)));
+  const y=Math.max(0,Math.min(h-1,Math.round(basePoint.y)));
   const radius=3,channels=[[],[],[]];
-  for(let y=Math.max(0,point.y-radius);y<=Math.min(h-1,point.y+radius);y++){
-    for(let x=Math.max(0,point.x-radius);x<=Math.min(w-1,point.x+radius);x++){
-      const i=(y*w+x)*4;
+  for(let yy=Math.max(0,y-radius);yy<=Math.min(h-1,y+radius);yy++){
+    for(let xx=Math.max(0,x-radius);xx<=Math.min(w-1,x+radius);xx++){
+      const i=(yy*w+xx)*4;
       if(data[i+3]<16)continue;
       channels[0].push(data[i]);channels[1].push(data[i+1]);channels[2].push(data[i+2]);
     }
   }
   if(!channels[0].length)return [0,0,0];
-  return channels.map(a=>{a.sort((x,y)=>x-y);return a[Math.floor(a.length/2)]});
+  return channels.map(a=>{a.sort((p,q)=>p-q);return a[Math.floor(a.length/2)]});
+}
+
+/* Преобразование координаты с рабочего холста в координаты исходного (base) */
+function workPointToBasePoint(p){
+  if(!originalPixels||!basePixels)return p;
+  const wx=originalPixels.width, wy=originalPixels.height;
+  const bx=basePixels.width, by=basePixels.height;
+  // рабочий холст может быть меньше исходного после кропа → масштабируем обратно
+  // но точное соответствие возможно только если кроп был 1:1 по пикселям
+  // Для общего случая: масштабируем пропорционально (лучшее приближение)
+  const scaleX = bx / Math.max(1,wx);
+  const scaleY = by / Math.max(1,wy);
+  return { x: p.x * scaleX, y: p.y * scaleY };
 }
 
 const loupe=$("loupe"),loupeCanvas=$("loupeCanvas");
@@ -865,7 +1032,7 @@ function positionLoupe(px,py,areaRect){
   y=Math.max(margin,Math.min(areaRect.height-size-margin,y));
   loupe.style.left=x+"px";loupe.style.top=y+"px";
 }
-function drawLoupe(srcCanvas,srcX,srcY){
+function drawLoupeFromSourceCanvas(srcCanvas,srcX,srcY){
   const size=loupeCanvas.width,half=size/(2*loupeZoom);
   loupeCtx.clearRect(0,0,size,size);
   loupeCtx.fillStyle="#000";loupeCtx.fillRect(0,0,size,size);
@@ -873,7 +1040,7 @@ function drawLoupe(srcCanvas,srcX,srcY){
   loupeCtx.drawImage(srcCanvas,srcX-half,srcY-half,half*2,half*2,0,0,size,size);
 }
 function showLoupe(srcCanvas,srcPoint,clientX,clientY){
-  drawLoupe(srcCanvas,srcPoint.x,srcPoint.y);
+  drawLoupeFromSourceCanvas(srcCanvas,srcPoint.x,srcPoint.y);
   const ctx=srcCanvas===result?resultCtx:sourceCtx;
   try{
     const px=ctx.getImageData(srcPoint.x,srcPoint.y,1,1).data;
@@ -903,9 +1070,6 @@ function updatePickUI(){
 }
 function stopPicking(){pickerMode=null;hideLoupe();pickDrag=null;updatePickUI()}
 
-/* ================================================================
-   ПИПЕТКИ — работают на любом виде, цвет берётся с правильного холста
-   ================================================================ */
 function attachPickerHandlers(canvas){
   canvas.style.touchAction="none";
 
@@ -914,8 +1078,7 @@ function attachPickerHandlers(canvas){
     e.preventDefault();
     const p=getCanvasPoint(e,canvas);
     pickDrag = { canvas, mode: pickerMode };
-    // лупа показывает тот холст, к которому относится активная пипетка
-    showLoupe(pickerMode==="mask" ? source : result, p, e.clientX, e.clientY);
+    showLoupe(canvas, p, e.clientX, e.clientY);
     canvas.setPointerCapture(e.pointerId);
   });
 
@@ -923,7 +1086,7 @@ function attachPickerHandlers(canvas){
     if(!pickDrag || !pickerMode || !originalPixels) return;
     e.preventDefault();
     const p=getCanvasPoint(e,canvas);
-    showLoupe(pickerMode==="mask" ? source : result, p, e.clientX, e.clientY);
+    showLoupe(canvas, p, e.clientX, e.clientY);
   });
 
   canvas.addEventListener("pointerup",e=>{
@@ -933,16 +1096,20 @@ function attachPickerHandlers(canvas){
     const mode = pickDrag.mode;
     hideLoupe(); pickDrag=null;
 
+    // координата тапа → в координаты исходного файла
+    const baseP = workPointToBasePoint(p);
+    // П.3 — цвет всегда с basePixels (исходный первоначальный файл)
+    const s = samplePixelFromBase(baseP);
+
     if(mode==="mask"){
       maskPoint = p;
-      maskColor = samplePixel(source, p);
+      maskColor = s;
       setStatus("maskInfo","RGB("+maskColor.join(", ")+")","good");
       const sw=$("maskSwatch");if(sw)sw.style.background="rgb("+maskColor.join(",")+")";
       const lb=$("maskLabel");if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
       drawMarkers();render();
     }else{
       wbPoint = p;
-      const s = samplePixel(result, p);
       const avg=(s[0]+s[1]+s[2])/3;
       wbGains=[s[0],s[1],s[2]].map(v=>Math.max(.25,Math.min(4,avg/Math.max(1,v))));
       setStatus("wbInfo","RGB("+s.join(", ")+")","good");
@@ -1004,10 +1171,19 @@ function showWorkingPixels(pixels){
   sourceOverlay.width=resultOverlay.width=pixels.width;
   sourceOverlay.height=resultOverlay.height=pixels.height;
   sourceCtx.putImageData(originalPixels,0,0);
-  basePixels=new ImageData(new Uint8ClampedArray(originalPixels.data),pixels.width,pixels.height);
   cropRect=null;cropDrag=null;cropEnabled=false;
   setStackRatio(pixels.width,pixels.height);
   drawMarkers();render();
+  // Сохранить как рабочие пиксели фото
+  if(selectedId!==null){
+    const photo=photos.find(p=>p.id===selectedId);
+    if(photo){
+      photo.workingPixels = new ImageData(
+        new Uint8ClampedArray(originalPixels.data),
+        originalPixels.width, originalPixels.height
+      );
+    }
+  }
 }
 function rotateImage(dir){
   if(!originalPixels){toast("Нет фото","err");return}
@@ -1599,7 +1775,7 @@ function renderProfilesPanel(body){
     syncAllSlidersUI();
     drawMarkers();render();refreshUIFromState();
 
-    saveCurrentPhotoSettings();
+    saveCurrentPhotoState();
 
     toast('Профиль "'+name+'" применён','good');
   };
@@ -1674,7 +1850,7 @@ function renderSavePanel(body){
     if(!photos.length){toast("Нет фото","err");return}
     if(!confirm("Сохранить обработанные копии всех фото?"))return;
 
-    saveCurrentPhotoSettings();
+    saveCurrentPhotoState();
     const overlay=$("batchOverlay"),bt=$("batchText");
     overlay.classList.add("show");
 
@@ -1690,29 +1866,49 @@ function renderSavePanel(body){
 
         bt.textContent="Обработка "+(n+1)+" из "+photos.length;
 
+        // Для каждого фото используем его рабочие пиксели (если есть), иначе — оригинал
         await new Promise(resolve=>{
-          const img=new Image();
-          img.onload=()=>{
+          const processImg = (img)=>{
             try{
-              const scale=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));
-              const w=Math.max(1,Math.round(img.naturalWidth*scale));
-              const h=Math.max(1,Math.round(img.naturalHeight*scale));
-              const temp=document.createElement("canvas");
-              temp.width=w;temp.height=h;
-              const ctx=temp.getContext("2d",{willReadFrequently:true});
-              ctx.drawImage(img,0,0,w,h);
-              const pix=ctx.getImageData(0,0,w,h),d=pix.data;
+              // Определяем, откуда брать пиксели: если есть рабочие — из них
+              let w,h,pixData;
+              if(photo.workingPixels){
+                w=photo.workingPixels.width; h=photo.workingPixels.height;
+                pixData = new ImageData(
+                  new Uint8ClampedArray(photo.workingPixels.data), w, h
+                );
+              }else{
+                const scale=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));
+                w=Math.max(1,Math.round(img.naturalWidth*scale));
+                h=Math.max(1,Math.round(img.naturalHeight*scale));
+                const t=document.createElement("canvas");
+                t.width=w;t.height=h;
+                const tc=t.getContext("2d",{willReadFrequently:true});
+                tc.drawImage(img,0,0,w,h);
+                pixData=tc.getImageData(0,0,w,h);
+              }
+              const d=pixData.data;
               for(let i=0;i<d.length;i+=4){
                 const p=transformPixel(d[i],d[i+1],d[i+2],opts);
                 d[i]=p[0];d[i+1]=p[1];d[i+2]=p[2];
               }
-              ctx.putImageData(pix,0,0);
-              downloadCanvas(temp,safeFilename(photo.name)+"_positive.jpg");
+              const out=document.createElement("canvas");
+              out.width=w;out.height=h;
+              out.getContext("2d").putImageData(pixData,0,0);
+              downloadCanvas(out,safeFilename(photo.name)+"_positive.jpg");
             }catch(err){console.error(err)}
             resolve();
           };
-          img.onerror=()=>resolve();
-          img.src=photo.url;
+
+          if(photo.workingPixels){
+            // не нужен Image — работаем с рабочими пикселями
+            processImg(null);
+          }else{
+            const img=new Image();
+            img.onload=()=>processImg(img);
+            img.onerror=()=>resolve();
+            img.src=photo.url;
+          }
         });
       }
     }finally{
