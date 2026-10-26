@@ -1,15 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>FilmLab — плёнка</title>
 <style>
-:root{color-scheme:dark;--bg:#17191d;--panel:#22252b;--panel2:#2b2f36;--border:#414650;--text:#f0f1f4;--muted:#aeb4bf;--accent:#67b7ff;--green:#70d6a0}
+:root{color-scheme:dark;--bg:#17191d;--panel:#22252b;--panel2:#2b2f36;--border:#414650;--text:#f0f1f4;--muted:#aeb4bf;--accent:#67b7ff;--green:#70d6a0;--scene-h:65vh;--scene-h-css:65dvh}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Arial,sans-serif}
-header{padding:15px 20px;border-bottom:1px solid var(--border);background:#202329;position:sticky;top:0;z-index:5}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Arial,sans-serif;-webkit-text-size-adjust:100%}
+header{padding:15px 20px;border-bottom:1px solid var(--border);background:#202329;position:sticky;top:0;z-index:20}
 h1{margin:0;font-size:22px}header p{margin:4px 0 0;color:var(--muted)}
 main{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:15px;padding:15px;max-width:1600px;margin:auto}
 .panel,.image-panel{min-width:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
@@ -39,7 +38,151 @@ input[type=file]{display:none}
 .bottom-actions{margin-top:12px}
 button.full{width:100%;margin:3px 0}
 .auto-box{border:1px solid #397cb6;background:#1c2d3c;padding:10px;border-radius:8px;margin:8px 0}
-@media(max-width:900px){main{grid-template-columns:1fr}.canvases{grid-template-columns:1fr}.canvas-wrap{min-height:160px}}
+.quick-bar{display:none}
+
+/* ================== MOBILE ================== */
+@media(max-width:900px){
+  body{overflow-x:hidden}
+  header{padding:8px 12px;position:static}
+  h1{font-size:15px;font-weight:600}
+  header p{display:none}
+
+  main{
+    display:flex;
+    flex-direction:column;
+    padding:0;
+    gap:0;
+    max-width:none;
+  }
+
+  /* Сцена с фото: всегда сверху, sticky, 65% экрана */
+  .workspace{
+    order:-1;
+    position:sticky;
+    top:0;
+    z-index:10;
+    height:var(--scene-h-css);
+    background:var(--bg);
+    padding:4px 6px 6px;
+    border-bottom:1px solid var(--border);
+    box-shadow:0 4px 12px rgba(0,0,0,.35);
+  }
+  .canvases{
+    display:flex;
+    height:100%;
+    gap:4px;
+  }
+  .image-panel{
+    flex:1 1 0;
+    min-width:0;
+    margin:0;
+    padding:3px;
+    display:flex;
+    flex-direction:column;
+    border-radius:6px;
+    background:var(--panel);
+  }
+  .image-panel h2{
+    font-size:10px;
+    margin:0 0 3px;
+    text-align:center;
+    color:var(--muted);
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    font-weight:600;
+  }
+  .canvas-wrap{
+    flex:1 1 0;
+    min-height:0;
+    overflow:hidden;
+  }
+  .canvas-wrap canvas{width:100%;height:100%;object-fit:contain}
+  .image-note{display:none}
+  .bottom-actions{display:none}
+
+  /* Быстрая лента под сценой */
+  .quick-bar{
+    display:flex;
+    order:1;
+    position:sticky;
+    top:var(--scene-h-css);
+    z-index:9;
+    gap:4px;
+    padding:6px;
+    overflow-x:auto;
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    scrollbar-width:none;
+  }
+  .quick-bar::-webkit-scrollbar{display:none}
+  .quick-bar button{
+    flex:0 0 auto;
+    padding:8px 11px;
+    font-size:12px;
+    white-space:nowrap;
+    border-radius:16px;
+  }
+
+  aside{
+    order:2;
+    padding:8px;
+    padding-bottom:40px;
+  }
+  .panel{padding:10px;margin-bottom:8px;border-radius:8px}
+  .panel h2{font-size:14px;margin-bottom:8px}
+  .panel h3{font-size:13px;margin:10px 0 6px}
+  .panel > .small,
+  .auto-box > .small{display:none}
+
+  /* Кнопки — сетка */
+  .row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+  }
+  .row:has(> :nth-child(3)){grid-template-columns:1fr 1fr}
+  .row > *{min-width:0}
+  button{padding:9px 8px;font-size:13px}
+  button.full{margin:3px 0}
+
+  /* Компактные ползунки: [label][reset] / [ползунок] */
+  .control{
+    margin:6px 0;
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+    column-gap:6px;
+    row-gap:2px;
+  }
+  .control label{
+    grid-column:1 / -1;
+    margin-bottom:0;
+    font-size:12px;
+  }
+  .control input[type=range]{
+    grid-column:1;
+    height:26px;
+    margin:0;
+  }
+  .control-buttons{
+    grid-column:2;
+    grid-row:2;
+  }
+  .control-buttons button{
+    padding:3px 8px;
+    font-size:11px;
+    height:24px;
+  }
+
+  #gallery{grid-template-columns:repeat(4,1fr);gap:4px}
+  .thumb span{display:none}
+  .thumb{border-radius:5px}
+
+  .file-button{padding:10px 8px;margin-bottom:6px;font-size:13px}
+
+  /* Ползунок кардрирования: чуть больше хват */
+  .canvas-wrap{touch-action:none}
+}
 </style>
 </head>
 <body>
@@ -56,7 +199,7 @@ button.full{width:100%;margin:3px 0}
 <input id="fileInput" type="file" accept="image/*" multiple>
 <label class="file-button" for="cameraInput">📷 Сделать снимок</label>
 <input id="cameraInput" type="file" accept="image/*" capture="environment">
-<div class="row"><button id="deleteBtn" class="danger">Удалить</button><button id="clearBtn">Очистить список</button></div>
+<div class="row"><button id="deleteBtn" class="danger">Удалить</button><button id="clearBtn">Очистить</button></div>
 <div id="gallery"></div>
 <p class="small">Выбери фотографию для обработки. Исходное изображение не изменяется.</p>
 </section>
@@ -70,7 +213,7 @@ button.full{width:100%;margin:3px 0}
   <p class="small">Поворот выполняется на исходном скане.</p>
   <button id="cropToggle" class="primary full">Включить кадрирование</button>
   <div class="row">
-    <button id="cropApply">Применить обрезку</button>
+    <button id="cropApply">Применить</button>
     <button id="geometryReset">Сбросить</button>
   </div>
   <p id="cropInfo" class="status">Кадрирование выключено.</p>
@@ -93,29 +236,29 @@ button.full{width:100%;margin:3px 0}
 <h2>3. Настройки изображения</h2>
 <div class="control">
 <label for="mode">Режим</label>
-<select id="mode" style="width:100%">
+<select id="mode" style="width:100%;grid-column:1/-1">
 <option value="negative">Цветной негатив</option>
 <option value="mono">Чёрно-белый негатив</option>
 <option value="slide">Позитив / слайд</option>
 </select>
 </div>
-<div class="control"><label for="maskStrength">Удаление цветной основы <span id="maskStrengthVal">100%</span></label><input id="maskStrength" type="range" min="0" max="100" value="100"><div class="control-buttons"><button id="resetMaskStrength">Сбросить</button></div></div>
-<div class="control"><label for="exposure">Экспозиция <span id="exposureVal">0</span></label><input id="exposure" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="exposure">Сбросить</button></div></div>
-<div class="control"><label for="contrast">Контраст <span id="contrastVal">0</span></label><input id="contrast" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="contrast">Сбросить</button></div></div>
-<div class="control"><label for="saturation">Насыщенность <span id="saturationVal">0</span></label><input id="saturation" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="saturation">Сбросить</button></div></div>
+<div class="control"><label for="maskStrength">Удаление цветной основы <span id="maskStrengthVal">100%</span></label><input id="maskStrength" type="range" min="0" max="100" value="100"><div class="control-buttons"><button id="resetMaskStrength">Сброс</button></div></div>
+<div class="control"><label for="exposure">Экспозиция <span id="exposureVal">0</span></label><input id="exposure" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="exposure">Сброс</button></div></div>
+<div class="control"><label for="contrast">Контраст <span id="contrastVal">0</span></label><input id="contrast" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="contrast">Сброс</button></div></div>
+<div class="control"><label for="saturation">Насыщенность <span id="saturationVal">0</span></label><input id="saturation" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="saturation">Сброс</button></div></div>
 <h3>Коррекция RGB</h3>
 
 <div class="control">
   <label for="temperature">Температура <span id="temperatureVal">0</span></label>
   <input id="temperature" type="range" min="-100" max="100" value="0">
   <div class="control-buttons">
-    <button data-reset="temperature">Сбросить</button>
+    <button data-reset="temperature">Сброс</button>
   </div>
 </div>
 
-<div class="control"><label for="red">Красный <span id="redVal">0</span></label><input id="red" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="red">Сбросить</button></div></div>
-<div class="control"><label for="green">Зелёный <span id="greenVal">0</span></label><input id="green" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="green">Сбросить</button></div></div>
-<div class="control"><label for="blue">Синий <span id="blueVal">0</span></label><input id="blue" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="blue">Сбросить</button></div></div>
+<div class="control"><label for="red">Красный <span id="redVal">0</span></label><input id="red" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="red">Сброс</button></div></div>
+<div class="control"><label for="green">Зелёный <span id="greenVal">0</span></label><input id="green" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="green">Сброс</button></div></div>
+<div class="control"><label for="blue">Синий <span id="blueVal">0</span></label><input id="blue" type="range" min="-100" max="100" value="0"><div class="control-buttons"><button data-reset="blue">Сброс</button></div></div>
 <button id="resetAll" class="full">Сбросить все настройки</button>
 </section>
 
@@ -137,7 +280,7 @@ button.full{width:100%;margin:3px 0}
 <h2>6. Профили</h2>
 <input id="profileName" type="text" placeholder="Название профиля" style="width:100%;margin-bottom:8px">
 <button id="saveProfile" class="full">Сохранить профиль</button>
-<div class="control"><label for="profiles">Сохранённые профили</label><select id="profiles" style="width:100%"><option value="">— Выбери профиль —</option></select></div>
+<div class="control"><label for="profiles">Сохранённые профили</label><select id="profiles" style="width:100%;grid-column:1/-1"><option value="">— Выбери профиль —</option></select></div>
 <div class="row"><button id="loadProfile">Применить</button><button id="deleteProfile" class="danger">Удалить</button></div>
 <h3>Резервная копия на телефоне</h3>
 <button id="exportProfile" class="full">Сохранить выбранный профиль в файл</button>
@@ -154,6 +297,15 @@ button.full{width:100%;margin:3px 0}
 <p class="small">Для каждой фотографии создаётся отдельный JPEG с текущими настройками.</p>
 </section>
 </aside>
+
+<div class="quick-bar" id="quickBar">
+  <button data-q="autoFull">✨ Авто</button>
+  <button data-q="maskPicker">🎯 Основа</button>
+  <button data-q="wbPicker">⚪ Баланс</button>
+  <button data-q="cropToggle">✂️ Кадр</button>
+  <button data-q="autoReset">↺ Отмена</button>
+  <button data-q="saveJpeg">💾 JPEG</button>
+</div>
 
 <section class="workspace">
 <div class="canvases">
@@ -225,7 +377,6 @@ function updateGallery(){
  });
 }
 
-/* ИСПРАВЛЕННАЯ ЗАГРУЗКА ИЗОБРАЖЕНИЯ */
 function loadPhotoToCanvas(photo){
  if(!photo||!photo.url){
   setStatus("Не найден файл фотографии.");
@@ -301,7 +452,6 @@ function selectPhoto(id){
  if(photo)loadPhotoToCanvas(photo);
 }
 
-/* ИСПРАВЛЕННЫЙ ВЫБОР И ДОБАВЛЕНИЕ ФАЙЛОВ */
 function addFiles(fileList){
  const files=Array.from(fileList||[]);
  if(!files.length){
@@ -352,7 +502,6 @@ function addFiles(fileList){
  }
 }
 
-/* Обработчики выбора файлов с выводом ошибок */
 function connectFileInput(id){
  const input=$(id);
 
@@ -448,12 +597,9 @@ $("resetAll").addEventListener("click",()=>{
  drawMarkers();render();setStatus("Все настройки сброшены.");
 });
 
-/* Преобразование: параметры RGB, экспозиции и контраста применяются после негатива. */
-
 function transformPixel(r, g, b, opts) {
  const mode = opts.mode;
 
- // 1. Удаление цветной основы негатива.
  if (mode === "negative" || mode === "mono") {
   if (opts.mask) {
    const strength = opts.maskStrength / 100;
@@ -476,21 +622,16 @@ function transformPixel(r, g, b, opts) {
    b = b * (1 - strength) + corrected[2] * strength;
   }
 
-  // Инверсия негатива.
   r = 255 - r;
   g = 255 - g;
   b = 255 - b;
  }
 
- // 2. Чёрно-белый режим.
  if (mode === "mono") {
   const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   r = g = b = y;
  }
 
- // 3. Цветовая температура: холоднее / теплее.
- // Отрицательное значение добавляет синеву,
- // положительное — жёлто-тёплый оттенок.
  const t = Number(opts.temperature || 0) / 100;
 
  const warmRed = Math.pow(2, t * 0.45);
@@ -501,7 +642,6 @@ function transformPixel(r, g, b, opts) {
  g = clamp(g * warmGreen);
  b = clamp(b * warmBlue);
 
- // 4. Экспозиция и индивидуальная RGB-коррекция.
  const exp = Math.pow(2, opts.exposure / 100);
  const gains = [opts.red, opts.green, opts.blue]
   .map(v => Math.pow(2, v / 100));
@@ -510,7 +650,6 @@ function transformPixel(r, g, b, opts) {
  g = clamp(g * exp * gains[1]);
  b = clamp(b * exp * gains[2]);
 
- // 5. Контраст.
  const con = (259 * (opts.contrast + 255)) /
   (255 * (259 - opts.contrast));
 
@@ -518,7 +657,6 @@ function transformPixel(r, g, b, opts) {
  g = clamp(con * (g - 128) + 128);
  b = clamp(con * (b - 128) + 128);
 
- // 6. Насыщенность.
  const sat = 1 + opts.saturation / 100;
  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
@@ -526,7 +664,6 @@ function transformPixel(r, g, b, opts) {
  g = clamp(lum + (g - lum) * sat);
  b = clamp(lum + (b - lum) * sat);
 
- // 7. Баланс белого по выбранной точке.
  if (opts.wb) {
   r = clamp(r * opts.wb[0]);
   g = clamp(g * opts.wb[1]);
@@ -657,7 +794,6 @@ $("resetWB").addEventListener("click",()=>{
  $("wbInfo").classList.remove("good");drawMarkers();render();setStatus("Баланс белого сброшен.");
 });
 
-/* Автоматический анализ статистики изображения. */
 function percentile(sorted,q){return sorted[Math.min(sorted.length-1,Math.max(0,Math.floor((sorted.length-1)*q)))]}
 function analyzeImage(){
  if(!originalPixels)return null;
@@ -751,7 +887,6 @@ $("autoReset").addEventListener("click",()=>{
  setStatus("Автокоррекция отменена.",true);
 });
 
-/* Профили: локальное хранение и резервные JSON-файлы. */
 function currentProfile(){
  return{format:"FilmLabProfile",version:1,settings:getSliderValues(),mode:$("mode").value,
  maskColor:maskColor?[...maskColor]:null,wbGains:wbGains?[...wbGains]:null};
@@ -966,7 +1101,7 @@ function drawCropRect() {
   const r = cropRect;
   const w = source.width;
   const h = source.height;
-  const handle = Math.max(18, Math.min(w, h) * 0.035);
+  const handle = Math.max(24, Math.min(w, h) * 0.04);
 
   ctx.save();
 
@@ -1007,7 +1142,7 @@ source.addEventListener("pointerdown", event => {
 
   const p = getCanvasPoint(event, source);
   const r = cropRect;
-  const hitRadius = 32;
+  const hitRadius = 44;
 
   const corners = [
     { name: "tl", x: r.x, y: r.y },
@@ -1164,8 +1299,6 @@ $("geometryReset").addEventListener("click", () => {
 });
 
 
-  
-/* Сохранение результатов. */
 function downloadCanvas(canvas,filename){
  canvas.toBlob(blob=>{
   if(!blob){setStatus("Не удалось подготовить JPEG.");return}
@@ -1212,6 +1345,14 @@ $("batchSave").addEventListener("click",async()=>{
  }
  if(startId!==null&&photos.some(p=>p.id===startId))selectPhoto(startId);
  setStatus("Пакетная обработка завершена. Проверь сохранённые JPEG.",true);
+});
+
+/* Быстрые кнопки на мобильном */
+document.querySelectorAll("#quickBar [data-q]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const target=$(btn.dataset.q);
+    if(target)target.click();
+  });
 });
 
 refreshProfiles();updateSliderLabels();updatePickUI();
