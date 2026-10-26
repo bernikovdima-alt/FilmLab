@@ -278,13 +278,6 @@ body.tool-collapsed #toolBody{display:none}
 .slider.sl-blue .ctrl input[type=range]::-moz-range-track{background:linear-gradient(90deg,#000,#0066ff)}
 .slider.sl-temp .ctrl input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(90deg,#4ea8ff,#eef1f6 50%,#ffb547)}
 .slider.sl-temp .ctrl input[type=range]::-moz-range-track{background:linear-gradient(90deg,#4ea8ff,#eef1f6 50%,#ffb547)}
-/* Ползунок основы плёнки */
-.slider.sl-base .ctrl input[type=range]::-webkit-slider-runnable-track{
-  background:linear-gradient(90deg, rgb(140,175,130), rgb(230,150,90), rgb(245,135,70));
-}
-.slider.sl-base .ctrl input[type=range]::-moz-range-track{
-  background:linear-gradient(90deg, rgb(140,175,130), rgb(230,150,90), rgb(245,135,70));
-}
 
 .icon-btn{
   flex:0 0 auto;width:28px;height:28px;
@@ -380,7 +373,6 @@ select.input{
   .ratio-cell .action-lbl{font-size:10px}
 }
 
-/* ===== П.1: компактные плитки мишеней ===== */
 .targets-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
 .target-col{
   background:var(--bg-3);border-radius:10px;padding:6px 8px;
@@ -398,10 +390,10 @@ select.input{
 .target-btns .btn.active-mode{background:var(--warn);border-color:transparent;color:#1a1200}
 .target-btns .btn.icononly{width:30px;padding:0}
 
-/* ===== П.2: ползунок основы плёнки ===== */
-.base-slider-wrap{margin:6px 0 4px;padding:0}
+/* Ползунки «Оттенок основы» и «Яркость основы» */
+.base-slider-wrap{margin:4px 0 2px;padding:0}
 .base-slider-wrap .row{
-  display:flex;align-items:center;gap:8px;margin-bottom:2px;
+  display:flex;align-items:center;gap:8px;margin-bottom:1px;
 }
 .base-slider-wrap .row label{
   font-size:12px;font-weight:600;color:#cfd6e2;flex:1 1 auto;
@@ -411,7 +403,7 @@ select.input{
   font-variant-numeric:tabular-nums;
 }
 .base-slider-wrap .row .preview{
-  width:22px;height:22px;border-radius:50%;border:1px solid var(--line);flex:0 0 auto;
+  width:20px;height:20px;border-radius:50%;border:1px solid var(--line);flex:0 0 auto;
 }
 
 #gallery{display:flex;gap:6px;overflow-x:auto;padding:4px 0 6px;scroll-snap-type:x mandatory;scrollbar-width:none}
@@ -567,6 +559,7 @@ select.input{
   <input id="blue" type="range" min="-100" max="100" value="0">
   <input id="maskStrength" type="range" min="0" max="100" value="100">
   <input id="baseTune" type="range" min="0" max="100" value="50">
+  <input id="baseBright" type="range" min="-100" max="100" value="0">
   <select id="mode">
     <option value="negative">Цветной негатив</option>
     <option value="mono">Чёрно-белый негатив</option>
@@ -589,10 +582,9 @@ const defaults={maskStrength:100,temperature:0,exposure:0,contrast:0,saturation:
 const ALL_SLIDERS=["exposure","contrast","maskStrength","saturation","temperature","red","green","blue"];
 const MAX_PHOTOS = 24;
 
-/* П.2: две крайние точки «линии основы плёнки» */
-const BASE_LINE_START = [140,175,130];   // холодная зелёная
-const BASE_LINE_MID   = [230,150,90];    // средняя тёплая
-const BASE_LINE_END   = [245,135,70];    // тёплая оранжевая
+const BASE_LINE_START = [140,175,130];
+const BASE_LINE_MID   = [230,150,90];
+const BASE_LINE_END   = [245,135,70];
 const PRESET_TARGET_LUM = 175;
 
 let photos=[],selectedId=null,nextId=1;
@@ -606,9 +598,9 @@ let renderQueued=false;
 let activeTool="crop";
 let currentView="result";
 let appliedProfile=null;
-/* П.2: признак, что текущая маска получена ползунком (для нормировки).
-   Ставится при движении ползунка, снимается пипеткой/сбросом. */
 let maskFromSlider=false;
+/* П.2: яркость основы — коэффициент-сдвиг маски */
+let baseBrightValue = 0;
 const lockedSliders=new Set(ALL_SLIDERS);
 
 const clamp=(v,a=0,b=255)=>Math.max(a,Math.min(b,v));
@@ -803,7 +795,8 @@ function snapshotCurrentSettings(){
     wbPoint: wbPoint?{...wbPoint}:null,
     baseOffsetX, baseOffsetY,
     maskFromSlider,
-    baseTune: Number($("baseTune").value)
+    baseTune: Number($("baseTune").value),
+    baseBright: baseBrightValue
   };
 }
 function saveCurrentPhotoState(){
@@ -835,6 +828,8 @@ function applySettingsToUI(s){
   baseOffsetY = src.baseOffsetY||0;
   maskFromSlider = !!src.maskFromSlider;
   $("baseTune").value = (src.baseTune!==undefined && src.baseTune!==null) ? src.baseTune : 50;
+  baseBrightValue = (src.baseBright!==undefined && src.baseBright!==null) ? src.baseBright : 0;
+  $("baseBright").value = baseBrightValue;
   syncAllSlidersUI();
   refreshUIFromState();
 }
@@ -845,13 +840,13 @@ function currentProfileSettingsTemplate(){
     maskColor: appliedProfile.maskColor?[...appliedProfile.maskColor]:null,
     wbGains: appliedProfile.wbGains?[...appliedProfile.wbGains]:null,
     maskPoint:null, wbPoint:null,
-    baseOffsetX:0, baseOffsetY:0, maskFromSlider:false, baseTune:50
+    baseOffsetX:0, baseOffsetY:0, maskFromSlider:false, baseTune:50, baseBright:0
   };
   return {
     settings:{...defaults},
     mode:"negative",
     maskColor:null,wbGains:null,maskPoint:null,wbPoint:null,
-    baseOffsetX:0, baseOffsetY:0, maskFromSlider:false, baseTune:50
+    baseOffsetX:0, baseOffsetY:0, maskFromSlider:false, baseTune:50, baseBright:0
   };
 }
 
@@ -1043,22 +1038,30 @@ function scheduleRender(){
 }
 Object.keys(defaults).forEach(k=>$(k).addEventListener("input",scheduleRender));
 
-/* П.2: пресет (ползунок) — нормируем к средней яркости */
+/* effectiveMask: пресет/слайдер нормируем к PRESET_TARGET_LUM.
+   Дополнительно — сдвиг яркости от baseBrightValue (±0.9 в степени 2). */
 function effectiveMask(){
   if(!maskColor) return null;
-  if(!maskFromSlider) return [...maskColor];
-  // из маски (start/mid/end интерполяция) нормируем к PRESET_TARGET_LUM
-  const Lp = 0.2126*maskColor[0]+0.7152*maskColor[1]+0.0722*maskColor[2];
-  if(Lp<1) return [...maskColor];
-  const k = PRESET_TARGET_LUM / Lp;
-  return [
-    clamp(maskColor[0]*k, 8, 255),
-    clamp(maskColor[1]*k, 8, 255),
-    clamp(maskColor[2]*k, 8, 255)
-  ];
+
+  let m = [...maskColor];
+
+  // если оттенок выставлен слайдером — нормируем среднюю яркость к PRESET_TARGET_LUM
+  if(maskFromSlider){
+    const Lp = 0.2126*m[0]+0.7152*m[1]+0.0722*m[2];
+    if(Lp > 1){
+      const k = PRESET_TARGET_LUM / Lp;
+      m = [clamp(m[0]*k,8,255), clamp(m[1]*k,8,255), clamp(m[2]*k,8,255)];
+    }
+  }
+
+  // П.2: яркость основы — экспоненциальный сдвиг ±0.9
+  const t = baseBrightValue / 100;
+  const k = Math.pow(2, t * 0.9);
+  m = [clamp(m[0]*k,8,255), clamp(m[1]*k,8,255), clamp(m[2]*k,8,255)];
+
+  return m;
 }
 
-/* П.3: база >= 60 для защиты от «взрыва в чёрное» */
 function transformPixel(r,g,b,opts){
   const mode=opts.mode;
   if(mode==="negative"||mode==="mono"){
@@ -1615,7 +1618,6 @@ function refreshUIFromState(){
   const ms=$("maskSwatch");
   if(ms){
     if(maskColor){
-      const eff = effectiveMask() || maskColor;
       ms.style.background="rgb("+maskColor.join(",")+")";
     }else{
       ms.style.background="#333";
@@ -1631,11 +1633,23 @@ function refreshUIFromState(){
   const ml=$("maskLabel");if(ml)ml.textContent=maskColor?"RGB("+maskColor.join(", ")+")":"не выбрано";
   const wl=$("wbLabel");if(wl)wl.textContent=wbGains?"установлено":"не настроено";
 
-  // обновляем превью-кружок ползунка основы
   const preview=$("basePreview");
-  if(preview && maskColor) preview.style.background="rgb("+maskColor.join(",")+")";
+  if(preview){
+    if(maskColor){
+      // показываем эффективный цвет (с учётом яркости) — так нагляднее
+      const eff = effectiveMask() || maskColor;
+      preview.style.background="rgb("+eff.map(v=>Math.round(v)).join(",")+")";
+    }else{
+      preview.style.background="#333";
+    }
+  }
   const btVal=$("baseTuneVal");
   if(btVal) btVal.textContent=$("baseTune").value+"";
+  const bbVal=$("baseBrightVal");
+  if(bbVal){
+    const v = Number($("baseBright").value);
+    bbVal.textContent = (v>0?"+":"")+v;
+  }
 }
 
 function sliderHTML(id,label,extraClass){
@@ -1838,7 +1852,6 @@ function renderTargetsPanel(body){
   wrap.className="group";
   wrap.style.padding="6px 8px 8px";
 
-  /* П.1: компактные плитки мишеней в один ряд */
   const grid=document.createElement("div");
   grid.className="targets-grid";
   grid.innerHTML=`
@@ -1862,7 +1875,7 @@ function renderTargetsPanel(body){
     </div>`;
   wrap.append(grid);
 
-  /* П.2: ползунок основы плёнки вместо пресетов */
+  // П.2: два ползунка — оттенок и яркость основы
   const baseBlock=document.createElement("div");
   baseBlock.className="base-slider-wrap";
   baseBlock.innerHTML=`
@@ -1874,6 +1887,15 @@ function renderTargetsPanel(body){
     <div style="display:flex;align-items:center;gap:6px">
       <button class="icon-btn reset" type="button" id="baseTuneReset" title="Сброс" aria-label="Сброс">↺</button>
       <input id="baseTune_ui" type="range" min="0" max="100" value="${$("baseTune").value}"
+        style="flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:20px;background:transparent">
+    </div>
+    <div class="row" style="margin-top:6px">
+      <label for="baseBright_ui">Яркость основы</label>
+      <span class="val" id="baseBrightVal">${$("baseBright").value}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="icon-btn reset" type="button" id="baseBrightReset" title="Сброс" aria-label="Сброс">↺</button>
+      <input id="baseBright_ui" type="range" min="-100" max="100" value="${$("baseBright").value}"
         style="flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:20px;background:transparent">
     </div>
   `;
@@ -1892,6 +1914,8 @@ function renderTargetsPanel(body){
   };
   $("resetMaskBtn").onclick=()=>{
     maskColor=null;maskPoint=null;maskFromSlider=false;
+    baseBrightValue = 0;
+    $("baseBright").value = 0;
     setStatus("maskInfo","","");
     drawMarkers();render();refreshUIFromState();
   };
@@ -1900,7 +1924,7 @@ function renderTargetsPanel(body){
     drawMarkers();render();refreshUIFromState();
   };
 
-  // стили трека ползунка основы
+  // CSS-треки для ползунков основы
   const st=document.createElement("style");
   st.textContent=`
     #baseTune_ui::-webkit-slider-runnable-track{
@@ -1919,15 +1943,32 @@ function renderTargetsPanel(body){
     #baseTune_ui::-moz-range-thumb{
       width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--accent)
     }
+    #baseBright_ui::-webkit-slider-runnable-track{
+      height:8px;border-radius:4px;
+      background:linear-gradient(90deg,#000,#888,#fff);
+    }
+    #baseBright_ui::-moz-range-track{
+      height:8px;border-radius:4px;
+      background:linear-gradient(90deg,#000,#888,#fff);
+    }
+    #baseBright_ui::-webkit-slider-thumb{
+      -webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:-5px;
+      border-radius:50%;background:#fff;border:3px solid var(--accent);
+      box-shadow:0 1px 4px rgba(0,0,0,.5);
+    }
+    #baseBright_ui::-moz-range-thumb{
+      width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--accent)
+    }
   `;
   document.head.appendChild(st);
 
   const baseUi=$("baseTune_ui");
   const baseVal=$("baseTuneVal");
-  let baseRaf=null;
+  const brightUi=$("baseBright_ui");
+  const brightVal=$("baseBrightVal");
+
   function updateFromBaseSlider(){
     const t = Number($("baseTune").value) / 100;
-    // интерполяция по двум сегментам: 0..50 — start→mid, 50..100 — mid→end
     let r,g,b;
     if(t<=0.5){
       const k = t/0.5;
@@ -1944,25 +1985,52 @@ function renderTargetsPanel(body){
     maskFromSlider = true;
     baseVal.textContent = $("baseTune").value;
     const preview=$("basePreview");
-    if(preview) preview.style.background="rgb("+maskColor.join(",")+")";
+    if(preview){
+      const eff = effectiveMask() || maskColor;
+      preview.style.background="rgb("+eff.map(v=>Math.round(v)).join(",")+")";
+    }
     const sw=$("maskSwatch");
     if(sw) sw.style.background="rgb("+maskColor.join(",")+")";
     const lb=$("maskLabel");
     if(lb) lb.textContent="RGB("+maskColor.join(", ")+")";
 
-    if(baseRaf) cancelAnimationFrame(baseRaf);
-    baseRaf = requestAnimationFrame(()=>{ render(); });
+    render();
+    if(selectedId!==null){
+      const p=photos.find(x=>x.id===selectedId); if(p)p.settings=snapshotCurrentSettings();
+    }
+  }
+  function updateFromBrightSlider(){
+    baseBrightValue = Number($("baseBright").value);
+    brightVal.textContent = (baseBrightValue>0?"+":"")+baseBrightValue;
+    const preview=$("basePreview");
+    if(preview && maskColor){
+      const eff = effectiveMask() || maskColor;
+      preview.style.background="rgb("+eff.map(v=>Math.round(v)).join(",")+")";
+    }
+    render();
+    if(selectedId!==null){
+      const p=photos.find(x=>x.id===selectedId); if(p)p.settings=snapshotCurrentSettings();
+    }
   }
 
   baseUi.addEventListener("input",()=>{
     $("baseTune").value = baseUi.value;
     updateFromBaseSlider();
   });
+  brightUi.addEventListener("input",()=>{
+    $("baseBright").value = brightUi.value;
+    updateFromBrightSlider();
+  });
 
   $("baseTuneReset").onclick=()=>{
     baseUi.value=50;
     $("baseTune").value=50;
     updateFromBaseSlider();
+  };
+  $("baseBrightReset").onclick=()=>{
+    brightUi.value=0;
+    $("baseBright").value=0;
+    updateFromBrightSlider();
   };
 }
 
@@ -2217,12 +2285,10 @@ function renderSavePanel(body){
   };
 }
 
-/* П.3: повторный тап по активному инструменту — сворачивает панель */
 function switchTool(tool){
   if(pickerMode&&tool!=="targets")stopPicking();
 
   if(activeTool === tool && !document.body.classList.contains("tool-collapsed")){
-    // повторный тап по тому же активному — свернуть
     document.body.classList.add("tool-collapsed");
     sheetToggle.classList.add("collapsed");
     setTimeout(resizeAllStacks,280);
