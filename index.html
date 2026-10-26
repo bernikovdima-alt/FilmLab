@@ -123,12 +123,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 #toolPanel{
   flex:0 0 var(--tool-h);background:var(--panel);
   border-top:1px solid var(--line);
-  display:flex;flex-direction:column;overflow:hidden;padding-top:8px;
+  display:flex;flex-direction:column;overflow:hidden;padding-top:6px;
 }
 #toolBody{
   flex:1 1 auto;min-height:0;
   overflow-y:auto;overscroll-behavior:contain;
-  padding:0 12px 10px;-webkit-overflow-scrolling:touch;
+  padding:0 12px 8px;-webkit-overflow-scrolling:touch;
 }
 
 #bottomNav{
@@ -152,44 +152,42 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .group{background:var(--bg-2);border-radius:var(--radius);padding:2px 10px;margin:0 0 6px}
 
-/* ======== КОМПАКТНЫЙ ПОЛЗУНОК ======== */
+/* ======== КОМПАКТНЫЙ ПОЛЗУНОК (без разделителей) ======== */
 .slider{
-  padding:4px 0 6px;
+  padding:2px 0 4px;
   user-select:none;
-  border-bottom:1px solid rgba(255,255,255,.04);
 }
-.slider:last-child{border-bottom:0}
 .slider .row{
   display:flex;align-items:center;gap:8px;
-  margin-bottom:3px;
-  min-height:16px;
+  margin-bottom:1px;
+  min-height:14px;
 }
 .slider .row label{
   flex:1 1 auto;min-width:0;
-  font-size:13px;font-weight:600;color:#cfd6e2;
+  font-size:12px;font-weight:600;color:#cfd6e2;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .slider .row .val{
   font-size:12px;font-weight:700;color:var(--accent);
-  font-variant-numeric:tabular-nums;flex:0 0 auto;min-width:36px;text-align:right;
+  font-variant-numeric:tabular-nums;flex:0 0 auto;min-width:34px;text-align:right;
 }
 .slider .ctrl{
   display:flex;align-items:center;gap:6px;
 }
 .slider .ctrl input[type=range]{
   flex:1 1 auto;min-width:0;
-  display:block;width:100%;height:22px;margin:0;
+  display:block;width:100%;height:20px;margin:0;
   -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
 }
 .slider .ctrl input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line)}
 .slider .ctrl input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line)}
 .slider .ctrl input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:-7px;
+  -webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-6px;
   border-radius:50%;background:#fff;border:3px solid var(--accent);
   box-shadow:0 1px 4px rgba(0,0,0,.5);
 }
 .slider .ctrl input[type=range]::-moz-range-thumb{
-  width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--accent);
+  width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--accent);
 }
 .slider .ctrl input[type=range]:disabled{
   opacity:.35;
@@ -199,13 +197,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* Кнопки-квадратики с рамкой */
 .icon-btn{
   flex:0 0 auto;
-  width:30px;height:30px;
-  border-radius:8px;
+  width:28px;height:28px;
+  border-radius:7px;
   border:1px solid var(--line);
   background:var(--bg-3);
   color:var(--muted);
   display:inline-flex;align-items:center;justify-content:center;
-  font-size:14px;line-height:1;cursor:pointer;padding:0;
+  font-size:13px;line-height:1;cursor:pointer;padding:0;
 }
 .icon-btn:active{background:var(--panel-2)}
 .icon-btn.reset{color:#cfd6e2}
@@ -258,10 +256,10 @@ select.input{
 .status.good{color:var(--good)}
 .status:empty{display:none}
 
-.segmented{display:flex;background:var(--bg-3);border-radius:12px;padding:3px;margin:0 0 8px}
+.segmented{display:flex;background:var(--bg-3);border-radius:12px;padding:3px;margin:0 0 6px}
 .segmented button{
   flex:1 1 0;border:0;background:transparent;color:var(--muted);
-  padding:9px 6px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;
+  padding:8px 6px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;
 }
 .segmented button.active{background:var(--panel-2);color:var(--text)}
 
@@ -462,6 +460,7 @@ const sourceOverlayCtx=sourceOverlay.getContext("2d");
 const resultOverlayCtx=resultOverlay.getContext("2d");
 
 const defaults={maskStrength:100,temperature:0,exposure:0,contrast:0,saturation:0,red:0,green:0,blue:0};
+const ALL_SLIDERS=["exposure","contrast","maskStrength","saturation","temperature","red","green","blue"];
 
 let photos=[],selectedId=null,nextId=1;
 let originalPixels=null,basePixels=null;
@@ -470,7 +469,7 @@ let currentRatio="free";
 let maskColor=null,wbGains=null,maskPoint=null,wbPoint=null,pickerMode=null;
 let renderQueued=false;
 let activeTool="crop";
-const lockedSliders=new Set();
+const lockedSliders=new Set(ALL_SLIDERS);
 
 const clamp=(v,a=0,b=255)=>Math.max(a,Math.min(b,v));
 
@@ -658,7 +657,7 @@ function syncSliderUI(id){
   if(v&&hidden)v.textContent=hidden.value+(id==="maskStrength"?"%":"");
 }
 function syncAllSlidersUI(){
-  ["exposure","contrast","maskStrength","saturation","red","green","blue","temperature"].forEach(syncSliderUI);
+  ALL_SLIDERS.forEach(syncSliderUI);
 }
 function scheduleRender(){
   updateSliderLabels();
@@ -1421,21 +1420,17 @@ function renderLightPanel(body){
   });
 }
 
+/* --- ЦВЕТ: единый блок со всеми 5 ползунками --- */
 function renderColorPanel(body){
-  const g1=document.createElement("div");g1.className="group";
-  g1.style.padding="6px 10px 6px";
-  g1.innerHTML=
+  const g=document.createElement("div");g.className="group";
+  g.style.padding="6px 10px 6px";
+  g.innerHTML=
     sliderHTML("saturation","Насыщенность")+
-    sliderHTML("temperature","Температура");
-  body.append(g1);
-
-  const g2=document.createElement("div");g2.className="group";
-  g2.style.padding="6px 10px 6px";
-  g2.innerHTML=
+    sliderHTML("temperature","Температура")+
     sliderHTML("red","Красный")+
     sliderHTML("green","Зелёный")+
     sliderHTML("blue","Синий");
-  body.append(g2);
+  body.append(g);
 
   bindSlider("saturation");bindSlider("temperature");
   bindSlider("red");bindSlider("green");bindSlider("blue");
