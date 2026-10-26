@@ -314,7 +314,6 @@ select.input{
 .target-btns .btn{width:100%;height:36px;font-size:12px;padding:0 6px;justify-content:center}
 .target-btns .btn.active-mode{background:var(--warn);border-color:transparent;color:#1a1200}
 
-/* подсказки в панели «Мишени» */
 .target-hint{
   font-size:10px;
   color:var(--muted);
@@ -896,45 +895,54 @@ function updatePickUI(){
   if(maskBtn)maskBtn.classList.toggle("active-mode",maskOn);
   if(wbBtn)wbBtn.classList.toggle("active-mode",wbOn);
   topHint.classList.toggle("show",!!pickerMode);
-  if(maskOn)topHintText.textContent="Тапни по основе";
-  if(wbOn)topHintText.textContent="Тапни по нейтральному";
-  // подсказки в панели «Мишени» показываем только когда пипетка активна
+  if(maskOn)topHintText.textContent="Тапни по основе (любой вид)";
+  if(wbOn)topHintText.textContent="Тапни по нейтральному (любой вид)";
   const mh=$("maskHint"),wh=$("wbHint");
   if(mh)mh.classList.toggle("show",maskOn);
   if(wh)wh.classList.toggle("show",wbOn);
 }
 function stopPicking(){pickerMode=null;hideLoupe();pickDrag=null;updatePickUI()}
 
-function attachPickerHandlers(canvas,type){
+/* ================================================================
+   ПИПЕТКИ — работают на любом виде, цвет берётся с правильного холста
+   ================================================================ */
+function attachPickerHandlers(canvas){
   canvas.style.touchAction="none";
+
   canvas.addEventListener("pointerdown",e=>{
-    if(pickerMode!==type||!originalPixels)return;
+    if(!pickerMode || !originalPixels) return;
     e.preventDefault();
     const p=getCanvasPoint(e,canvas);
-    pickDrag={canvas,type};
-    showLoupe(canvas,p,e.clientX,e.clientY);
+    pickDrag = { canvas, mode: pickerMode };
+    // лупа показывает тот холст, к которому относится активная пипетка
+    showLoupe(pickerMode==="mask" ? source : result, p, e.clientX, e.clientY);
     canvas.setPointerCapture(e.pointerId);
   });
+
   canvas.addEventListener("pointermove",e=>{
-    if(!pickDrag||pickDrag.canvas!==canvas||pickerMode!==type)return;
+    if(!pickDrag || !pickerMode || !originalPixels) return;
     e.preventDefault();
     const p=getCanvasPoint(e,canvas);
-    showLoupe(canvas,p,e.clientX,e.clientY);
+    showLoupe(pickerMode==="mask" ? source : result, p, e.clientX, e.clientY);
   });
+
   canvas.addEventListener("pointerup",e=>{
-    if(!pickDrag||pickDrag.canvas!==canvas)return;
+    if(!pickDrag || !pickerMode) return;
     e.preventDefault();
     const p=getCanvasPoint(e,canvas);
-    hideLoupe();pickDrag=null;
-    if(type==="mask"){
-      maskPoint=p;maskColor=samplePixel(source,p);
+    const mode = pickDrag.mode;
+    hideLoupe(); pickDrag=null;
+
+    if(mode==="mask"){
+      maskPoint = p;
+      maskColor = samplePixel(source, p);
       setStatus("maskInfo","RGB("+maskColor.join(", ")+")","good");
       const sw=$("maskSwatch");if(sw)sw.style.background="rgb("+maskColor.join(",")+")";
       const lb=$("maskLabel");if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
       drawMarkers();render();
     }else{
-      wbPoint=p;
-      const s=samplePixel(result,p);
+      wbPoint = p;
+      const s = samplePixel(result, p);
       const avg=(s[0]+s[1]+s[2])/3;
       wbGains=[s[0],s[1],s[2]].map(v=>Math.max(.25,Math.min(4,avg/Math.max(1,v))));
       setStatus("wbInfo","RGB("+s.join(", ")+")","good");
@@ -943,36 +951,13 @@ function attachPickerHandlers(canvas,type){
       drawMarkers();render();
     }
   });
+
   canvas.addEventListener("pointercancel",()=>{hideLoupe();pickDrag=null});
 }
-attachPickerHandlers(source,"mask");
-attachPickerHandlers(result,"wb");
+attachPickerHandlers(source);
+attachPickerHandlers(result);
 
 $("topHintDone").addEventListener("click",stopPicking);
-
-source.addEventListener("click",e=>{
-  if(pickerMode!=="mask"||!originalPixels)return;
-  if(pickDrag)return;
-  const p=getCanvasPoint(e,source);
-  maskPoint=p;maskColor=samplePixel(source,p);
-  setStatus("maskInfo","RGB("+maskColor.join(", ")+")","good");
-  const sw=$("maskSwatch");if(sw)sw.style.background="rgb("+maskColor.join(",")+")";
-  const lb=$("maskLabel");if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
-  drawMarkers();render();
-});
-result.addEventListener("click",e=>{
-  if(pickerMode!=="wb"||!originalPixels)return;
-  if(pickDrag)return;
-  const p=getCanvasPoint(e,result);
-  wbPoint=p;
-  const s=samplePixel(result,p);
-  const avg=(s[0]+s[1]+s[2])/3;
-  wbGains=[s[0],s[1],s[2]].map(v=>Math.max(.25,Math.min(4,avg/Math.max(1,v))));
-  setStatus("wbInfo","RGB("+s.join(", ")+")","good");
-  const sw=$("wbSwatch");if(sw)sw.style.background="rgb("+s.join(",")+")";
-  const lb=$("wbLabel");if(lb)lb.textContent="RGB("+s.join(", ")+")";
-  drawMarkers();render();
-});
 
 /* ---------- Профили ---------- */
 function currentProfile(){
@@ -1473,7 +1458,7 @@ function renderTargetsPanel(body){
         <button class="btn" id="pickMaskBtn" type="button">🎯 Пипетка</button>
         <button class="btn" id="resetMaskBtn" type="button">Сброс</button>
       </div>
-      <div class="target-hint" id="maskHint">Вид переключается кнопкой справа. Смотреть можно «Результат», тапать — по «Скану».</div>
+      <div class="target-hint" id="maskHint">Работает на любом виде. Смотри «Результат» — видно, как мишень влияет на позитив.</div>
       <p class="status" id="maskInfo" style="display:none"></p>
     </div>
     <div class="target-col">
@@ -1484,7 +1469,7 @@ function renderTargetsPanel(body){
         <button class="btn" id="pickWbBtn" type="button">⚪ Пипетка</button>
         <button class="btn" id="resetWbBtn" type="button">Сброс</button>
       </div>
-      <div class="target-hint" id="wbHint">Вид переключается кнопкой справа. Тапать — по «Результату».</div>
+      <div class="target-hint" id="wbHint">Работает на любом виде. Тапать можно и на «Скане» — цвет берётся с «Результата».</div>
       <p class="status" id="wbInfo" style="display:none"></p>
     </div>`;
   wrap.append(grid);body.append(wrap);
@@ -1492,11 +1477,11 @@ function renderTargetsPanel(body){
 
   $("pickMaskBtn").onclick=()=>{
     pickerMode=pickerMode==="mask"?null:"mask";updatePickUI();
-    if(pickerMode)toast("Тапни по основе на «Скане»","good");
+    if(pickerMode)toast("Тапни по основе","good");
   };
   $("pickWbBtn").onclick=()=>{
     pickerMode=pickerMode==="wb"?null:"wb";updatePickUI();
-    if(pickerMode)toast("Тапни по нейтральному на «Результате»","good");
+    if(pickerMode)toast("Тапни по нейтральному","good");
   };
   $("resetMaskBtn").onclick=()=>{
     maskColor=null;maskPoint=null;setStatus("maskInfo","","");
