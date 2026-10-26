@@ -688,7 +688,7 @@ $("importProfileFile").addEventListener("change",async e=>{
   if(file.size>5*1024*1024){alert("Файл слишком большой. Максимум 5 МБ.");return}
   const data=JSON.parse(await file.text());let incoming;
   if(data&&(data.format==="FilmLabProfile"||data.format==="FilmLabBackup")&&data.profiles)incoming=data.profiles;
-  else if(validProfile(data))incoming={[file.name.replace(/\.json$/i,""):data};
+  else if(validProfile(data))incoming={[file.name.replace(/\.json$/i,"")]:data};
   else{alert("Это не распознанный файл профиля FilmLab.");return}
   if(!incoming||typeof incoming!=="object"||Array.isArray(incoming)){alert("Неверная структура файла.");return}
   const entries=Object.entries(incoming);
