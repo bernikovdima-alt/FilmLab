@@ -51,7 +51,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
 }
 
-/* ======= НОВАЯ КНОПКА-ПЕРЕКЛЮЧАТЕЛЬ ======= */
+/* ======= КНОПКА-ПЕРЕКЛЮЧАТЕЛЬ ======= */
 #viewToggle{
   position:absolute;right:10px;top:50%;transform:translateY(-50%);
   z-index:4;
@@ -194,7 +194,6 @@ button,input,select,textarea{font:inherit;color:inherit}
   display:block;width:100%;height:20px;margin:0;
   -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
 }
-/* По умолчанию трек */
 .slider .ctrl input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--line)}
 .slider .ctrl input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--line)}
 .slider .ctrl input[type=range]::-webkit-slider-thumb{
@@ -432,16 +431,11 @@ select.input{
         <label class="ghost" for="cameraInput">📷 Снять</label>
       </div>
 
-      <!-- Одна кнопка-переключатель -->
       <button id="viewToggle" type="button" class="active" aria-label="Результат/Скан">
-        <svg id="viewIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <!-- иконка "плёнка" (негатив) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="4" width="18" height="16" rx="2"/>
-          <circle cx="7" cy="8" r="1.4"/>
-          <circle cx="7" cy="16" r="1.4"/>
-          <circle cx="17" cy="8" r="1.4"/>
-          <circle cx="17" cy="16" r="1.4"/>
-          <path d="M12 7v10M10 7h4M10 17h4"/>
+          <path d="M3 15l4-4 4 4 3-3 7 7"/>
+          <circle cx="9" cy="9" r="1.5"/>
         </svg>
       </button>
 
@@ -512,6 +506,7 @@ const resultOverlayCtx=resultOverlay.getContext("2d");
 
 const defaults={maskStrength:100,temperature:0,exposure:0,contrast:0,saturation:0,red:0,green:0,blue:0};
 const ALL_SLIDERS=["exposure","contrast","maskStrength","saturation","temperature","red","green","blue"];
+const MAX_PHOTOS = 24;
 
 let photos=[],selectedId=null,nextId=1;
 let originalPixels=null,basePixels=null;
@@ -521,7 +516,6 @@ let maskColor=null,wbGains=null,maskPoint=null,wbPoint=null,pickerMode=null;
 let renderQueued=false;
 let activeTool="crop";
 let currentView="result";
-/* «Шаблон» — применённый профиль, для новых фото */
 let appliedProfile=null;
 const lockedSliders=new Set(ALL_SLIDERS);
 
@@ -617,7 +611,6 @@ function snapshotCurrentSettings(){
   };
 }
 function applySettingsToUI(s){
-  // Если настроек нет — используем текущие (для первого фото)
   const src = s || currentProfileSettingsTemplate();
   setSliderValues(src.settings);
   $("mode").value = src.mode || "negative";
@@ -629,9 +622,6 @@ function applySettingsToUI(s){
   refreshUIFromState();
 }
 function currentProfileSettingsTemplate(){
-  // Шаблон для новых фото:
-  // 1) если применён профиль — его настройки
-  // 2) иначе дефолт
   if(appliedProfile) return {
     settings:{...defaults, ...(appliedProfile.settings||{})},
     mode: appliedProfile.mode||"negative",
@@ -655,6 +645,15 @@ function saveCurrentPhotoSettings(){
 /* ---------- Загрузка/выбор фото ---------- */
 function loadPhotoToCanvas(photo){
   if(!photo||!photo.url){toast("Нет файла","err");return}
+
+  // Освобождаем предыдущие пиксели — они больше не нужны
+  originalPixels = null;
+  basePixels = null;
+
+  cropRect=null;cropDrag=null;cropEnabled=false;
+  currentRatio="free";
+  stopPicking();
+
   const img=new Image();
   img.onload=()=>{
     try{
@@ -674,11 +673,6 @@ function loadPhotoToCanvas(photo){
       originalPixels=sourceCtx.getImageData(0,0,w,h);
       basePixels=new ImageData(new Uint8ClampedArray(originalPixels.data),w,h);
 
-      cropRect=null;cropDrag=null;cropEnabled=false;
-      currentRatio="free";
-      stopPicking();
-
-      // Восстанавливаем настройки ЭТОГО фото, если сохранены. Иначе — шаблон (профиль/дефолт)
       applySettingsToUI(photo.settings || null);
 
       drawMarkers();render();
@@ -686,26 +680,38 @@ function loadPhotoToCanvas(photo){
       $("emptyHint").style.display="none";
       toast("Загружено: "+photo.name,"good");
     }catch(err){
-      originalPixels=null;toast("Ошибка: "+err.message,"err");
+      originalPixels=null;basePixels=null;
+      toast("Ошибка: "+err.message,"err");
     }
   };
   img.onerror=()=>toast("Не удалось прочитать файл","err");
   img.src=photo.url;
 }
 function selectPhoto(id){
-  // сохранить текущие настройки предыдущего фото
   if(selectedId!==null && selectedId!==id) saveCurrentPhotoSettings();
-  selectedId=id;updateGallery();
+  if(selectedId===id && originalPixels) return;
+  selectedId=id;
+  updateGallery();
   const photo=photos.find(p=>p.id===selectedId);
   if(photo)loadPhotoToCanvas(photo);
 }
 
-/* ---------- Добавление файлов ---------- */
+/* ---------- Добавление файлов (с лимитом) ---------- */
 function addFiles(fileList){
   const files=Array.from(fileList||[]);
   if(!files.length)return;
+
+  const remaining = MAX_PHOTOS - photos.length;
+  if(remaining <= 0){
+    toast("Достигнут лимит: "+MAX_PHOTOS+" фото. Удали что-нибудь.","err");
+    return;
+  }
+
+  const accepted = files.slice(0, remaining);
+  const overflow = files.length - accepted.length;
+
   let added=0;const firstNewIndex=photos.length;const errs=[];
-  for(const f of files){
+  for(const f of accepted){
     if(!f.type||!f.type.startsWith("image/")){errs.push(f.name);continue}
     if(f.size===0){errs.push(f.name);continue}
     try{
@@ -713,6 +719,7 @@ function addFiles(fileList){
       added++;
     }catch(e){errs.push(f.name)}
   }
+
   updateGallery();
   if(added>0){
     if(selectedId===null||!photos.some(p=>p.id===selectedId)){
@@ -720,9 +727,11 @@ function addFiles(fileList){
       updateGallery();
       loadPhotoToCanvas(photos[firstNewIndex]);
     }
-    toast("Добавлено: "+added,errs.length?"":"good");
+    let msg="Добавлено: "+added;
+    if(overflow>0)msg+=". Пропущено (лимит "+MAX_PHOTOS+"): "+overflow;
+    toast(msg, overflow||errs.length ? "" : "good");
   }
-  if(errs.length)toast("Не добавлено: "+errs.length,"err");
+  if(errs.length && !overflow)toast("Не добавлено: "+errs.length,"err");
 }
 function connectFileInput(id){
   const input=$(id);
@@ -745,6 +754,7 @@ function removePhoto(id){
 }
 function resetStage(){
   originalPixels=null;
+  basePixels=null;
   sourceCtx.clearRect(0,0,source.width,source.height);
   resultCtx.clearRect(0,0,result.width,result.height);
   sourceOverlayCtx.clearRect(0,0,sourceOverlay.width,sourceOverlay.height);
@@ -1039,6 +1049,7 @@ function showWorkingPixels(pixels){
   sourceOverlay.width=resultOverlay.width=pixels.width;
   sourceOverlay.height=resultOverlay.height=pixels.height;
   sourceCtx.putImageData(originalPixels,0,0);
+  basePixels=new ImageData(new Uint8ClampedArray(originalPixels.data),pixels.width,pixels.height);
   cropRect=null;cropDrag=null;cropEnabled=false;
   setStackRatio(pixels.width,pixels.height);
   drawMarkers();render();
@@ -1299,6 +1310,16 @@ function sliderHTML(id,label,extraClass){
     </div>
   </div>`;
 }
+function rgbSliderHTML(id,extraClass){
+  return `
+  <div class="slider ${extraClass}" data-slider-id="${id}">
+    <div class="ctrl">
+      <button class="icon-btn reset" type="button" data-reset-slider="${id}" title="Сброс" aria-label="Сброс">↺</button>
+      <input id="${id}_ui" type="range" min="${$(id).min}" max="${$(id).max}" value="${$(id).value}">
+      <button class="icon-btn lock" type="button" data-lock-slider="${id}" title="Заблокировать" aria-label="Заблокировать">🔓</button>
+    </div>
+  </div>`;
+}
 function bindSlider(id){
   const hidden=$(id),ui=$(`${id}_ui`);
   if(!ui)return;
@@ -1544,19 +1565,16 @@ function renderLightPanel(body){
   });
 }
 
-/* --- ЦВЕТ: единый блок; R/G/B без подписей, с цветными треками --- */
 function renderColorPanel(body){
   const g=document.createElement("div");g.className="group";
   g.style.padding="6px 10px 6px";
 
-  // Насыщенность и Температура — обычные
   const topRow=document.createElement("div");
   topRow.innerHTML=
     sliderHTML("saturation","Насыщенность")+
     sliderHTML("temperature","Температура","sl-temp");
   g.append(topRow);
 
-  // R / G / B — без подписи, только ползунок с цветным треком
   const rgbWrap=document.createElement("div");
   rgbWrap.innerHTML=`
     ${rgbSliderHTML("red","sl-red")}
@@ -1570,18 +1588,6 @@ function renderColorPanel(body){
   bindSlider("saturation");
   bindSlider("temperature");
   bindSlider("red");bindSlider("green");bindSlider("blue");
-}
-
-/* R/G/B без подписи — только ползунок с цветным градиентом */
-function rgbSliderHTML(id,extraClass){
-  return `
-  <div class="slider ${extraClass}" data-slider-id="${id}">
-    <div class="ctrl">
-      <button class="icon-btn reset" type="button" data-reset-slider="${id}" title="Сброс" aria-label="Сброс">↺</button>
-      <input id="${id}_ui" type="range" min="${$(id).min}" max="${$(id).max}" value="${$(id).value}">
-      <button class="icon-btn lock" type="button" data-lock-slider="${id}" title="Заблокировать" aria-label="Заблокировать">🔓</button>
-    </div>
-  </div>`;
 }
 
 function renderProfilesPanel(body){
@@ -1621,7 +1627,6 @@ function renderProfilesPanel(body){
     if(!p){alert("Выбери профиль");return}
     if(!validProfile(p)){alert("Некорректный профиль");return}
 
-    // Применяем к ТЕКУЩЕМУ фото и запоминаем как «шаблон» для новых
     appliedProfile = {
       settings:{...p.settings},
       mode:p.mode||"negative",
@@ -1637,7 +1642,6 @@ function renderProfilesPanel(body){
     syncAllSlidersUI();
     drawMarkers();render();refreshUIFromState();
 
-    // Сохраняем в текущее фото
     saveCurrentPhotoSettings();
 
     toast('Профиль "'+name+'" применён','good');
@@ -1712,17 +1716,23 @@ function renderSavePanel(body){
   $("batchBtn").onclick=async()=>{
     if(!photos.length){toast("Нет фото","err");return}
     if(!confirm("Сохранить обработанные копии всех фото?"))return;
-    // Сохранить настройки текущего фото перед пакетной
+
     saveCurrentPhotoSettings();
     const overlay=$("batchOverlay"),bt=$("batchText");
     overlay.classList.add("show");
+
+    const currentPhotoId = selectedId;
+
     try{
       for(let n=0;n<photos.length;n++){
         const photo=photos[n];
-        // Используем настройки ЭТОГО фото, если есть; иначе — шаблон
         const s = photo.settings || currentProfileSettingsTemplate();
-        const opts = {...s.settings,mode:s.mode,mask:s.maskColor?[...s.maskColor]:null,wb:s.wbGains?[...s.wbGains]:null};
+        const opts = {...s.settings, mode:s.mode,
+          mask:s.maskColor?[...s.maskColor]:null,
+          wb:s.wbGains?[...s.wbGains]:null};
+
         bt.textContent="Обработка "+(n+1)+" из "+photos.length;
+
         await new Promise(resolve=>{
           const img=new Image();
           img.onload=()=>{
@@ -1748,7 +1758,13 @@ function renderSavePanel(body){
           img.src=photo.url;
         });
       }
-    }finally{overlay.classList.remove("show")}
+    }finally{
+      overlay.classList.remove("show");
+    }
+
+    if(currentPhotoId!==null && photos.some(p=>p.id===currentPhotoId)){
+      selectPhoto(currentPhotoId);
+    }
     toast("Пакетная обработка завершена","good");
   };
 }
