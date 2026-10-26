@@ -280,11 +280,77 @@ select.input{
 .ratio-cell .action-lbl{font-size:11px;font-weight:700;line-height:1}
 .ratio-cell .action-ico{font-size:16px;line-height:1}
 
-/* Совсем маленькие экраны — не ломаемся */
 @media (max-width:360px){
   .ratio-grid{grid-auto-rows:56px;gap:4px}
   .ratio-lbl{font-size:9px}
   .ratio-cell .action-lbl{font-size:10px}
+}
+
+/* ============ ВКЛАДКА "МИШЕНИ" (2 колонки) ============ */
+.targets-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin:8px 0;
+}
+.target-col{
+  background:var(--bg-3);
+  border-radius:12px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:0;
+}
+.target-title{
+  font-size:12px;
+  font-weight:700;
+  color:var(--text);
+  text-align:center;
+  letter-spacing:.02em;
+}
+.target-swatch{
+  width:100%;
+  height:52px;
+  border-radius:10px;
+  border:2px solid var(--line);
+  background:#333;
+  position:relative;
+  overflow:hidden;
+}
+.target-swatch::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(45deg,rgba(255,255,255,.06) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.06) 75%),
+    linear-gradient(45deg,rgba(255,255,255,.06) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.06) 75%);
+  background-size:12px 12px;
+  background-position:0 0,6px 6px;
+  pointer-events:none;
+}
+.target-label{
+  font-size:11px;
+  color:var(--muted);
+  text-align:center;
+  min-height:14px;
+  overflow-wrap:anywhere;
+}
+.target-btns{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:auto;
+}
+.target-btns .btn{
+  width:100%;
+  height:36px;
+  font-size:12px;
+  padding:0 6px;
+  justify-content:center;
+}
+.target-btns .btn.active-mode{
+  background:var(--warn);border-color:transparent;color:#1a1200;
 }
 
 #gallery{display:flex;gap:6px;overflow-x:auto;padding:4px 0 6px;scroll-snap-type:x mandatory;scrollbar-width:none}
@@ -306,33 +372,6 @@ select.input{
   padding:0 2px 4px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-
-.pick-panel-info{display:flex;align-items:center;gap:8px;margin:4px 0 8px}
-.pick-panel-info .swatch{
-  width:36px;height:36px;border-radius:10px;border:2px solid var(--line);
-  flex:0 0 auto;background:#333;
-}
-.pick-panel-info .lbl{
-  flex:1 1 auto;min-width:0;font-size:12px;color:var(--muted);
-  line-height:1.35;overflow-wrap:anywhere;
-}
-.pick-help{
-  font-size:12px;color:var(--muted);background:var(--bg-3);border-radius:10px;
-  padding:8px 10px;margin:0 0 8px;line-height:1.4;
-}
-.pick-help b{color:var(--text)}
-
-.nudge{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0;max-width:180px}
-.nudge button{
-  height:36px;border-radius:8px;border:1px solid var(--line);
-  background:var(--bg-3);color:var(--text);font-size:15px;font-weight:700;cursor:pointer;
-}
-.nudge button:active{background:var(--panel-2)}
-.nudge .up{grid-column:2}
-.nudge .left{grid-column:1;grid-row:2}
-.nudge .mid{grid-column:2;grid-row:2;opacity:.55;font-size:11px;font-weight:600}
-.nudge .right{grid-column:3;grid-row:2}
-.nudge .down{grid-column:2;grid-row:3}
 
 #toast{
   position:fixed;left:50%;top:calc(8px + var(--safe-t));
@@ -420,9 +459,9 @@ select.input{
 
   <div id="bottomNav">
     <button type="button" data-tool="crop" class="active"><span class="ico">✂️</span><span class="lbl">Кадр</span></button>
+    <button type="button" data-tool="targets"><span class="ico">🎯</span><span class="lbl">Мишени</span></button>
     <button type="button" data-tool="light"><span class="ico">☀️</span><span class="lbl">Свет</span></button>
     <button type="button" data-tool="color"><span class="ico">🎨</span><span class="lbl">Цвет</span></button>
-    <button type="button" data-tool="pick"><span class="ico">🎯</span><span class="lbl">Точки</span></button>
     <button type="button" data-tool="profiles"><span class="ico">👤</span><span class="lbl">Профили</span></button>
     <button type="button" data-tool="save"><span class="ico">💾</span><span class="lbl">Файлы</span></button>
   </div>
@@ -830,11 +869,14 @@ let pickDrag=null;
 function updatePickUI(){
   const maskOn=pickerMode==="mask";
   const wbOn=pickerMode==="wb";
-  $("pickMaskBtn")&&$("pickMaskBtn").classList.toggle("active-mode",maskOn);
-  $("pickWbBtn")&&$("pickWbBtn").classList.toggle("active-mode",wbOn);
+  // Подсветка кнопок "Пипетка" в панели
+  const maskBtn=$("pickMaskBtn");
+  const wbBtn=$("pickWbBtn");
+  if(maskBtn)maskBtn.classList.toggle("active-mode",maskOn);
+  if(wbBtn)wbBtn.classList.toggle("active-mode",wbOn);
   topHint.classList.toggle("show",!!pickerMode);
-  if(maskOn){topHintText.textContent="Задержи палец на основе";setView("source")}
-  if(wbOn){topHintText.textContent="Задержи палец на нейтральном";setView("result")}
+  if(maskOn){topHintText.textContent="Тапни по основе";setView("source")}
+  if(wbOn){topHintText.textContent="Тапни по нейтральному";setView("result")}
 }
 function stopPicking(){pickerMode=null;hideLoupe();pickDrag=null;updatePickUI()}
 
@@ -883,6 +925,7 @@ attachPickerHandlers(result,"wb");
 
 $("topHintDone").addEventListener("click",stopPicking);
 
+/* Тап по фото без "задержки" (для быстрого выбора) */
 source.addEventListener("click",e=>{
   if(pickerMode!=="mask"||!originalPixels)return;
   if(pickDrag)return;
@@ -890,6 +933,7 @@ source.addEventListener("click",e=>{
   maskPoint=p;maskColor=samplePixel(source,p);
   setStatus("maskInfo","RGB("+maskColor.join(", ")+")","good");
   const sw=$("maskSwatch");if(sw)sw.style.background="rgb("+maskColor.join(",")+")";
+  const lb=$("maskLabel");if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
   drawMarkers();render();
 });
 result.addEventListener("click",e=>{
@@ -902,6 +946,7 @@ result.addEventListener("click",e=>{
   wbGains=[s[0],s[1],s[2]].map(v=>Math.max(.25,Math.min(4,avg/Math.max(1,v))));
   setStatus("wbInfo","RGB("+s.join(", ")+")","good");
   const sw=$("wbSwatch");if(sw)sw.style.background="rgb("+s.join(",")+")";
+  const lb=$("wbLabel");if(lb)lb.textContent="RGB("+s.join(", ")+")";
   drawMarkers();render();
 });
 
@@ -1340,9 +1385,18 @@ function refreshUIFromState(){
     b.classList.toggle("active",b.dataset.mode===$("mode").value);
   });
   const ms=$("maskSwatch");if(ms)ms.style.background=maskColor?"rgb("+maskColor.join(",")+")":"#333";
-  const ws=$("wbSwatch");if(ws)ws.style.background=wbGains?"rgb("+[1,1,1].map((v,i)=>Math.round(255/Math.max(.01,wbGains[i]))).join(",")+")":"#333";
-  const ml=$("maskLabel");if(ml)ml.textContent=maskColor?"RGB("+maskColor.join(", ")+")":"Точка не выбрана";
-  const wl=$("wbLabel");if(wl)wl.textContent=wbGains?"Баланс установлен":"Не настроен";
+  const ws=$("wbSwatch");
+  if(ws){
+    if(wbGains){
+      // для свотча показываем усреднённый цвет с учётом gains — нейтрализуем примерно
+      const c=[0,1,2].map(i=>Math.round(255/Math.max(.01,wbGains[i])));
+      ws.style.background="rgb("+c.join(",")+")";
+    }else{
+      ws.style.background="#333";
+    }
+  }
+  const ml=$("maskLabel");if(ml)ml.textContent=maskColor?"RGB("+maskColor.join(", ")+")":"не выбрано";
+  const wl=$("wbLabel");if(wl)wl.textContent=wbGains?"установлено":"не настроено";
   updateUndoAvailability();
 }
 
@@ -1351,9 +1405,9 @@ function renderToolPanel(){
   const body=$("toolBody");
   body.replaceChildren();
   if(activeTool==="crop")renderCropPanel(body);
+  else if(activeTool==="targets")renderTargetsPanel(body);
   else if(activeTool==="light")renderLightPanel(body);
   else if(activeTool==="color")renderColorPanel(body);
-  else if(activeTool==="pick")renderPickPanel(body);
   else if(activeTool==="profiles")renderProfilesPanel(body);
   else if(activeTool==="save")renderSavePanel(body);
   refreshUIFromState();
@@ -1420,7 +1474,6 @@ function renderCropPanel(body){
       <span class="action-lbl">Сброс</span>
     </button>`;
   g.append(grid);
-
   body.append(g);
 
   // Логика
@@ -1469,7 +1522,6 @@ function renderCropPanel(body){
     if(r==="apply"||r==="reset")return;
     btn.onclick=()=>{
       if(r===currentRatio&&cropEnabled){
-        // повторный тап по активному — выключить рамку
         cropEnabled=false;
         cropRect=null;
         cropDrag=null;
@@ -1486,6 +1538,66 @@ function renderCropPanel(body){
       applyAspectRatio(r);
     };
   });
+}
+
+/* --- TARGETS (Мишени) --- */
+function renderTargetsPanel(body){
+  const wrap=document.createElement("div");
+  wrap.className="group";
+  wrap.style.padding="8px 8px 10px";
+
+  const grid=document.createElement("div");
+  grid.className="targets-grid";
+  grid.innerHTML=`
+    <div class="target-col">
+      <div class="target-title">Мишень плёнки</div>
+      <div class="target-swatch" id="maskSwatch"></div>
+      <div class="target-label" id="maskLabel">не выбрано</div>
+      <div class="target-btns">
+        <button class="btn" id="pickMaskBtn" type="button">🎯 Пипетка</button>
+        <button class="btn" id="resetMaskBtn" type="button">Сброс</button>
+      </div>
+      <p class="status" id="maskInfo" style="display:none"></p>
+    </div>
+    <div class="target-col">
+      <div class="target-title">Точка белого</div>
+      <div class="target-swatch" id="wbSwatch"></div>
+      <div class="target-label" id="wbLabel">не настроено</div>
+      <div class="target-btns">
+        <button class="btn" id="pickWbBtn" type="button">⚪ Пипетка</button>
+        <button class="btn" id="resetWbBtn" type="button">Сброс</button>
+      </div>
+      <p class="status" id="wbInfo" style="display:none"></p>
+    </div>`;
+  wrap.append(grid);
+  body.append(wrap);
+
+  // Обновить отображение
+  refreshUIFromState();
+  updatePickUI();
+
+  // Кнопки пипеток
+  $("pickMaskBtn").onclick=()=>{
+    pickerMode=pickerMode==="mask"?null:"mask";
+    updatePickUI();
+    if(pickerMode)toast("Тапни по основе","good");
+  };
+  $("pickWbBtn").onclick=()=>{
+    pickerMode=pickerMode==="wb"?null:"wb";
+    updatePickUI();
+    if(pickerMode)toast("Тапни по нейтральному","good");
+  };
+
+  $("resetMaskBtn").onclick=()=>{
+    maskColor=null;maskPoint=null;
+    setStatus("maskInfo","","");
+    drawMarkers();render();refreshUIFromState();
+  };
+  $("resetWbBtn").onclick=()=>{
+    wbGains=null;wbPoint=null;
+    setStatus("wbInfo","","");
+    drawMarkers();render();refreshUIFromState();
+  };
 }
 
 /* --- LIGHT --- */
@@ -1592,113 +1704,6 @@ function renderColorPanel(body){
     toast("Сброшено","good");
   };
   updateUndoAvailability();
-}
-
-/* --- PICK --- */
-function renderPickPanel(body){
-  const g1=document.createElement("div");g1.className="group";
-  g1.innerHTML=`
-    <div class="group-title">Основа плёнки</div>
-    <div class="pick-help">
-      <b>Задержи</b> палец на основе в скане — появится лупа.
-      Двигай пальцем, чтобы прицелиться, отпусти — точка зафиксирована.
-    </div>
-    <div class="pick-panel-info">
-      <div class="swatch" id="maskSwatch"></div>
-      <div class="lbl" id="maskLabel">Точка не выбрана</div>
-    </div>
-    <div class="btn-row tight">
-      <button class="btn" id="pickMaskBtn">🎯 Пипетка</button>
-      <button class="btn" id="resetMaskBtn">Сброс</button>
-    </div>
-    <div class="nudge" id="maskNudge">
-      <button class="up" data-mask-dir="up">▲</button>
-      <button class="left" data-mask-dir="left">◀</button>
-      <button class="mid">1px</button>
-      <button class="right" data-mask-dir="right">▶</button>
-      <button class="down" data-mask-dir="down">▼</button>
-    </div>
-    <p class="status" id="maskInfo"></p>`;
-  body.append(g1);
-
-  const g2=document.createElement("div");g2.className="group";
-  g2.innerHTML=`
-    <div class="group-title">Баланс белого</div>
-    <div class="pick-help">
-      <b>Задержи</b> палец на нейтральном участке фото (белое/серое).
-      Отпусти — баланс пересчитается.
-    </div>
-    <div class="pick-panel-info">
-      <div class="swatch" id="wbSwatch"></div>
-      <div class="lbl" id="wbLabel">Не настроен</div>
-    </div>
-    <div class="btn-row tight">
-      <button class="btn" id="pickWbBtn">⚪ Пипетка</button>
-      <button class="btn" id="resetWbBtn">Сброс</button>
-    </div>
-    <div class="nudge" id="wbNudge">
-      <button class="up" data-wb-dir="up">▲</button>
-      <button class="left" data-wb-dir="left">◀</button>
-      <button class="mid">1px</button>
-      <button class="right" data-wb-dir="right">▶</button>
-      <button class="down" data-wb-dir="down">▼</button>
-    </div>
-    <p class="status" id="wbInfo"></p>`;
-  body.append(g2);
-
-  $("pickMaskBtn").onclick=()=>{
-    pickerMode=pickerMode==="mask"?null:"mask";
-    updatePickUI();
-    if(pickerMode)toast("Задержи палец на основе","good");
-  };
-  $("pickWbBtn").onclick=()=>{
-    pickerMode=pickerMode==="wb"?null:"wb";
-    updatePickUI();
-    if(pickerMode)toast("Задержи палец на нейтральном","good");
-  };
-  $("resetMaskBtn").onclick=()=>{
-    maskColor=null;maskPoint=null;
-    setStatus("maskInfo","","");
-    drawMarkers();render();refreshUIFromState();
-  };
-  $("resetWbBtn").onclick=()=>{
-    wbGains=null;wbPoint=null;
-    setStatus("wbInfo","","");
-    drawMarkers();render();refreshUIFromState();
-  };
-  document.querySelectorAll("[data-mask-dir]").forEach(b=>{
-    b.onclick=()=>nudgePoint("mask",b.dataset.maskDir);
-  });
-  document.querySelectorAll("[data-wb-dir]").forEach(b=>{
-    b.onclick=()=>nudgePoint("wb",b.dataset.wbDir);
-  });
-  refreshUIFromState();
-}
-
-function nudgePoint(type,dir){
-  if(!originalPixels)return;
-  const dx=dir==="left"?-1:dir==="right"?1:0;
-  const dy=dir==="up"?-1:dir==="down"?1:0;
-  if(type==="mask"){
-    const p=maskPoint||{x:Math.floor(source.width/2),y:Math.floor(source.height/2)};
-    const np={x:Math.max(0,Math.min(source.width-1,p.x+dx)),y:Math.max(0,Math.min(source.height-1,p.y+dy))};
-    maskPoint=np;maskColor=samplePixel(source,np);
-    setStatus("maskInfo","RGB("+maskColor.join(", ")+")","good");
-    const sw=$("maskSwatch");if(sw)sw.style.background="rgb("+maskColor.join(",")+")";
-    const lb=$("maskLabel");if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
-    drawMarkers();render();
-  }else{
-    const p=wbPoint||{x:Math.floor(result.width/2),y:Math.floor(result.height/2)};
-    const np={x:Math.max(0,Math.min(result.width-1,p.x+dx)),y:Math.max(0,Math.min(result.height-1,p.y+dy))};
-    wbPoint=np;
-    const s=samplePixel(result,np);
-    const avg=(s[0]+s[1]+s[2])/3;
-    wbGains=[s[0],s[1],s[2]].map(v=>Math.max(.25,Math.min(4,avg/Math.max(1,v))));
-    setStatus("wbInfo","RGB("+s.join(", ")+")","good");
-    const sw=$("wbSwatch");if(sw)sw.style.background="rgb("+s.join(",")+")";
-    const lb=$("wbLabel");if(lb)lb.textContent="RGB("+s.join(", ")+")";
-    drawMarkers();render();
-  }
 }
 
 /* --- PROFILES --- */
@@ -1901,7 +1906,7 @@ function bindSlider(id){
 
 /* ---------- Navigation ---------- */
 function switchTool(tool){
-  if(pickerMode&&tool!=="pick")stopPicking();
+  if(pickerMode&&tool!=="targets")stopPicking();
   activeTool=tool;
   document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
     b.classList.toggle("active",b.dataset.tool===tool);
