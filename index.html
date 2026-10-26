@@ -374,6 +374,41 @@ select.input{
 }
 .target-hint.show{display:block}
 
+/* Пресеты цвета плёнки */
+.film-presets{
+  display:flex;gap:8px;
+  overflow-x:auto;
+  padding:4px 2px 6px;
+  scrollbar-width:none;
+}
+.film-presets::-webkit-scrollbar{display:none}
+.preset-btn{
+  flex:0 0 auto;
+  width:64px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  border:0;background:transparent;cursor:pointer;padding:0;
+}
+.preset-dot{
+  width:46px;height:46px;border-radius:50%;
+  border:2px solid var(--line);
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.35);
+  transition:transform .15s, border-color .15s;
+}
+.preset-btn:active .preset-dot{transform:scale(.94)}
+.preset-btn.active .preset-dot{border-color:var(--accent);box-shadow:inset 0 0 0 2px rgba(0,0,0,.35), 0 0 0 2px rgba(78,168,255,.4)}
+.preset-lbl{
+  font-size:9px;font-weight:600;color:var(--muted);
+  text-align:center;line-height:1.15;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  max-width:100%;
+}
+.preset-btn.active .preset-lbl{color:var(--accent)}
+.presets-title{
+  font-size:10px;font-weight:700;color:var(--muted);
+  letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 2px 4px;
+}
+
 #gallery{display:flex;gap:6px;overflow-x:auto;padding:4px 0 6px;scroll-snap-type:x mandatory;scrollbar-width:none}
 #gallery::-webkit-scrollbar{display:none}
 #gallery .thumb{
@@ -545,6 +580,9 @@ const MAX_PHOTOS = 24;
 let photos=[],selectedId=null,nextId=1;
 let originalPixels=null;
 let basePixels=null;
+/* Смещение кропа в координатах basePixels:
+   (0,0) если кроп не применялся; иначе — offsetX/offsetY исходного файла */
+let baseOffsetX=0, baseOffsetY=0;
 let cropEnabled=false,cropRect=null,cropDrag=null;
 let currentRatio="free";
 let maskColor=null,wbGains=null,maskPoint=null,wbPoint=null,pickerMode=null;
@@ -552,7 +590,22 @@ let renderQueued=false;
 let activeTool="crop";
 let currentView="result";
 let appliedProfile=null;
+let currentFilmPresetId=null;
 const lockedSliders=new Set(ALL_SLIDERS);
+
+/* Список готовых пресетов плёнки: цвет основы (maskColor) */
+const FILM_PRESETS = [
+  { id:"portra",   name:"Portra 400",   rgb:[217,119,66] },
+  { id:"gold",     name:"Gold 200",     rgb:[224,138,62] },
+  { id:"ektar",    name:"Ektar 100",    rgb:[201,98,58] },
+  { id:"superia",  name:"Superia 400",  rgb:[196,104,68] },
+  { id:"pro400h",  name:"Pro 400H",     rgb:[168,192,138] },
+  { id:"cinestill",name:"CineStill 800",rgb:[160,74,50] },
+  { id:"vista",    name:"Vista 200",    rgb:[176,96,80] },
+  { id:"lomo",     name:"Lomography",   rgb:[122,32,80] },
+  { id:"ektachrome",name:"Ektachrome",  rgb:[74,90,106] },
+  { id:"agfa",     name:"Agfa",         rgb:[176,88,64] }
+];
 
 const clamp=(v,a=0,b=255)=>Math.max(a,Math.min(b,v));
 
@@ -658,7 +711,9 @@ function snapshotCurrentSettings(){
     maskColor: maskColor?[...maskColor]:null,
     wbGains: wbGains?[...wbGains]:null,
     maskPoint: maskPoint?{...maskPoint}:null,
-    wbPoint: wbPoint?{...wbPoint}:null
+    wbPoint: wbPoint?{...wbPoint}:null,
+    baseOffsetX, baseOffsetY,
+    filmPresetId: currentFilmPresetId
   };
 }
 function saveCurrentPhotoState(){
@@ -672,6 +727,10 @@ function saveCurrentPhotoState(){
       new Uint8ClampedArray(originalPixels.data),
       originalPixels.width, originalPixels.height
     );
+    photo.baseOffsetX = baseOffsetX;
+    photo.baseOffsetY = baseOffsetY;
+    photo.workingW = originalPixels.width;
+    photo.workingH = originalPixels.height;
   }
 }
 function applySettingsToUI(s){
@@ -682,6 +741,9 @@ function applySettingsToUI(s){
   wbGains = src.wbGains?[...src.wbGains]:null;
   maskPoint = src.maskPoint?{...src.maskPoint}:null;
   wbPoint = src.wbPoint?{...src.wbPoint}:null;
+  baseOffsetX = src.baseOffsetX||0;
+  baseOffsetY = src.baseOffsetY||0;
+  currentFilmPresetId = src.filmPresetId || null;
   syncAllSlidersUI();
   refreshUIFromState();
 }
@@ -691,12 +753,14 @@ function currentProfileSettingsTemplate(){
     mode: appliedProfile.mode||"negative",
     maskColor: appliedProfile.maskColor?[...appliedProfile.maskColor]:null,
     wbGains: appliedProfile.wbGains?[...appliedProfile.wbGains]:null,
-    maskPoint:null, wbPoint:null
+    maskPoint:null, wbPoint:null,
+    baseOffsetX:0, baseOffsetY:0, filmPresetId:null
   };
   return {
     settings:{...defaults},
     mode:"negative",
-    maskColor:null,wbGains:null,maskPoint:null,wbPoint:null
+    maskColor:null,wbGains:null,maskPoint:null,wbPoint:null,
+    baseOffsetX:0, baseOffsetY:0, filmPresetId:null
   };
 }
 
@@ -709,6 +773,7 @@ async function loadPhotoToCanvas(photo){
 
   originalPixels = null;
   basePixels = null;
+  baseOffsetX = 0; baseOffsetY = 0;
   cropRect=null;cropDrag=null;cropEnabled=false;
   currentRatio="free";
   stopPicking();
@@ -743,9 +808,12 @@ async function loadPhotoToCanvas(photo){
       );
       workW = photo.workingPixels.width;
       workH = photo.workingPixels.height;
+      baseOffsetX = photo.baseOffsetX || 0;
+      baseOffsetY = photo.baseOffsetY || 0;
     }else{
       workPixels = new ImageData(new Uint8ClampedArray(basePixels.data),baseW,baseH);
       workW = baseW; workH = baseH;
+      baseOffsetX = 0; baseOffsetY = 0;
     }
 
     source.width=result.width=workW;
@@ -801,6 +869,7 @@ function addFiles(fileList){
         url:URL.createObjectURL(f),
         settings:null,
         workingPixels:null,
+        baseOffsetX:0, baseOffsetY:0,
         ratio:"free"
       });
       added++;
@@ -840,6 +909,7 @@ function removePhoto(id){
 function resetStage(){
   originalPixels=null;
   basePixels=null;
+  baseOffsetX=0;baseOffsetY=0;
   sourceCtx.clearRect(0,0,source.width,source.height);
   resultCtx.clearRect(0,0,result.width,result.height);
   sourceOverlayCtx.clearRect(0,0,sourceOverlay.width,sourceOverlay.height);
@@ -955,26 +1025,32 @@ function getCanvasPoint(event,canvas){
   };
 }
 
-function samplePixelFromBase(basePoint){
-  if(!basePixels)return [0,0,0];
+/* Медианный пиксель в квадрате radius вокруг точки.
+   Если хотим "тёмное" или "светлое" — отбрасываем крайние 20% по яркости
+   и возвращаем середину оставшихся. */
+function medianPixelFromBase(basePoint, radius=4){
+  if(!basePixels) return [0,0,0];
   const w=basePixels.width,h=basePixels.height,data=basePixels.data;
   const x=Math.max(0,Math.min(w-1,Math.round(basePoint.x)));
   const y=Math.max(0,Math.min(h-1,Math.round(basePoint.y)));
-  const radius=3,channels=[[],[],[]];
+  const list=[];
   for(let yy=Math.max(0,y-radius);yy<=Math.min(h-1,y+radius);yy++){
     for(let xx=Math.max(0,x-radius);xx<=Math.min(w-1,x+radius);xx++){
       const i=(yy*w+xx)*4;
       if(data[i+3]<16)continue;
-      channels[0].push(data[i]);channels[1].push(data[i+1]);channels[2].push(data[i+2]);
+      list.push([data[i],data[i+1],data[i+2]]);
     }
   }
-  if(!channels[0].length)return [0,0,0];
-  return channels.map(a=>{a.sort((p,q)=>p-q);return a[Math.floor(a.length/2)]});
+  if(!list.length)return [0,0,0];
+  list.sort((a,b)=> (a[0]+a[1]+a[2]) - (b[0]+b[1]+b[2]));
+  const mid = list[Math.floor(list.length/2)];
+  return mid;
 }
 
-function samplePixel(canvas,point){
+/* Сэмпл пикселя с произвольного canvas (для точки белого)
+   Работает по небольшому окну, стабильно. */
+function samplePixel(canvas,point,radius=4){
   const ctx=canvas===result?resultCtx:sourceCtx;
-  const radius=3;
   const x0=Math.max(0,point.x-radius);
   const y0=Math.max(0,point.y-radius);
   const w=Math.min(canvas.width,point.x+radius+1)-x0;
@@ -982,24 +1058,23 @@ function samplePixel(canvas,point){
   if(w<=0||h<=0)return [0,0,0];
   const image=ctx.getImageData(x0,y0,w,h);
   const data=image.data;
-  const channels=[[],[],[]];
+  const list=[];
   for(let i=0;i<data.length;i+=4){
     if(data[i+3]<16)continue;
-    channels[0].push(data[i]);
-    channels[1].push(data[i+1]);
-    channels[2].push(data[i+2]);
+    list.push([data[i],data[i+1],data[i+2]]);
   }
-  if(!channels[0].length)return [0,0,0];
-  return channels.map(a=>{a.sort((p,q)=>p-q);return a[Math.floor(a.length/2)]});
+  if(!list.length)return [0,0,0];
+  list.sort((a,b)=> (a[0]+a[1]+a[2]) - (b[0]+b[1]+b[2]));
+  return list[Math.floor(list.length/2)];
 }
 
-function workPointToBasePoint(p){
-  if(!originalPixels||!basePixels)return p;
-  const wx=originalPixels.width, wy=originalPixels.height;
-  const bx=basePixels.width, by=basePixels.height;
-  const scaleX = bx / Math.max(1,wx);
-  const scaleY = by / Math.max(1,wy);
-  return { x: p.x * scaleX, y: p.y * scaleY };
+/* Сэмпл с ИСХОДНОГО файла, с учётом кропа — для мишени плёнки */
+function sampleOriginalAt(workPoint, radius=4){
+  if(!basePixels) return [0,0,0];
+  // рабочая точка → точка в исходных пикселях
+  const bx = baseOffsetX + workPoint.x;
+  const by = baseOffsetY + workPoint.y;
+  return medianPixelFromBase({x:bx,y:by}, radius);
 }
 
 const loupe=$("loupe"),loupeCanvas=$("loupeCanvas");
@@ -1080,8 +1155,10 @@ function attachPickerHandlers(canvas){
     hideLoupe(); pickDrag=null;
 
     if(mode==="mask"){
-      const baseP = workPointToBasePoint(p);
-      const s = samplePixelFromBase(baseP);
+      /* Мишень плёнки:
+         - берём пиксель с ИСХОДНОГО файла (basePixels + смещение кропа)
+         - это стабильно и не зависит от количества тапов */
+      const s = sampleOriginalAt(p, 4);
       maskPoint = p;
       maskColor = s;
       setStatus("maskInfo","RGB("+maskColor.join(", ")+")","good");
@@ -1089,13 +1166,32 @@ function attachPickerHandlers(canvas){
       const lb=$("maskLabel");if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
       drawMarkers();render();
     }else{
+      /* Точка белого:
+         - координата тапа — в рабочем холсте результата
+         - берём медиану из result, но СНИМАЕМ предыдущий wb, чтобы не было "скачков"
+         - считаем коэффициенты усиления к среднему яркости с ограничением 0.5…2.0 */
+      const s = samplePixel(result, p, 4);
+      // снимаем текущий wb временно
+      const prevWb = wbGains;
+      wbGains = null;
+      render();
+      // теперь читаем "чистый" результат в этой же точке
+      const cleanSample = samplePixel(result, p, 4);
+      // возвращаем предыдущий wb (чтобы дальше считать от чистого)
+      wbGains = prevWb;
+
+      const avg = (cleanSample[0]+cleanSample[1]+cleanSample[2])/3;
+      const safe = v => Math.max(8, v);
+      wbGains = [
+        Math.max(0.5, Math.min(2.0, avg / safe(cleanSample[0]))),
+        Math.max(0.5, Math.min(2.0, avg / safe(cleanSample[1]))),
+        Math.max(0.5, Math.min(2.0, avg / safe(cleanSample[2])))
+      ];
+
       wbPoint = p;
-      const s = samplePixel(result, p);
-      const avg=(s[0]+s[1]+s[2])/3;
-      wbGains=[s[0],s[1],s[2]].map(v=>Math.max(.25,Math.min(4,avg/Math.max(1,v))));
-      setStatus("wbInfo","RGB("+s.join(", ")+")","good");
-      const sw=$("wbSwatch");if(sw)sw.style.background="rgb("+s.join(",")+")";
-      const lb=$("wbLabel");if(lb)lb.textContent="RGB("+s.join(", ")+")";
+      setStatus("wbInfo","RGB("+cleanSample.join(", ")+")","good");
+      const sw=$("wbSwatch");if(sw)sw.style.background="rgb("+cleanSample.join(",")+")";
+      const lb=$("wbLabel");if(lb)lb.textContent="RGB("+cleanSample.join(", ")+")";
       drawMarkers();render();
     }
   });
@@ -1143,7 +1239,7 @@ function validProfile(p){
   return true;
 }
 
-function showWorkingPixels(pixels){
+function showWorkingPixels(pixels, baseOffX, baseOffY){
   originalPixels=new ImageData(new Uint8ClampedArray(pixels.data),pixels.width,pixels.height);
   source.width=result.width=pixels.width;
   source.height=result.height=pixels.height;
@@ -1151,6 +1247,8 @@ function showWorkingPixels(pixels){
   sourceOverlay.height=resultOverlay.height=pixels.height;
   sourceCtx.putImageData(originalPixels,0,0);
   cropRect=null;cropDrag=null;cropEnabled=false;
+  if(typeof baseOffX==="number") baseOffsetX=baseOffX;
+  if(typeof baseOffY==="number") baseOffsetY=baseOffY;
   setStackRatio(pixels.width,pixels.height);
   drawMarkers();render();
   if(selectedId!==null){
@@ -1160,6 +1258,10 @@ function showWorkingPixels(pixels){
         new Uint8ClampedArray(originalPixels.data),
         originalPixels.width, originalPixels.height
       );
+      photo.baseOffsetX = baseOffsetX;
+      photo.baseOffsetY = baseOffsetY;
+      photo.workingW = originalPixels.width;
+      photo.workingH = originalPixels.height;
     }
   }
 }
@@ -1175,7 +1277,8 @@ function rotateImage(dir){
   ctx.translate(temp.width/2,temp.height/2);
   ctx.rotate(dir*Math.PI/2);
   ctx.drawImage(src,-w/2,-h/2);
-  showWorkingPixels(ctx.getImageData(0,0,temp.width,temp.height));
+  // при повороте смещение кропа сбрасываем — работать с base после поворота некорректно
+  showWorkingPixels(ctx.getImageData(0,0,temp.width,temp.height), 0, 0);
   if(currentRatio!=="free")applyAspectRatio(currentRatio);
   toast("Повёрнуто","good");
 }
@@ -1401,6 +1504,11 @@ function refreshUIFromState(){
   }
   const ml=$("maskLabel");if(ml)ml.textContent=maskColor?"RGB("+maskColor.join(", ")+")":"не выбрано";
   const wl=$("wbLabel");if(wl)wl.textContent=wbGains?"установлено":"не настроено";
+
+  // обновить подсветку активного пресета
+  document.querySelectorAll(".preset-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.preset === currentFilmPresetId);
+  });
 }
 
 function sliderHTML(id,label,extraClass){
@@ -1556,7 +1664,10 @@ function renderCropPanel(body){
       const from=((y+row)*originalPixels.width+x)*4;
       cropped.data.set(originalPixels.data.subarray(from,from+w*4),row*w*4);
     }
-    showWorkingPixels(cropped);
+    // сохраняем смещение в координатах исходного файла
+    const newOffX = baseOffsetX + x;
+    const newOffY = baseOffsetY + y;
+    showWorkingPixels(cropped, newOffX, newOffY);
     cropEnabled=false;currentRatio="free";
     document.querySelectorAll(".ratio-cell").forEach(b=>{
       const r=b.dataset.ratio;
@@ -1568,7 +1679,7 @@ function renderCropPanel(body){
   };
   $("geomResetBtn").onclick=()=>{
     if(!basePixels){toast("Нет фото","err");return}
-    showWorkingPixels(basePixels);
+    showWorkingPixels(basePixels, 0, 0);
     cropEnabled=false;cropRect=null;cropDrag=null;currentRatio="free";
     document.querySelectorAll(".ratio-cell").forEach(b=>{
       const r=b.dataset.ratio;
@@ -1625,7 +1736,34 @@ function renderTargetsPanel(body){
       <div class="target-hint" id="wbHint">Нажми на самую светлую область</div>
       <p class="status" id="wbInfo" style="display:none"></p>
     </div>`;
-  wrap.append(grid);body.append(wrap);
+  wrap.append(grid);
+
+  // Пресеты цвета плёнки
+  const presetsGroup=document.createElement("div");
+  presetsGroup.style.marginTop="8px";
+  presetsGroup.innerHTML=`<div class="presets-title">Пресеты плёнки</div>`;
+  const presetsRow=document.createElement("div");
+  presetsRow.className="film-presets";
+  FILM_PRESETS.forEach(pr=>{
+    const btn=document.createElement("button");
+    btn.type="button";
+    btn.className="preset-btn" + (currentFilmPresetId===pr.id?" active":"");
+    btn.dataset.preset=pr.id;
+    btn.title=pr.name;
+    const dot=document.createElement("div");
+    dot.className="preset-dot";
+    dot.style.background="rgb("+pr.rgb.join(",")+")";
+    const lbl=document.createElement("div");
+    lbl.className="preset-lbl";
+    lbl.textContent=pr.name;
+    btn.append(dot,lbl);
+    btn.addEventListener("click",()=>applyFilmPreset(pr));
+    presetsRow.append(btn);
+  });
+  presetsGroup.append(presetsRow);
+  wrap.append(presetsGroup);
+
+  body.append(wrap);
   refreshUIFromState();updatePickUI();
 
   $("pickMaskBtn").onclick=()=>{
@@ -1637,13 +1775,27 @@ function renderTargetsPanel(body){
     if(pickerMode)toast("Тапни по светлой области","good");
   };
   $("resetMaskBtn").onclick=()=>{
-    maskColor=null;maskPoint=null;setStatus("maskInfo","","");
+    maskColor=null;maskPoint=null;currentFilmPresetId=null;
+    setStatus("maskInfo","","");
     drawMarkers();render();refreshUIFromState();
   };
   $("resetWbBtn").onclick=()=>{
     wbGains=null;wbPoint=null;setStatus("wbInfo","","");
     drawMarkers();render();refreshUIFromState();
   };
+}
+
+/* Применить пресет цвета плёнки как maskColor */
+function applyFilmPreset(preset){
+  maskColor=[...preset.rgb];
+  currentFilmPresetId = preset.id;
+  const sw=$("maskSwatch"); if(sw) sw.style.background="rgb("+maskColor.join(",")+")";
+  const lb=$("maskLabel"); if(lb) lb.textContent="RGB("+maskColor.join(", ")+")";
+  setStatus("maskInfo","Пресет: "+preset.name,"good");
+  render();
+  refreshUIFromState();
+  saveCurrentPhotoState();
+  toast("Пресет «"+preset.name+"» применён","good");
 }
 
 function renderLightPanel(body){
@@ -1911,8 +2063,6 @@ document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
 /* ---------- Защита от случайного ухода со страницы ---------- */
 (function setupExitGuard(){
   let ignoreNextPop = false;
-
-  // Кладём маркер в историю, чтобы можно было перехватить «назад»
   history.pushState({filmlab:true},"",location.href);
 
   window.addEventListener("popstate",()=>{
@@ -1933,7 +2083,6 @@ document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
     }
   });
 
-  // Стандартный браузерный диалог при обновлении / закрытии вкладки / уходе
   window.addEventListener("beforeunload",e=>{
     if(!originalPixels || selectedId===null) return;
     e.preventDefault();
