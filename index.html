@@ -234,25 +234,34 @@ select.input{
 }
 .segmented button.active{background:var(--panel-2);color:var(--text)}
 
-.ratio-strip{
-  display:flex;gap:5px;overflow-x:auto;
-  padding:4px 0 6px;scroll-snap-type:x mandatory;
-  scrollbar-width:none;
+/* ============ СЕТКА ПРЕСЕТОВ 2 СТРОКИ ============ */
+.ratio-grid{
+  display:grid;
+  grid-template-columns:repeat(5, minmax(0,1fr));
+  grid-auto-rows:60px;
+  gap:6px;
+  margin:8px 0 4px;
 }
-.ratio-strip::-webkit-scrollbar{display:none}
-.ratio-btn{
-  flex:0 0 auto;scroll-snap-align:start;
+.ratio-cell{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  min-width:52px;height:56px;padding:4px 6px;
+  padding:4px 2px;
   border-radius:10px;border:1px solid var(--line);
   background:var(--bg-3);color:var(--muted);
   cursor:pointer;
+  min-width:0;
 }
-.ratio-btn:active{transform:scale(.96)}
-.ratio-btn.active{
+.ratio-cell:active{transform:scale(.96)}
+.ratio-cell.active{
   border-color:var(--accent);color:var(--accent);
   background:rgba(78,168,255,.1);
 }
+.ratio-cell.action{
+  border-style:dashed;
+}
+.ratio-cell.primary{
+  background:var(--accent);color:#04121f;border-color:transparent;
+}
+.ratio-cell.primary:active{background:#68b6ff}
 .ratio-icon{
   display:block;
   border:2px solid currentColor;
@@ -267,7 +276,16 @@ select.input{
   content:"";position:absolute;inset:3px;
   border:1px dashed currentColor;border-radius:1px;
 }
-.ratio-lbl{font-size:10px;font-weight:600;line-height:1}
+.ratio-lbl{font-size:10px;font-weight:600;line-height:1;white-space:nowrap}
+.ratio-cell .action-lbl{font-size:11px;font-weight:700;line-height:1}
+.ratio-cell .action-ico{font-size:16px;line-height:1}
+
+/* Совсем маленькие экраны — не ломаемся */
+@media (max-width:360px){
+  .ratio-grid{grid-auto-rows:56px;gap:4px}
+  .ratio-lbl{font-size:9px}
+  .ratio-cell .action-lbl{font-size:10px}
+}
 
 #gallery{display:flex;gap:6px;overflow-x:auto;padding:4px 0 6px;scroll-snap-type:x mandatory;scrollbar-width:none}
 #gallery::-webkit-scrollbar{display:none}
@@ -1054,7 +1072,6 @@ function rotateImage(dir){
   ctx.rotate(dir*Math.PI/2);
   ctx.drawImage(src,-w/2,-h/2);
   showWorkingPixels(ctx.getImageData(0,0,temp.width,temp.height));
-  // Восстанавливаем рамку если была активна
   if(currentRatio!=="free"){
     applyAspectRatio(currentRatio);
   }
@@ -1116,21 +1133,16 @@ function computeAspectRect(ratio, currentRect){
 
 function applyAspectRatio(ratio){
   currentRatio=ratio;
-  document.querySelectorAll(".ratio-btn").forEach(b=>{
-    b.classList.toggle("active",b.dataset.ratio===ratio);
+  document.querySelectorAll(".ratio-cell").forEach(b=>{
+    const r=b.dataset.ratio;
+    if(!r||r==="apply"||r==="reset")return;
+    b.classList.toggle("active",r===ratio);
   });
   if(!originalPixels)return;
-
-  // Если "Свободно" и рамка уже включена — просто выключаем
   if(ratio==="free"){
-    // Оставляем рамку включённой, но свободного режима
-    if(cropEnabled&&cropRect){
-      drawCropRect();
-    }
+    if(cropEnabled&&cropRect)drawCropRect();
     return;
   }
-
-  // Включаем кадрирование, если выключено
   if(!cropEnabled){
     cropEnabled=true;
     if(!cropRect){
@@ -1144,7 +1156,7 @@ function applyAspectRatio(ratio){
   drawCropRect();
 }
 
-/* ---------- Pinch to resize crop rect ---------- */
+/* ---------- Pinch to resize ---------- */
 function getPinchDistance(touches){
   const dx=touches[0].clientX-touches[1].clientX;
   const dy=touches[0].clientY-touches[1].clientY;
@@ -1183,18 +1195,15 @@ source.addEventListener("touchmove",e=>{
   const imgW=source.width,imgH=source.height;
   const startRect=pinchState.startRect;
 
-  // Новая ширина/высота
   let newW=startRect.w*scale;
   let newH=startRect.h*scale;
 
-  // Ограничения
   const minSize=20;
   if(newW<minSize)newW=minSize;
   if(newH<minSize)newH=minSize;
   if(newW>imgW)newW=imgW;
   if(newH>imgH)newH=imgH;
 
-  // Если фиксированный ratio — сохраняем
   if(currentRatio!=="free"){
     const [rw,rh]=currentRatio.split(":").map(Number);
     const targetRatio=rw/rh;
@@ -1207,12 +1216,10 @@ source.addEventListener("touchmove",e=>{
     if(newH>imgH){newH=imgH;newW=newH*targetRatio;}
   }
 
-  // Центр рамки — привязываем к центру пинча
   const center=pinchState.startCenter;
   let newX=center.x-newW/2;
   let newY=center.y-newH/2;
 
-  // Удержать внутри изображения
   newX=Math.max(0,Math.min(imgW-newW,newX));
   newY=Math.max(0,Math.min(imgH-newH,newY));
 
@@ -1230,7 +1237,7 @@ source.addEventListener("touchcancel",e=>{
   pinchState=null;
 },{passive:true});
 
-/* ---------- Crop gesture (source canvas) ---------- */
+/* ---------- Crop gesture ---------- */
 source.style.touchAction="none";
 
 source.addEventListener("pointerdown",event=>{
@@ -1354,7 +1361,6 @@ function renderToolPanel(){
 
 /* --- CROP --- */
 function renderCropPanel(body){
-  // Единый блок: поворот + пресеты + применить/сброс
   const g=document.createElement("div");g.className="group";
 
   // Поворот
@@ -1366,53 +1372,54 @@ function renderCropPanel(body){
     <button class="btn" id="rotR">↷ +90°</button>`;
   g.append(rotRow);
 
-  // Пресеты соотношения
-  const ratioWrap=document.createElement("div");
-  ratioWrap.className="ratio-strip";
-  ratioWrap.style.marginTop="8px";
-  ratioWrap.innerHTML=`
-    <button class="ratio-btn ${currentRatio==="free"?"active":""}" data-ratio="free">
-      <span class="ratio-icon free" style="width:22px;height:22px"></span>
+  // Сетка пресетов 2 строки, 5 столбцов:
+  // Строка 1: Своб. | 4:3 | 3:2 | 16:9 | ✓ Готово
+  // Строка 2: 1:1   | 3:4 | 2:3 | 9:16 | ↺ Сброс
+  const grid=document.createElement("div");
+  grid.className="ratio-grid";
+  grid.innerHTML=`
+    <button class="ratio-cell ${currentRatio==="free"?"active":""}" data-ratio="free">
+      <span class="ratio-icon free" style="width:20px;height:20px"></span>
       <span class="ratio-lbl">Своб.</span>
     </button>
-    <button class="ratio-btn ${currentRatio==="1:1"?"active":""}" data-ratio="1:1">
-      <span class="ratio-icon" style="width:22px;height:22px"></span>
-      <span class="ratio-lbl">1:1</span>
-    </button>
-    <button class="ratio-btn ${currentRatio==="4:3"?"active":""}" data-ratio="4:3">
-      <span class="ratio-icon" style="width:24px;height:18px"></span>
+    <button class="ratio-cell ${currentRatio==="4:3"?"active":""}" data-ratio="4:3">
+      <span class="ratio-icon" style="width:22px;height:16px"></span>
       <span class="ratio-lbl">4:3</span>
     </button>
-    <button class="ratio-btn ${currentRatio==="3:2"?"active":""}" data-ratio="3:2">
-      <span class="ratio-icon" style="width:24px;height:16px"></span>
+    <button class="ratio-cell ${currentRatio==="3:2"?"active":""}" data-ratio="3:2">
+      <span class="ratio-icon" style="width:22px;height:15px"></span>
       <span class="ratio-lbl">3:2</span>
     </button>
-    <button class="ratio-btn ${currentRatio==="16:9"?"active":""}" data-ratio="16:9">
-      <span class="ratio-icon" style="width:26px;height:15px"></span>
+    <button class="ratio-cell ${currentRatio==="16:9"?"active":""}" data-ratio="16:9">
+      <span class="ratio-icon" style="width:24px;height:14px"></span>
       <span class="ratio-lbl">16:9</span>
     </button>
-    <button class="ratio-btn ${currentRatio==="3:4"?"active":""}" data-ratio="3:4">
-      <span class="ratio-icon" style="width:18px;height:24px"></span>
+    <button class="ratio-cell primary" id="cropApplyBtn" data-ratio="apply">
+      <span class="action-ico">✓</span>
+      <span class="action-lbl">Готово</span>
+    </button>
+
+    <button class="ratio-cell ${currentRatio==="1:1"?"active":""}" data-ratio="1:1">
+      <span class="ratio-icon" style="width:20px;height:20px"></span>
+      <span class="ratio-lbl">1:1</span>
+    </button>
+    <button class="ratio-cell ${currentRatio==="3:4"?"active":""}" data-ratio="3:4">
+      <span class="ratio-icon" style="width:16px;height:22px"></span>
       <span class="ratio-lbl">3:4</span>
     </button>
-    <button class="ratio-btn ${currentRatio==="2:3"?"active":""}" data-ratio="2:3">
-      <span class="ratio-icon" style="width:16px;height:24px"></span>
+    <button class="ratio-cell ${currentRatio==="2:3"?"active":""}" data-ratio="2:3">
+      <span class="ratio-icon" style="width:15px;height:22px"></span>
       <span class="ratio-lbl">2:3</span>
     </button>
-    <button class="ratio-btn ${currentRatio==="9:16"?"active":""}" data-ratio="9:16">
-      <span class="ratio-icon" style="width:15px;height:26px"></span>
+    <button class="ratio-cell ${currentRatio==="9:16"?"active":""}" data-ratio="9:16">
+      <span class="ratio-icon" style="width:14px;height:24px"></span>
       <span class="ratio-lbl">9:16</span>
+    </button>
+    <button class="ratio-cell action" id="geomResetBtn" data-ratio="reset">
+      <span class="action-ico">↺</span>
+      <span class="action-lbl">Сброс</span>
     </button>`;
-  g.append(ratioWrap);
-
-  // Применить / Сброс — под пресетами
-  const applyRow=document.createElement("div");
-  applyRow.className="btn-row tight";
-  applyRow.style.marginTop="4px";
-  applyRow.innerHTML=`
-    <button class="btn primary" id="cropApplyBtn">Применить</button>
-    <button class="btn" id="geomResetBtn">Сброс</button>`;
-  g.append(applyRow);
+  g.append(grid);
 
   body.append(g);
 
@@ -1421,7 +1428,7 @@ function renderCropPanel(body){
   $("rotR").onclick=()=>rotateImage(1);
 
   $("cropApplyBtn").onclick=()=>{
-    if(!originalPixels||!cropRect||!cropEnabled){toast("Включи рамку через пресет","err");return}
+    if(!originalPixels||!cropRect||!cropEnabled){toast("Выбери пресет","err");return}
     const x=Math.max(0,Math.floor(cropRect.x));
     const y=Math.max(0,Math.floor(cropRect.y));
     const w=Math.min(originalPixels.width-x,Math.floor(cropRect.w));
@@ -1433,6 +1440,13 @@ function renderCropPanel(body){
       cropped.data.set(originalPixels.data.subarray(from,from+w*4),row*w*4);
     }
     showWorkingPixels(cropped);
+    cropEnabled=false;
+    currentRatio="free";
+    document.querySelectorAll(".ratio-cell").forEach(b=>{
+      const r=b.dataset.ratio;
+      if(!r||r==="apply"||r==="reset")return;
+      b.classList.toggle("active",r==="free");
+    });
     setView("result");
     toast("Кадрирование применено","good");
   };
@@ -1442,31 +1456,34 @@ function renderCropPanel(body){
     showWorkingPixels(basePixels);
     cropEnabled=false;cropRect=null;cropDrag=null;
     currentRatio="free";
-    document.querySelectorAll(".ratio-btn").forEach(b=>{
-      b.classList.toggle("active",b.dataset.ratio==="free");
+    document.querySelectorAll(".ratio-cell").forEach(b=>{
+      const r=b.dataset.ratio;
+      if(!r||r==="apply"||r==="reset")return;
+      b.classList.toggle("active",r==="free");
     });
     toast("Сброшено","good");
   };
 
-  document.querySelectorAll(".ratio-btn").forEach(btn=>{
+  document.querySelectorAll(".ratio-cell").forEach(btn=>{
+    const r=btn.dataset.ratio;
+    if(r==="apply"||r==="reset")return;
     btn.onclick=()=>{
-      const ratio=btn.dataset.ratio;
-      // Повторный тап по активному пресету — выключить рамку
-      if(ratio===currentRatio&&cropEnabled){
+      if(r===currentRatio&&cropEnabled){
+        // повторный тап по активному — выключить рамку
         cropEnabled=false;
         cropRect=null;
         cropDrag=null;
         drawMarkers();
         render();
-        document.querySelectorAll(".ratio-btn").forEach(b=>b.classList.remove("active"));
         currentRatio="free";
-        // Обновим состояние кнопки "Своб."
-        document.querySelectorAll(".ratio-btn").forEach(b=>{
-          if(b.dataset.ratio==="free")b.classList.add("active");
+        document.querySelectorAll(".ratio-cell").forEach(b=>{
+          const rr=b.dataset.ratio;
+          if(!rr||rr==="apply"||rr==="reset")return;
+          b.classList.toggle("active",rr==="free");
         });
         return;
       }
-      applyAspectRatio(ratio);
+      applyAspectRatio(r);
     };
   });
 }
