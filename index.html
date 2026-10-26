@@ -27,11 +27,9 @@ body{
 button,input,select,textarea{font:inherit;color:inherit}
 
 #stage{position:fixed;inset:0;display:flex;flex-direction:column;background:#000}
-
 #photoArea{
-  flex:1 1 auto;min-height:0;
-  position:relative;display:flex;flex-direction:column;
-  overflow:hidden;background:#000;
+  flex:1 1 auto;min-height:0;position:relative;
+  display:flex;flex-direction:column;overflow:hidden;background:#000;
 }
 #canvasArea{
   position:relative;flex:1 1 auto;min-height:0;
@@ -40,27 +38,17 @@ button,input,select,textarea{font:inherit;color:inherit}
   padding:calc(8px + var(--safe-t)) 8px 8px;
 }
 .canvas-wrap{
-  display:none;
-  align-items:center;justify-content:center;
-  width:100%;height:100%;
-  position:relative;
+  display:none;align-items:center;justify-content:center;
+  width:100%;height:100%;position:relative;
 }
 .canvas-wrap.visible{display:flex}
-.canvas-stack{
-  position:relative;
-  display:block;
-  flex:0 0 auto;
-}
+.canvas-stack{position:relative;display:block;flex:0 0 auto}
 .canvas-stack canvas.base{
-  display:block;
-  width:100%;height:100%;
-  object-fit:contain;
+  display:block;width:100%;height:100%;object-fit:contain;
   box-shadow:0 4px 20px rgba(0,0,0,.55);
 }
 .canvas-stack canvas.overlay{
-  position:absolute;inset:0;
-  width:100%;height:100%;
-  pointer-events:none;
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
 }
 
 #viewTabs{
@@ -162,7 +150,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 #bottomNav button.active .ico{filter:none}
 #bottomNav button:active{background:rgba(255,255,255,.05)}
 
-/* ---------- Примитивы ---------- */
 .group{background:var(--bg-2);border-radius:var(--radius);padding:4px 12px;margin:0 0 8px}
 .group-title{
   font-size:10px;font-weight:700;color:var(--muted);
@@ -229,7 +216,7 @@ select.input{
   height:38px;border-radius:10px;
   border:1px dashed var(--line);background:var(--bg-3);color:var(--text);
   font-size:13px;font-weight:600;cursor:pointer;
-  padding:0 12px;margin:4px 0;flex:0 0 auto;
+  padding:0 12px;margin:0;flex:0 0 auto;
 }
 
 .status{
@@ -247,7 +234,6 @@ select.input{
 }
 .segmented button.active{background:var(--panel-2);color:var(--text)}
 
-/* ---------- Пресеты соотношений ---------- */
 .ratio-strip{
   display:flex;gap:5px;overflow-x:auto;
   padding:4px 0 6px;scroll-snap-type:x mandatory;
@@ -283,7 +269,6 @@ select.input{
 }
 .ratio-lbl{font-size:10px;font-weight:600;line-height:1}
 
-/* ---------- Галерея ---------- */
 #gallery{display:flex;gap:6px;overflow-x:auto;padding:4px 0 6px;scroll-snap-type:x mandatory;scrollbar-width:none}
 #gallery::-webkit-scrollbar{display:none}
 #gallery .thumb{
@@ -304,7 +289,6 @@ select.input{
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 
-/* ---------- Пипетки ---------- */
 .pick-panel-info{display:flex;align-items:center;gap:8px;margin:4px 0 8px}
 .pick-panel-info .swatch{
   width:36px;height:36px;border-radius:10px;border:2px solid var(--line);
@@ -578,6 +562,7 @@ function loadPhotoToCanvas(photo){
       basePixels=new ImageData(new Uint8ClampedArray(originalPixels.data),w,h);
 
       cropRect=null;cropDrag=null;cropEnabled=false;
+      currentRatio="free";
 
       maskColor=null;wbGains=null;maskPoint=null;wbPoint=null;autoSnapshot=null;
       stopPicking();
@@ -1052,7 +1037,7 @@ function showWorkingPixels(pixels){
   sourceOverlay.width=resultOverlay.width=pixels.width;
   sourceOverlay.height=resultOverlay.height=pixels.height;
   sourceCtx.putImageData(originalPixels,0,0);
-  cropRect=null;cropDrag=null;
+  cropRect=null;cropDrag=null;cropEnabled=false;
   setStackRatio(pixels.width,pixels.height);
   drawMarkers();render();
 }
@@ -1069,6 +1054,10 @@ function rotateImage(dir){
   ctx.rotate(dir*Math.PI/2);
   ctx.drawImage(src,-w/2,-h/2);
   showWorkingPixels(ctx.getImageData(0,0,temp.width,temp.height));
+  // Восстанавливаем рамку если была активна
+  if(currentRatio!=="free"){
+    applyAspectRatio(currentRatio);
+  }
   toast("Повёрнуто","good");
 }
 
@@ -1106,7 +1095,6 @@ function computeAspectRect(ratio, currentRect){
   const targetRatio=rw/rh;
   const imgW=originalPixels.width,imgH=originalPixels.height;
 
-  // Максимальный размер с данным соотношением, вписанный в изображение
   let testW=Math.min(imgW,imgH*targetRatio);
   let testH=testW/targetRatio;
 
@@ -1133,7 +1121,14 @@ function applyAspectRatio(ratio){
   });
   if(!originalPixels)return;
 
-  if(ratio==="free")return;
+  // Если "Свободно" и рамка уже включена — просто выключаем
+  if(ratio==="free"){
+    // Оставляем рамку включённой, но свободного режима
+    if(cropEnabled&&cropRect){
+      drawCropRect();
+    }
+    return;
+  }
 
   // Включаем кадрирование, если выключено
   if(!cropEnabled){
@@ -1144,26 +1139,103 @@ function applyAspectRatio(ratio){
       cropRect={x:mx,y:my,w:w-mx*2,h:h-my*2};
     }
     setView("source");
-    const b=$("cropToggleBtn");
-    if(b){b.classList.add("active-mode");b.textContent="Скрыть рамку";}
   }
   cropRect=computeAspectRect(ratio,cropRect);
   drawCropRect();
-  updateCropStatus();
 }
 
-function updateCropStatus(){
-  const el=$("cropStatus");if(!el)return;
-  if(!cropEnabled){el.textContent="Кадрирование выключено.";return}
-  if(!cropRect){el.textContent="Перетаскивай углы рамки.";return}
-  el.textContent="Область: "+Math.round(cropRect.w)+" × "+Math.round(cropRect.h);
+/* ---------- Pinch to resize crop rect ---------- */
+function getPinchDistance(touches){
+  const dx=touches[0].clientX-touches[1].clientX;
+  const dy=touches[0].clientY-touches[1].clientY;
+  return Math.hypot(dx,dy);
 }
+function getPinchCenter(touches,canvas){
+  const rect=canvas.getBoundingClientRect();
+  const cx=(touches[0].clientX+touches[1].clientX)/2;
+  const cy=(touches[0].clientY+touches[1].clientY)/2;
+  return {
+    x:(cx-rect.left)*canvas.width/rect.width,
+    y:(cy-rect.top)*canvas.height/rect.height
+  };
+}
+
+let pinchState=null;
+
+source.addEventListener("touchstart",e=>{
+  if(!cropEnabled||!originalPixels||pickerMode)return;
+  if(e.touches.length!==2)return;
+  e.preventDefault();
+  pinchState={
+    startDist:getPinchDistance(e.touches),
+    startRect:{...cropRect},
+    startCenter:getPinchCenter(e.touches,source)
+  };
+},{passive:false});
+
+source.addEventListener("touchmove",e=>{
+  if(!cropEnabled||!originalPixels||!pinchState)return;
+  if(e.touches.length!==2)return;
+  e.preventDefault();
+
+  const dist=getPinchDistance(e.touches);
+  const scale=dist/pinchState.startDist;
+  const imgW=source.width,imgH=source.height;
+  const startRect=pinchState.startRect;
+
+  // Новая ширина/высота
+  let newW=startRect.w*scale;
+  let newH=startRect.h*scale;
+
+  // Ограничения
+  const minSize=20;
+  if(newW<minSize)newW=minSize;
+  if(newH<minSize)newH=minSize;
+  if(newW>imgW)newW=imgW;
+  if(newH>imgH)newH=imgH;
+
+  // Если фиксированный ratio — сохраняем
+  if(currentRatio!=="free"){
+    const [rw,rh]=currentRatio.split(":").map(Number);
+    const targetRatio=rw/rh;
+    if(newW/newH>targetRatio){
+      newH=newW/targetRatio;
+    }else{
+      newW=newH*targetRatio;
+    }
+    if(newW>imgW){newW=imgW;newH=newW/targetRatio;}
+    if(newH>imgH){newH=imgH;newW=newH*targetRatio;}
+  }
+
+  // Центр рамки — привязываем к центру пинча
+  const center=pinchState.startCenter;
+  let newX=center.x-newW/2;
+  let newY=center.y-newH/2;
+
+  // Удержать внутри изображения
+  newX=Math.max(0,Math.min(imgW-newW,newX));
+  newY=Math.max(0,Math.min(imgH-newH,newY));
+
+  cropRect={x:newX,y:newY,w:newW,h:newH};
+  drawCropRect();
+},{passive:false});
+
+source.addEventListener("touchend",e=>{
+  if(pinchState){
+    pinchState=null;
+  }
+},{passive:true});
+
+source.addEventListener("touchcancel",e=>{
+  pinchState=null;
+},{passive:true});
 
 /* ---------- Crop gesture (source canvas) ---------- */
 source.style.touchAction="none";
 
 source.addEventListener("pointerdown",event=>{
   if(!cropEnabled||!originalPixels||pickerMode)return;
+  if(event.pointerType==="touch"&&event.isPrimary===false)return;
   const p=getCanvasPoint(event,source);
   const r=cropRect;
   if(!r)return;
@@ -1208,7 +1280,6 @@ source.addEventListener("pointermove",event=>{
     if(d.corner.includes("b"))b=Math.min(source.height,Math.max(t+minSize,p.y));
     cropRect={x:l,y:t,w:rt-l,h:b-t};
   }else{
-    // Соотношение фиксировано — пересчитываем с противоположным фиксированным углом
     const [rw,rh]=currentRatio.split(":").map(Number);
     const targetRatio=rw/rh;
     const fixedX=d.corner.includes("l")?r.x+r.w:r.x;
@@ -1234,7 +1305,6 @@ source.addEventListener("pointermove",event=>{
     cropRect={x:newX,y:newY,w,h};
   }
   drawCropRect();
-  updateCropStatus();
 });
 source.addEventListener("pointerup",()=>{cropDrag=null});
 source.addEventListener("pointercancel",()=>{cropDrag=null});
@@ -1284,94 +1354,74 @@ function renderToolPanel(){
 
 /* --- CROP --- */
 function renderCropPanel(body){
+  // Единый блок: поворот + пресеты + применить/сброс
+  const g=document.createElement("div");g.className="group";
+
   // Поворот
-  const g1=document.createElement("div");g1.className="group";
-  g1.innerHTML=`
-    <div class="group-title">Поворот</div>
-    <div class="btn-row tight">
-      <button class="btn" id="rotL">↶ −90°</button>
-      <button class="btn" id="rotR">↷ +90°</button>
-    </div>`;
-  body.append(g1);
+  const rotRow=document.createElement("div");
+  rotRow.className="btn-row tight";
+  rotRow.style.marginTop="8px";
+  rotRow.innerHTML=`
+    <button class="btn" id="rotL">↶ −90°</button>
+    <button class="btn" id="rotR">↷ +90°</button>`;
+  g.append(rotRow);
 
-  // Кадрирование
-  const g2=document.createElement("div");g2.className="group";
-  g2.innerHTML=`
-    <div class="group-title">Кадрирование</div>
-    <div class="btn-row tight">
-      <button class="btn" id="cropToggleBtn">Включить рамку</button>
-      <button class="btn primary" id="cropApplyBtn">Применить</button>
-      <button class="btn" id="geomResetBtn">Сброс</button>
-    </div>
-    <p class="status" id="cropStatus">Кадрирование выключено.</p>`;
-  body.append(g2);
+  // Пресеты соотношения
+  const ratioWrap=document.createElement("div");
+  ratioWrap.className="ratio-strip";
+  ratioWrap.style.marginTop="8px";
+  ratioWrap.innerHTML=`
+    <button class="ratio-btn ${currentRatio==="free"?"active":""}" data-ratio="free">
+      <span class="ratio-icon free" style="width:22px;height:22px"></span>
+      <span class="ratio-lbl">Своб.</span>
+    </button>
+    <button class="ratio-btn ${currentRatio==="1:1"?"active":""}" data-ratio="1:1">
+      <span class="ratio-icon" style="width:22px;height:22px"></span>
+      <span class="ratio-lbl">1:1</span>
+    </button>
+    <button class="ratio-btn ${currentRatio==="4:3"?"active":""}" data-ratio="4:3">
+      <span class="ratio-icon" style="width:24px;height:18px"></span>
+      <span class="ratio-lbl">4:3</span>
+    </button>
+    <button class="ratio-btn ${currentRatio==="3:2"?"active":""}" data-ratio="3:2">
+      <span class="ratio-icon" style="width:24px;height:16px"></span>
+      <span class="ratio-lbl">3:2</span>
+    </button>
+    <button class="ratio-btn ${currentRatio==="16:9"?"active":""}" data-ratio="16:9">
+      <span class="ratio-icon" style="width:26px;height:15px"></span>
+      <span class="ratio-lbl">16:9</span>
+    </button>
+    <button class="ratio-btn ${currentRatio==="3:4"?"active":""}" data-ratio="3:4">
+      <span class="ratio-icon" style="width:18px;height:24px"></span>
+      <span class="ratio-lbl">3:4</span>
+    </button>
+    <button class="ratio-btn ${currentRatio==="2:3"?"active":""}" data-ratio="2:3">
+      <span class="ratio-icon" style="width:16px;height:24px"></span>
+      <span class="ratio-lbl">2:3</span>
+    </button>
+    <button class="ratio-btn ${currentRatio==="9:16"?"active":""}" data-ratio="9:16">
+      <span class="ratio-icon" style="width:15px;height:26px"></span>
+      <span class="ratio-lbl">9:16</span>
+    </button>`;
+  g.append(ratioWrap);
 
-  // Пресеты
-  const g3=document.createElement("div");g3.className="group";
-  g3.innerHTML=`
-    <div class="group-title">Соотношение</div>
-    <div class="ratio-strip">
-      <button class="ratio-btn ${currentRatio==="free"?"active":""}" data-ratio="free">
-        <span class="ratio-icon free" style="width:22px;height:22px"></span>
-        <span class="ratio-lbl">Своб.</span>
-      </button>
-      <button class="ratio-btn ${currentRatio==="1:1"?"active":""}" data-ratio="1:1">
-        <span class="ratio-icon" style="width:22px;height:22px"></span>
-        <span class="ratio-lbl">1:1</span>
-      </button>
-      <button class="ratio-btn ${currentRatio==="4:3"?"active":""}" data-ratio="4:3">
-        <span class="ratio-icon" style="width:24px;height:18px"></span>
-        <span class="ratio-lbl">4:3</span>
-      </button>
-      <button class="ratio-btn ${currentRatio==="3:2"?"active":""}" data-ratio="3:2">
-        <span class="ratio-icon" style="width:24px;height:16px"></span>
-        <span class="ratio-lbl">3:2</span>
-      </button>
-      <button class="ratio-btn ${currentRatio==="16:9"?"active":""}" data-ratio="16:9">
-        <span class="ratio-icon" style="width:26px;height:15px"></span>
-        <span class="ratio-lbl">16:9</span>
-      </button>
-      <button class="ratio-btn ${currentRatio==="3:4"?"active":""}" data-ratio="3:4">
-        <span class="ratio-icon" style="width:18px;height:24px"></span>
-        <span class="ratio-lbl">3:4</span>
-      </button>
-      <button class="ratio-btn ${currentRatio==="2:3"?"active":""}" data-ratio="2:3">
-        <span class="ratio-icon" style="width:16px;height:24px"></span>
-        <span class="ratio-lbl">2:3</span>
-      </button>
-      <button class="ratio-btn ${currentRatio==="9:16"?"active":""}" data-ratio="9:16">
-        <span class="ratio-icon" style="width:15px;height:26px"></span>
-        <span class="ratio-lbl">9:16</span>
-      </button>
-    </div>`;
-  body.append(g3);
+  // Применить / Сброс — под пресетами
+  const applyRow=document.createElement("div");
+  applyRow.className="btn-row tight";
+  applyRow.style.marginTop="4px";
+  applyRow.innerHTML=`
+    <button class="btn primary" id="cropApplyBtn">Применить</button>
+    <button class="btn" id="geomResetBtn">Сброс</button>`;
+  g.append(applyRow);
 
+  body.append(g);
+
+  // Логика
   $("rotL").onclick=()=>rotateImage(-1);
   $("rotR").onclick=()=>rotateImage(1);
 
-  $("cropToggleBtn").onclick=()=>{
-    if(!originalPixels){toast("Нет фото","err");return}
-    cropEnabled=!cropEnabled;
-    if(cropEnabled){
-      if(!cropRect){
-        const w=originalPixels.width,h=originalPixels.height;
-        const mx=Math.round(w*0.08),my=Math.round(h*0.08);
-        cropRect={x:mx,y:my,w:w-mx*2,h:h-my*2};
-      }
-      if(currentRatio!=="free"){
-        cropRect=computeAspectRect(currentRatio,cropRect);
-      }
-      setView("source");
-    }else cropDrag=null;
-    const b=$("cropToggleBtn");
-    b.classList.toggle("active-mode",cropEnabled);
-    b.textContent=cropEnabled?"Скрыть рамку":"Включить рамку";
-    drawCropRect();
-    updateCropStatus();
-  };
-
   $("cropApplyBtn").onclick=()=>{
-    if(!originalPixels||!cropRect){toast("Включи рамку","err");return}
+    if(!originalPixels||!cropRect||!cropEnabled){toast("Включи рамку через пресет","err");return}
     const x=Math.max(0,Math.floor(cropRect.x));
     const y=Math.max(0,Math.floor(cropRect.y));
     const w=Math.min(originalPixels.width-x,Math.floor(cropRect.w));
@@ -1383,12 +1433,7 @@ function renderCropPanel(body){
       cropped.data.set(originalPixels.data.subarray(from,from+w*4),row*w*4);
     }
     showWorkingPixels(cropped);
-    cropEnabled=false;
-    const b=$("cropToggleBtn");
-    b.classList.remove("active-mode");
-    b.textContent="Включить рамку";
     setView("result");
-    updateCropStatus();
     toast("Кадрирование применено","good");
   };
 
@@ -1396,18 +1441,34 @@ function renderCropPanel(body){
     if(!basePixels){toast("Нет фото","err");return}
     showWorkingPixels(basePixels);
     cropEnabled=false;cropRect=null;cropDrag=null;
-    const b=$("cropToggleBtn");
-    b.classList.remove("active-mode");
-    b.textContent="Включить рамку";
-    updateCropStatus();
+    currentRatio="free";
+    document.querySelectorAll(".ratio-btn").forEach(b=>{
+      b.classList.toggle("active",b.dataset.ratio==="free");
+    });
     toast("Сброшено","good");
   };
 
   document.querySelectorAll(".ratio-btn").forEach(btn=>{
-    btn.onclick=()=>applyAspectRatio(btn.dataset.ratio);
+    btn.onclick=()=>{
+      const ratio=btn.dataset.ratio;
+      // Повторный тап по активному пресету — выключить рамку
+      if(ratio===currentRatio&&cropEnabled){
+        cropEnabled=false;
+        cropRect=null;
+        cropDrag=null;
+        drawMarkers();
+        render();
+        document.querySelectorAll(".ratio-btn").forEach(b=>b.classList.remove("active"));
+        currentRatio="free";
+        // Обновим состояние кнопки "Своб."
+        document.querySelectorAll(".ratio-btn").forEach(b=>{
+          if(b.dataset.ratio==="free")b.classList.add("active");
+        });
+        return;
+      }
+      applyAspectRatio(ratio);
+    };
   });
-
-  updateCropStatus();
 }
 
 /* --- LIGHT --- */
@@ -1707,7 +1768,6 @@ function renderProfilesPanel(body){
 
 /* --- SAVE (Файлы) --- */
 function renderSavePanel(body){
-  // Галерея
   const gGal=document.createElement("div");gGal.className="group";
   gGal.innerHTML=`
     <div class="group-title">Фотографии</div>
@@ -1722,7 +1782,6 @@ function renderSavePanel(body){
     </div>`;
   body.append(gGal);
 
-  // Сохранение
   const gSave=document.createElement("div");gSave.className="group";
   gSave.innerHTML=`
     <div class="group-title">Сохранить</div>
