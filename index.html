@@ -51,19 +51,34 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
 }
 
-#viewTabs{
-  position:absolute;right:8px;top:50%;transform:translateY(-50%);
-  z-index:4;display:flex;flex-direction:column;gap:4px;
+/* ======= НОВАЯ КНОПКА-ПЕРЕКЛЮЧАТЕЛЬ ======= */
+#viewToggle{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  z-index:4;
+  width:56px;height:56px;
+  border-radius:50%;
+  border:0;
+  background:rgba(0,0,0,.65);
+  color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  box-shadow:0 4px 14px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.08);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  padding:0;
+  transition:background .2s, transform .15s;
 }
-#viewTabs button{
-  min-width:64px;padding:10px 8px;border:0;
-  background:rgba(0,0,0,.6);color:#fff;
-  font-size:11px;font-weight:700;letter-spacing:.02em;
-  border-radius:10px;cursor:pointer;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  box-shadow:0 2px 8px rgba(0,0,0,.4);
+#viewToggle:active{transform:translateY(-50%) scale(.94)}
+#viewToggle.active{
+  background:var(--accent);
+  color:#04121f;
+  box-shadow:0 4px 14px rgba(78,168,255,.5),inset 0 0 0 2px rgba(0,0,0,.1);
 }
-#viewTabs button.active{background:var(--accent);color:#04121f}
+#viewToggle svg{
+  width:26px;height:26px;
+  display:block;
+  transition:transform .2s;
+}
+#viewToggle.active svg{transform:rotate(180deg)}
 
 #emptyHint{
   position:absolute;inset:0;
@@ -152,7 +167,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .group{background:var(--bg-2);border-radius:var(--radius);padding:2px 10px;margin:0 0 6px}
 
-/* ======== КОМПАКТНЫЙ ПОЛЗУНОК (без разделителей) ======== */
+/* ======== КОМПАКТНЫЙ ПОЛЗУНОК ======== */
 .slider{
   padding:2px 0 4px;
   user-select:none;
@@ -179,10 +194,11 @@ button,input,select,textarea{font:inherit;color:inherit}
   display:block;width:100%;height:20px;margin:0;
   -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
 }
-.slider .ctrl input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line)}
-.slider .ctrl input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line)}
+/* По умолчанию трек */
+.slider .ctrl input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--line)}
+.slider .ctrl input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--line)}
 .slider .ctrl input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-6px;
+  -webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5px;
   border-radius:50%;background:#fff;border:3px solid var(--accent);
   box-shadow:0 1px 4px rgba(0,0,0,.5);
 }
@@ -192,6 +208,33 @@ button,input,select,textarea{font:inherit;color:inherit}
 .slider .ctrl input[type=range]:disabled{
   opacity:.35;
   pointer-events:none;
+}
+
+/* Градиентные треки для цветовых каналов (R/G/B) */
+.slider.sl-red .ctrl input[type=range]::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,#000,#ff0000);
+}
+.slider.sl-red .ctrl input[type=range]::-moz-range-track{
+  background:linear-gradient(90deg,#000,#ff0000);
+}
+.slider.sl-green .ctrl input[type=range]::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,#000,#00ff00);
+}
+.slider.sl-green .ctrl input[type=range]::-moz-range-track{
+  background:linear-gradient(90deg,#000,#00ff00);
+}
+.slider.sl-blue .ctrl input[type=range]::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,#000,#0066ff);
+}
+.slider.sl-blue .ctrl input[type=range]::-moz-range-track{
+  background:linear-gradient(90deg,#000,#0066ff);
+}
+/* Градиент для температуры (холод → тепло) */
+.slider.sl-temp .ctrl input[type=range]::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,#4ea8ff,#eef1f6 50%,#ffb547);
+}
+.slider.sl-temp .ctrl input[type=range]::-moz-range-track{
+  background:linear-gradient(90deg,#4ea8ff,#eef1f6 50%,#ffb547);
 }
 
 /* Кнопки-квадратики с рамкой */
@@ -389,10 +432,18 @@ select.input{
         <label class="ghost" for="cameraInput">📷 Снять</label>
       </div>
 
-      <div id="viewTabs">
-        <button type="button" data-view="result" class="active">Результат</button>
-        <button type="button" data-view="source">Скан</button>
-      </div>
+      <!-- Одна кнопка-переключатель -->
+      <button id="viewToggle" type="button" class="active" aria-label="Результат/Скан">
+        <svg id="viewIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- иконка "плёнка" (негатив) -->
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <circle cx="7" cy="8" r="1.4"/>
+          <circle cx="7" cy="16" r="1.4"/>
+          <circle cx="17" cy="8" r="1.4"/>
+          <circle cx="17" cy="16" r="1.4"/>
+          <path d="M12 7v10M10 7h4M10 17h4"/>
+        </svg>
+      </button>
 
       <div id="loupe">
         <canvas id="loupeCanvas" width="220" height="220"></canvas>
@@ -469,6 +520,9 @@ let currentRatio="free";
 let maskColor=null,wbGains=null,maskPoint=null,wbPoint=null,pickerMode=null;
 let renderQueued=false;
 let activeTool="crop";
+let currentView="result";
+/* «Шаблон» — применённый профиль, для новых фото */
+let appliedProfile=null;
 const lockedSliders=new Set(ALL_SLIDERS);
 
 const clamp=(v,a=0,b=255)=>Math.max(a,Math.min(b,v));
@@ -506,18 +560,24 @@ function setStackRatio(w,h){
 window.addEventListener("resize",resizeAllStacks);
 window.addEventListener("orientationchange",()=>setTimeout(resizeAllStacks,120));
 
+/* ---------- ОДНА КНОПКА «Результат / Скан» ---------- */
+const ICON_RESULT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15l4-4 4 4 3-3 7 7"/><circle cx="9" cy="9" r="1.5"/></svg>`;
+const ICON_SOURCE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="7" cy="8" r="1.4"/><circle cx="7" cy="16" r="1.4"/><circle cx="17" cy="8" r="1.4"/><circle cx="17" cy="16" r="1.4"/><path d="M12 7v10M10 7h4M10 17h4"/></svg>`;
+
 function setView(v){
+  currentView=v;
   $("resultWrap").classList.toggle("visible",v==="result");
   $("sourceWrap").classList.toggle("visible",v==="source");
-  document.querySelectorAll("#viewTabs [data-view]").forEach(b=>{
-    b.classList.toggle("active",b.dataset.view===v);
-  });
+  const btn=$("viewToggle");
+  btn.classList.toggle("active",v==="result");
+  btn.innerHTML = v==="result" ? ICON_RESULT : ICON_SOURCE;
   setTimeout(resizeAllStacks,10);
 }
-document.querySelectorAll("#viewTabs [data-view]").forEach(btn=>{
-  btn.addEventListener("click",()=>setView(btn.dataset.view));
+$("viewToggle").addEventListener("click",()=>{
+  setView(currentView==="result"?"source":"result");
 });
 
+/* ---------- Галерея ---------- */
 function updateGallery(){
   const g=$("gallery");if(!g)return;
   g.replaceChildren();
@@ -543,6 +603,56 @@ function updateGallery(){
   }
 }
 
+/* ======================================================
+   НАСТРОЙКИ НА КАЖДОЕ ФОТО
+   ====================================================== */
+function snapshotCurrentSettings(){
+  return {
+    settings: getSliderValues(),
+    mode: $("mode").value,
+    maskColor: maskColor?[...maskColor]:null,
+    wbGains: wbGains?[...wbGains]:null,
+    maskPoint: maskPoint?{...maskPoint}:null,
+    wbPoint: wbPoint?{...wbPoint}:null
+  };
+}
+function applySettingsToUI(s){
+  // Если настроек нет — используем текущие (для первого фото)
+  const src = s || currentProfileSettingsTemplate();
+  setSliderValues(src.settings);
+  $("mode").value = src.mode || "negative";
+  maskColor = src.maskColor?[...src.maskColor]:null;
+  wbGains = src.wbGains?[...src.wbGains]:null;
+  maskPoint = src.maskPoint?{...src.maskPoint}:null;
+  wbPoint = src.wbPoint?{...src.wbPoint}:null;
+  syncAllSlidersUI();
+  refreshUIFromState();
+}
+function currentProfileSettingsTemplate(){
+  // Шаблон для новых фото:
+  // 1) если применён профиль — его настройки
+  // 2) иначе дефолт
+  if(appliedProfile) return {
+    settings:{...defaults, ...(appliedProfile.settings||{})},
+    mode: appliedProfile.mode||"negative",
+    maskColor: appliedProfile.maskColor?[...appliedProfile.maskColor]:null,
+    wbGains: appliedProfile.wbGains?[...appliedProfile.wbGains]:null,
+    maskPoint:null, wbPoint:null
+  };
+  return {
+    settings:{...defaults},
+    mode:"negative",
+    maskColor:null,wbGains:null,maskPoint:null,wbPoint:null
+  };
+}
+function saveCurrentPhotoSettings(){
+  if(selectedId===null)return;
+  const photo=photos.find(p=>p.id===selectedId);
+  if(!photo)return;
+  photo.settings = snapshotCurrentSettings();
+}
+
+/* ---------- Загрузка/выбор фото ---------- */
 function loadPhotoToCanvas(photo){
   if(!photo||!photo.url){toast("Нет файла","err");return}
   const img=new Image();
@@ -566,8 +676,12 @@ function loadPhotoToCanvas(photo){
 
       cropRect=null;cropDrag=null;cropEnabled=false;
       currentRatio="free";
-      maskColor=null;wbGains=null;maskPoint=null;wbPoint=null;
-      stopPicking();drawMarkers();render();
+      stopPicking();
+
+      // Восстанавливаем настройки ЭТОГО фото, если сохранены. Иначе — шаблон (профиль/дефолт)
+      applySettingsToUI(photo.settings || null);
+
+      drawMarkers();render();
       updateGallery();setStackRatio(w,h);
       $("emptyHint").style.display="none";
       toast("Загружено: "+photo.name,"good");
@@ -579,11 +693,14 @@ function loadPhotoToCanvas(photo){
   img.src=photo.url;
 }
 function selectPhoto(id){
+  // сохранить текущие настройки предыдущего фото
+  if(selectedId!==null && selectedId!==id) saveCurrentPhotoSettings();
   selectedId=id;updateGallery();
   const photo=photos.find(p=>p.id===selectedId);
   if(photo)loadPhotoToCanvas(photo);
 }
 
+/* ---------- Добавление файлов ---------- */
 function addFiles(fileList){
   const files=Array.from(fileList||[]);
   if(!files.length)return;
@@ -592,14 +709,16 @@ function addFiles(fileList){
     if(!f.type||!f.type.startsWith("image/")){errs.push(f.name);continue}
     if(f.size===0){errs.push(f.name);continue}
     try{
-      photos.push({id:nextId++,name:f.name||"Фото",url:URL.createObjectURL(f)});
+      photos.push({id:nextId++,name:f.name||"Фото",url:URL.createObjectURL(f),settings:null});
       added++;
     }catch(e){errs.push(f.name)}
   }
   updateGallery();
   if(added>0){
     if(selectedId===null||!photos.some(p=>p.id===selectedId)){
-      selectPhoto(photos[firstNewIndex].id);
+      selectedId=photos[firstNewIndex].id;
+      updateGallery();
+      loadPhotoToCanvas(photos[firstNewIndex]);
     }
     toast("Добавлено: "+added,errs.length?"":"good");
   }
@@ -634,6 +753,7 @@ function resetStage(){
   stopPicking();
 }
 
+/* ---------- Слайдеры ---------- */
 function getSliderValues(){const v={};Object.keys(defaults).forEach(k=>v[k]=Number($(k).value));return v}
 function setSliderValues(v){
   Object.keys(defaults).forEach(k=>{
@@ -667,6 +787,7 @@ function scheduleRender(){
 }
 Object.keys(defaults).forEach(k=>$(k).addEventListener("input",scheduleRender));
 
+/* ---------- Трансформация ---------- */
 function transformPixel(r,g,b,opts){
   const mode=opts.mode;
   if(mode==="negative"||mode==="mono"){
@@ -873,6 +994,7 @@ result.addEventListener("click",e=>{
   drawMarkers();render();
 });
 
+/* ---------- Профили ---------- */
 function currentProfile(){
   return{
     format:"FilmLabProfile",version:1,
@@ -909,6 +1031,7 @@ function validProfile(p){
   return true;
 }
 
+/* ---------- Поворот/кроп ---------- */
 function showWorkingPixels(pixels){
   originalPixels=new ImageData(new Uint8ClampedArray(pixels.data),pixels.width,pixels.height);
   source.width=result.width=pixels.width;
@@ -1161,9 +1284,10 @@ function refreshUIFromState(){
 }
 
 /* ---------- Slider HTML/bind ---------- */
-function sliderHTML(id,label){
+function sliderHTML(id,label,extraClass){
+  const cls = "slider" + (extraClass ? " "+extraClass : "");
   return `
-  <div class="slider" data-slider-id="${id}">
+  <div class="${cls}" data-slider-id="${id}">
     <div class="row">
       <label for="${id}_ui">${label}</label>
       <span class="val" id="${id}Val">${$(id).value}${id==="maskStrength"?"%":""}</span>
@@ -1420,20 +1544,44 @@ function renderLightPanel(body){
   });
 }
 
-/* --- ЦВЕТ: единый блок со всеми 5 ползунками --- */
+/* --- ЦВЕТ: единый блок; R/G/B без подписей, с цветными треками --- */
 function renderColorPanel(body){
   const g=document.createElement("div");g.className="group";
   g.style.padding="6px 10px 6px";
-  g.innerHTML=
+
+  // Насыщенность и Температура — обычные
+  const topRow=document.createElement("div");
+  topRow.innerHTML=
     sliderHTML("saturation","Насыщенность")+
-    sliderHTML("temperature","Температура")+
-    sliderHTML("red","Красный")+
-    sliderHTML("green","Зелёный")+
-    sliderHTML("blue","Синий");
+    sliderHTML("temperature","Температура","sl-temp");
+  g.append(topRow);
+
+  // R / G / B — без подписи, только ползунок с цветным треком
+  const rgbWrap=document.createElement("div");
+  rgbWrap.innerHTML=`
+    ${rgbSliderHTML("red","sl-red")}
+    ${rgbSliderHTML("green","sl-green")}
+    ${rgbSliderHTML("blue","sl-blue")}
+  `;
+  g.append(rgbWrap);
+
   body.append(g);
 
-  bindSlider("saturation");bindSlider("temperature");
+  bindSlider("saturation");
+  bindSlider("temperature");
   bindSlider("red");bindSlider("green");bindSlider("blue");
+}
+
+/* R/G/B без подписи — только ползунок с цветным градиентом */
+function rgbSliderHTML(id,extraClass){
+  return `
+  <div class="slider ${extraClass}" data-slider-id="${id}">
+    <div class="ctrl">
+      <button class="icon-btn reset" type="button" data-reset-slider="${id}" title="Сброс" aria-label="Сброс">↺</button>
+      <input id="${id}_ui" type="range" min="${$(id).min}" max="${$(id).max}" value="${$(id).value}">
+      <button class="icon-btn lock" type="button" data-lock-slider="${id}" title="Заблокировать" aria-label="Заблокировать">🔓</button>
+    </div>
+  </div>`;
 }
 
 function renderProfilesPanel(body){
@@ -1472,6 +1620,15 @@ function renderProfilesPanel(body){
     const name=$("profiles").value,p=getProfiles()[name];
     if(!p){alert("Выбери профиль");return}
     if(!validProfile(p)){alert("Некорректный профиль");return}
+
+    // Применяем к ТЕКУЩЕМУ фото и запоминаем как «шаблон» для новых
+    appliedProfile = {
+      settings:{...p.settings},
+      mode:p.mode||"negative",
+      maskColor:p.maskColor?[...p.maskColor]:null,
+      wbGains:p.wbGains?[...p.wbGains]:null
+    };
+
     setSliderValues(p.settings);
     $("mode").value=p.mode||"negative";
     maskColor=p.maskColor?[...p.maskColor]:null;
@@ -1479,7 +1636,11 @@ function renderProfilesPanel(body){
     maskPoint=null;wbPoint=null;
     syncAllSlidersUI();
     drawMarkers();render();refreshUIFromState();
-    toast('Профиль "'+name+'" применён',"good");
+
+    // Сохраняем в текущее фото
+    saveCurrentPhotoSettings();
+
+    toast('Профиль "'+name+'" применён','good');
   };
   $("deleteProfileBtn").onclick=()=>{
     const name=$("profiles").value;if(!name)return;
@@ -1551,13 +1712,17 @@ function renderSavePanel(body){
   $("batchBtn").onclick=async()=>{
     if(!photos.length){toast("Нет фото","err");return}
     if(!confirm("Сохранить обработанные копии всех фото?"))return;
-    const ids=photos.map(p=>p.id),startId=selectedId,opts=currentTransformOptions();
+    // Сохранить настройки текущего фото перед пакетной
+    saveCurrentPhotoSettings();
     const overlay=$("batchOverlay"),bt=$("batchText");
     overlay.classList.add("show");
     try{
-      for(let n=0;n<ids.length;n++){
-        const photo=photos.find(p=>p.id===ids[n]);if(!photo)continue;
-        bt.textContent="Обработка "+(n+1)+" из "+ids.length;
+      for(let n=0;n<photos.length;n++){
+        const photo=photos[n];
+        // Используем настройки ЭТОГО фото, если есть; иначе — шаблон
+        const s = photo.settings || currentProfileSettingsTemplate();
+        const opts = {...s.settings,mode:s.mode,mask:s.maskColor?[...s.maskColor]:null,wb:s.wbGains?[...s.wbGains]:null};
+        bt.textContent="Обработка "+(n+1)+" из "+photos.length;
         await new Promise(resolve=>{
           const img=new Image();
           img.onload=()=>{
@@ -1584,7 +1749,6 @@ function renderSavePanel(body){
         });
       }
     }finally{overlay.classList.remove("show")}
-    if(startId!==null&&photos.some(p=>p.id===startId))selectPhoto(startId);
     toast("Пакетная обработка завершена","good");
   };
 }
@@ -1601,6 +1765,7 @@ document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
   b.addEventListener("click",()=>switchTool(b.dataset.tool));
 });
 
+/* ---------- Init ---------- */
 setView("result");
 updateSliderLabels();
 refreshUIFromState();
