@@ -15,20 +15,27 @@ main{max-width:900px;margin:auto;padding:12px}
 .panel{background:#18232d;border:1px solid #344655;border-radius:12px;padding:14px;margin-bottom:12px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 button,.filebtn,select{font:inherit;color:#fff;background:#263846;border:1px solid #496174;border-radius:8px;padding:10px;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
 .primary{background:#1769aa}
+.active{background:#8a6510;border-color:#ffd45a;color:#fff}
 input[type=file]{display:none}
 .control{display:block;font-size:13px;color:#c2ced8;margin-bottom:12px}
 .control input,.control select{display:block;width:100%;margin-top:6px}
 input[type=range]{accent-color:#58a6ff}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-canvas{width:100%;height:auto;background:#080c10;border-radius:8px}
+canvas{display:block;width:100%;height:auto;background:#080c10;border-radius:8px}
+.canvas-wrap{position:relative}
+.canvas-wrap.picking canvas{cursor:crosshair;outline:2px solid #ffd45a}
 .small{font-size:13px;color:#a9b8c5;line-height:1.5}
 #thumbs{display:flex;gap:8px;overflow:auto;margin-top:10px}
 .thumb{min-width:75px;width:75px;padding:3px}
 .thumb img{width:100%;height:55px;object-fit:cover}
 #cameraPanel video{width:100%;max-height:50vh;background:#000}
 .status{font-size:13px;color:#70d6a5;margin-top:8px;overflow-wrap:anywhere}
+.tool-head{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+.tool-head h2{margin:0}
+.reset{padding:7px 10px;font-size:13px}
 @media(max-width:450px){main{padding:8px}.panel{padding:10px}.preview{grid-template-columns:1fr}}
 </style>
 </head>
@@ -61,7 +68,10 @@ canvas{width:100%;height:auto;background:#080c10;border-radius:8px}
 </section>
 
 <section class="panel">
+<div class="tool-head">
 <h2>2. Настройки обработки</h2>
+<button class="reset" id="reset">Сбросить настройки</button>
+</div>
 <div class="grid">
 <label class="control">Режим
 <select id="mode">
@@ -92,7 +102,6 @@ canvas{width:100%;height:auto;background:#080c10;border-radius:8px}
 <span id="blueLabel">100%</span></label>
 </div>
 <div class="row">
-<button id="reset">Сбросить настройки</button>
 <button class="primary" id="saveProfile">Сохранить профиль</button>
 <select id="profiles"><option value="">Выбрать профиль</option></select>
 <button id="deleteProfile">Удалить профиль</button>
@@ -101,23 +110,31 @@ canvas{width:100%;height:auto;background:#080c10;border-radius:8px}
 </section>
 
 <section class="panel">
+<div class="tool-head">
 <h2>3. Баланс белого и маска плёнки</h2>
-<p class="small">Для баланса белого нажмите на нейтральный серый участок в изображении результата. Для маски выберите снимок пустого кадра плёнки на белом фоне, затем укажите цвет самой плёнки.</p>
-<div class="row">
-<label class="filebtn" for="maskFile">Выбрать пустой кадр</label>
-<input id="maskFile" type="file" accept="image/*">
-<button id="sampleMask">Задать цвет маски</button>
-<button id="clearMask">Сбросить маску</button>
+<button class="reset" id="clearMask">Сбросить пипетку</button>
 </div>
-<div id="maskStatus" class="status">Цвет маски не задан.</div>
-<p class="small">При выборе маски нажмите на участок плёнки, а не на белый фон.</p>
+<p class="small">Нажмите «Пипетка», затем укажите на исходном негативе участок плёнки или нейтральную точку, цвет которой нужно скорректировать. Отдельный снимок пустого кадра не требуется. Выбранный цвет используется для компенсации маски и баланса каналов.</p>
+<div class="row">
+<button id="sampleMask" class="primary">Пипетка</button>
+</div>
+<div id="maskStatus" class="status">Точка не выбрана.</div>
+<p class="small">Для выбора точки нажмите непосредственно на изображение в блоке «Исходник» ниже. Для отмены режима выбора повторно нажмите «Пипетка».</p>
 </section>
 
 <section class="panel">
 <h2>4. Предпросмотр</h2>
 <div class="preview">
-<div><div class="small">Исходник</div><canvas id="source" width="1" height="1"></canvas></div>
-<div><div class="small">Результат — нажмите для баланса белого</div><canvas id="result" width="1" height="1"></canvas></div>
+<div>
+<div class="small">Исходник — нажмите для выбора точки</div>
+<div class="canvas-wrap" id="sourceWrap">
+<canvas id="source" width="1" height="1"></canvas>
+</div>
+</div>
+<div>
+<div class="small">Результат</div>
+<canvas id="result" width="1" height="1"></canvas>
+</div>
 </div>
 <div class="row" style="margin-top:12px">
 <button id="save" class="primary">Сохранить результат JPEG</button>
@@ -129,11 +146,11 @@ canvas{width:100%;height:auto;background:#080c10;border-radius:8px}
 <script>
 (() => {
 const $=id=>document.getElementById(id);
-const source=$('source'), result=$('result');
+const source=$('source'),result=$('result');
 const sc=source.getContext('2d',{willReadFrequently:true});
 const rc=result.getContext('2d',{willReadFrequently:true});
-let photos=[],index=-1,maskColor=null,wbColor=null,maskSource=null,stream=null;
-let profiles={};
+let photos=[],index=-1,maskColor=null,wbColor=null,stream=null;
+let picking=false,pickPoint=null,profiles={};
 try{profiles=JSON.parse(localStorage.getItem('filmlabProfiles')||'{}')}catch(e){}
 
 const sliders=['maskStrength','exposure','contrast','saturation','red','green','blue'];
@@ -149,25 +166,20 @@ function settings(){
 function updateLabels(){
  sliders.forEach(id=>{
   const label=$(id+'Label');
-  if(label)label.textContent=$(id).value+(id==='exposure'?'': '%');
+  if(label)label.textContent=$(id).value+(id==='exposure'?'':'%');
  });
 }
 function drawImageOnCanvas(canvas,ctx,img,maxSide=1800){
- const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
- canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
- canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+ const scale=Math.min(1,maxSide/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+ canvas.width=Math.max(1,Math.round((img.naturalWidth||img.width)*scale));
+ canvas.height=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
  ctx.drawImage(img,0,0,canvas.width,canvas.height);
 }
-function addFile(file,isMask=false){
+function addFile(file){
  if(!file)return;
  const url=URL.createObjectURL(file),img=new Image();
  img.onload=()=>{
   URL.revokeObjectURL(url);
-  if(isMask){
-   maskSource=img;
-   $('maskStatus').textContent='Пустой кадр загружен. Нажмите «Задать цвет маски».';
-   return;
-  }
   photos.push({name:file.name||'photo.jpg',img});
   index=photos.length-1;
   drawThumbs();showCurrent();
@@ -186,10 +198,17 @@ function drawThumbs(){
   box.appendChild(b);
  });
 }
+function updatePickUI(){
+ $('sampleMask').classList.toggle('active',picking);
+ $('sourceWrap').classList.toggle('picking',picking);
+ source.style.cursor=picking?'crosshair':'default';
+}
 function showCurrent(){
  if(index<0||!photos[index])return;
+ stopPicking();
  drawImageOnCanvas(source,sc,photos[index].img);
- wbColor=null;render();
+ pickPoint=null;
+ render();
 }
 function render(){
  if(index<0||!photos[index])return;
@@ -206,9 +225,9 @@ function render(){
   if(s.mode==='mono'){const y=.2126*r+.7152*g+.0722*b;r=g=b=y}
   if(maskColor&&s.mode!=='slide'){
    const strength=s.maskStrength/100;
-   r-= (maskColor[0]-128)*strength;
-   g-= (maskColor[1]-128)*strength;
-   b-= (maskColor[2]-128)*strength;
+   r-=(maskColor[0]-128)*strength;
+   g-=(maskColor[1]-128)*strength;
+   b-=(maskColor[2]-128)*strength;
   }
   if(wbColor){
    r*=128/Math.max(1,wbColor[0]);
@@ -224,10 +243,27 @@ function render(){
   o[i]=clamp(r);o[i+1]=clamp(g);o[i+2]=clamp(b);o[i+3]=d[i+3];
  }
  rc.putImageData(output,0,0);
+ drawPickMarker();
 }
-$('gallery').onchange=e=>{[...e.target.files].forEach(f=>addFile(f));e.target.value=''};
+function drawPickMarker(){
+ if(!pickPoint||index<0)return;
+ const x=pickPoint.x,y=pickPoint.y;
+ sc.save();
+ sc.beginPath();sc.arc(x,y,7,0,Math.PI*2);
+ sc.strokeStyle='#ffd45a';sc.lineWidth=2;sc.stroke();
+ sc.beginPath();sc.moveTo(x-12,y);sc.lineTo(x+12,y);
+ sc.moveTo(x,y-12);sc.lineTo(x,y+12);
+ sc.strokeStyle='#101820';sc.lineWidth=4;sc.stroke();
+ sc.beginPath();sc.arc(x,y,7,0,Math.PI*2);
+ sc.strokeStyle='#ffd45a';sc.lineWidth=2;sc.stroke();
+ sc.restore();
+}
+function stopPicking(){
+ picking=false;
+ updatePickUI();
+}
+$('gallery').onchange=e=>{[...e.target.files].forEach(addFile);e.target.value=''};
 $('cameraFile').onchange=e=>{if(e.target.files[0])addFile(e.target.files[0]);e.target.value=''};
-$('maskFile').onchange=e=>{addFile(e.target.files[0],true);e.target.value=''};
 $('cameraButton').onclick=async()=>{
  try{
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw Error('no camera API');
@@ -254,13 +290,18 @@ $('remove').onclick=()=>{
  photos.splice(index,1);index=photos.length?Math.min(index,photos.length-1):-1;
  drawThumbs();
  if(index>=0)showCurrent();
- else{source.width=source.height=result.width=result.height=1;message('Нет выбранных фотографий.')}
+ else{
+  stopPicking();pickPoint=null;maskColor=null;wbColor=null;
+  source.width=source.height=result.width=result.height=1;
+  $('maskStatus').textContent='Точка не выбрана.';
+  message('Нет выбранных фотографий.');
+ }
 };
 sliders.forEach(id=>$(id).oninput=()=>{updateLabels();render()});
 $('mode').onchange=render;
 $('reset').onclick=()=>{
  Object.keys(defaults).forEach(id=>$(id).value=defaults[id]);
- wbColor=null;updateLabels();render();
+ updateLabels();render();
 };
 function refreshProfiles(){
  const sel=$('profiles'),old=sel.value;
@@ -290,39 +331,32 @@ $('deleteProfile').onclick=()=>{
  delete profiles[n];localStorage.setItem('filmlabProfiles',JSON.stringify(profiles));
  refreshProfiles();message('Профиль удалён.');
 };
-function pickColor(img,callback){
- const w=window.open('','_blank');
- if(!w){message('Браузер заблокировал окно выбора. Разрешите всплывающие окна.');return}
- const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
- c.getContext('2d').drawImage(img,0,0);
- w.document.write('<meta name="viewport" content="width=device-width,initial-scale=1"><p>Нажмите на нужный участок изображения.</p><img id="pick" style="width:100%;height:auto" src="'+c.toDataURL()+'"><p id="msg">Выберите участок.</p>');
- const pick=w.document.getElementById('pick');
- pick.onclick=ev=>{
-  const rect=pick.getBoundingClientRect();
-  const x=Math.max(0,Math.min(c.width-1,Math.floor((ev.clientX-rect.left)/rect.width*c.width)));
-  const y=Math.max(0,Math.min(c.height-1,Math.floor((ev.clientY-rect.top)/rect.height*c.height)));
-  const px=c.getContext('2d').getImageData(x,y,1,1).data;
-  callback([px[0],px[1],px[2]]);
-  w.document.getElementById('msg').textContent='Выбран RGB: '+px[0]+', '+px[1]+', '+px[2]+'. Закройте окно.';
- };
-}
 $('sampleMask').onclick=()=>{
- if(!maskSource){$('maskStatus').textContent='Сначала выберите пустой кадр.';return}
- pickColor(maskSource,c=>{
-  maskColor=c;
-  $('maskStatus').textContent='Цвет маски: RGB '+c.join(', ');
-  render();
- });
+ if(index<0){$('maskStatus').textContent='Сначала выберите фотографию.';return}
+ picking=!picking;
+ updatePickUI();
+ $('maskStatus').textContent=picking
+  ?'Режим пипетки включён. Нажмите точку на исходном негативе.'
+  :(pickPoint?'Выбранная точка сохранена.':'Точка не выбрана.');
 };
-$('clearMask').onclick=()=>{maskColor=null;maskSource=null;$('maskStatus').textContent='Маска сброшена.';render()};
-result.onclick=ev=>{
- if(index<0)return;
- const rect=result.getBoundingClientRect();
- const x=Math.max(0,Math.min(result.width-1,Math.floor((ev.clientX-rect.left)/rect.width*result.width)));
- const y=Math.max(0,Math.min(result.height-1,Math.floor((ev.clientY-rect.top)/rect.height*result.height)));
- const p=rc.getImageData(x,y,1,1).data;
- wbColor=[p[0],p[1],p[2]];
- message('Баланс белого установлен по выбранной точке.');
+source.addEventListener('click',ev=>{
+ if(!picking||index<0)return;
+ const rect=source.getBoundingClientRect();
+ const x=Math.max(0,Math.min(source.width-1,Math.floor((ev.clientX-rect.left)/rect.width*source.width)));
+ const y=Math.max(0,Math.min(source.height-1,Math.floor((ev.clientY-rect.top)/rect.height*source.height)));
+ const px=sc.getImageData(x,y,1,1).data;
+ pickPoint={x,y};
+ maskColor=[px[0],px[1],px[2]];
+ wbColor=[px[0],px[1],px[2]];
+ stopPicking();
+ $('maskStatus').textContent='Точка выбрана: RGB '+px[0]+', '+px[1]+', '+px[2]+'.';
+ render();
+});
+$('clearMask').onclick=()=>{
+ stopPicking();
+ pickPoint=null;maskColor=null;wbColor=null;
+ $('maskStatus').textContent='Пипетка сброшена. Цветовая коррекция по точке отключена.';
+ if(index>=0)drawImageOnCanvas(source,sc,photos[index].img);
  render();
 };
 function download(canvas,name){
@@ -350,7 +384,7 @@ $('batch').onclick=async()=>{
  index=old;drawThumbs();showCurrent();
  message('Пакетная обработка завершена. Браузер может попросить разрешить несколько загрузок.');
 };
-updateLabels();refreshProfiles();
+updateLabels();refreshProfiles();updatePickUI();
 })();
 </script>
 </body>
