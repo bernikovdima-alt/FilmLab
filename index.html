@@ -151,16 +151,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 #bottomNav button:active{background:rgba(255,255,255,.05)}
 
 .group{background:var(--bg-2);border-radius:var(--radius);padding:4px 12px;margin:0 0 8px}
-.group-title{
-  font-size:10px;font-weight:700;color:var(--muted);
-  letter-spacing:.06em;text-transform:uppercase;padding:8px 2px 2px;
-}
 
-/* ======== ПОЛЗУНКИ СО ВСТРОЕННЫМИ ИКОНКАМИ ======== */
 .slider{padding:6px 0 8px;user-select:none}
-.slider .row{
-  display:flex;align-items:center;gap:6px;margin-bottom:2px;
-}
+.slider .row{display:flex;align-items:center;gap:6px;margin-bottom:2px}
 .slider .row label{
   flex:1 1 auto;min-width:0;
   font-size:13px;font-weight:600;color:#cfd6e2;
@@ -171,16 +164,10 @@ button,input,select,textarea{font:inherit;color:inherit}
   font-variant-numeric:tabular-nums;flex:0 0 auto;min-width:40px;text-align:right;
 }
 .slider .row .icon-btn{
-  flex:0 0 auto;
-  width:26px;height:26px;
-  border-radius:8px;
-  border:0;
-  background:transparent;
-  color:var(--muted);
+  flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:0;
+  background:transparent;color:var(--muted);
   display:inline-flex;align-items:center;justify-content:center;
-  font-size:14px;line-height:1;
-  cursor:pointer;
-  padding:0;
+  font-size:14px;line-height:1;cursor:pointer;padding:0;
 }
 .slider .row .icon-btn:active{background:var(--panel-2)}
 .slider .row .icon-btn.reset{color:var(--muted)}
@@ -201,10 +188,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .slider input[type=range]::-moz-range-thumb{
   width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--accent);
 }
-.slider input[type=range]:disabled{
-  opacity:.4;
-  pointer-events:none;
-}
+.slider input[type=range]:disabled{opacity:.4;pointer-events:none}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:6px;
@@ -258,37 +242,23 @@ select.input{
 }
 .segmented button.active{background:var(--panel-2);color:var(--text)}
 
-/* ============ СЕТКА ПРЕСЕТОВ 2 СТРОКИ ============ */
 .ratio-grid{
-  display:grid;
-  grid-template-columns:repeat(5, minmax(0,1fr));
-  grid-auto-rows:60px;
-  gap:6px;
-  margin:8px 0 4px;
+  display:grid;grid-template-columns:repeat(5, minmax(0,1fr));
+  grid-auto-rows:60px;gap:6px;margin:8px 0 4px;
 }
 .ratio-cell{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  padding:4px 2px;
-  border-radius:10px;border:1px solid var(--line);
-  background:var(--bg-3);color:var(--muted);
-  cursor:pointer;
-  min-width:0;
+  padding:4px 2px;border-radius:10px;border:1px solid var(--line);
+  background:var(--bg-3);color:var(--muted);cursor:pointer;min-width:0;
 }
 .ratio-cell:active{transform:scale(.96)}
-.ratio-cell.active{
-  border-color:var(--accent);color:var(--accent);
-  background:rgba(78,168,255,.1);
-}
+.ratio-cell.active{border-color:var(--accent);color:var(--accent);background:rgba(78,168,255,.1)}
 .ratio-cell.action{border-style:dashed}
 .ratio-cell.primary{background:var(--accent);color:#04121f;border-color:transparent}
 .ratio-cell.primary:active{background:#68b6ff}
-.ratio-icon{
-  display:block;border:2px solid currentColor;border-radius:3px;box-sizing:border-box;
-}
+.ratio-icon{display:block;border:2px solid currentColor;border-radius:3px;box-sizing:border-box}
 .ratio-icon.free{border-style:dashed;position:relative}
-.ratio-icon.free::after{
-  content:"";position:absolute;inset:3px;border:1px dashed currentColor;border-radius:1px;
-}
+.ratio-icon.free::after{content:"";position:absolute;inset:3px;border:1px dashed currentColor;border-radius:1px}
 .ratio-lbl{font-size:10px;font-weight:600;line-height:1;white-space:nowrap}
 .ratio-cell .action-lbl{font-size:11px;font-weight:700;line-height:1}
 .ratio-cell .action-ico{font-size:16px;line-height:1}
@@ -299,18 +269,12 @@ select.input{
   .ratio-cell .action-lbl{font-size:10px}
 }
 
-/* ============ ВКЛАДКА "МИШЕНИ" ============ */
-.targets-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0;
-}
+.targets-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
 .target-col{
   background:var(--bg-3);border-radius:12px;padding:10px;
   display:flex;flex-direction:column;gap:8px;min-width:0;
 }
-.target-title{
-  font-size:12px;font-weight:700;color:var(--text);
-  text-align:center;letter-spacing:.02em;
-}
+.target-title{font-size:12px;font-weight:700;color:var(--text);text-align:center;letter-spacing:.02em}
 .target-swatch{
   width:100%;height:52px;border-radius:10px;
   border:2px solid var(--line);background:#333;
@@ -325,10 +289,7 @@ select.input{
   background-position:0 0,6px 6px;
   pointer-events:none;
 }
-.target-label{
-  font-size:11px;color:var(--muted);text-align:center;
-  min-height:14px;overflow-wrap:anywhere;
-}
+.target-label{font-size:11px;color:var(--muted);text-align:center;min-height:14px;overflow-wrap:anywhere}
 .target-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:auto}
 .target-btns .btn{width:100%;height:36px;font-size:12px;padding:0 6px;justify-content:center}
 .target-btns .btn.active-mode{background:var(--warn);border-color:transparent;color:#1a1200}
@@ -347,10 +308,7 @@ select.input{
   display:flex;align-items:center;justify-content:center;
 }
 #galleryEmpty{font-size:12px;color:var(--muted);padding:6px 2px 2px}
-.photo-name{
-  font-size:12px;color:var(--muted);padding:0 2px 4px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
+.photo-name{font-size:12px;color:var(--muted);padding:0 2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 #toast{
   position:fixed;left:50%;top:calc(8px + var(--safe-t));
@@ -359,8 +317,7 @@ select.input{
   border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;
   max-width:calc(100% - 32px);
   box-shadow:0 8px 24px rgba(0,0,0,.5);
-  opacity:0;pointer-events:none;
-  transition:opacity .2s,transform .2s;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -389,7 +346,6 @@ select.input{
 <body>
 
 <div id="stage">
-
   <div id="photoArea">
     <div id="canvasArea">
       <div class="canvas-wrap visible" id="resultWrap">
@@ -444,7 +400,6 @@ select.input{
     <button type="button" data-tool="profiles"><span class="ico">👤</span><span class="lbl">Профили</span></button>
     <button type="button" data-tool="save"><span class="ico">💾</span><span class="lbl">Файлы</span></button>
   </div>
-
 </div>
 
 <div id="toast"></div>
@@ -509,14 +464,12 @@ function setStatus(id,msg,good){
   el.textContent=msg;el.classList.toggle("good",!!good);
 }
 
-/* ---------- Canvas stack sizing ---------- */
 function resizeAllStacks(){
   document.querySelectorAll(".canvas-stack").forEach(stack=>{
     const [w,h]=(stack.dataset.ratio||"4x3").split("x").map(Number);
     if(!w||!h)return;
     const parent=stack.parentElement;
-    const availW=parent.clientWidth;
-    const availH=parent.clientHeight;
+    const availW=parent.clientWidth,availH=parent.clientHeight;
     if(!availW||!availH)return;
     const scale=Math.min(availW/w,availH/h);
     stack.style.width=Math.floor(w*scale)+"px";
@@ -531,7 +484,6 @@ function setStackRatio(w,h){
 window.addEventListener("resize",resizeAllStacks);
 window.addEventListener("orientationchange",()=>setTimeout(resizeAllStacks,120));
 
-/* ---------- View tabs ---------- */
 function setView(v){
   $("resultWrap").classList.toggle("visible",v==="result");
   $("sourceWrap").classList.toggle("visible",v==="source");
@@ -544,10 +496,8 @@ document.querySelectorAll("#viewTabs [data-view]").forEach(btn=>{
   btn.addEventListener("click",()=>setView(btn.dataset.view));
 });
 
-/* ---------- Gallery ---------- */
 function updateGallery(){
-  const g=$("gallery");
-  if(!g)return;
+  const g=$("gallery");if(!g)return;
   g.replaceChildren();
   const empty=$("galleryEmpty");
   if(empty)empty.style.display=photos.length?"none":"block";
@@ -571,7 +521,6 @@ function updateGallery(){
   }
 }
 
-/* ---------- Load / Select ---------- */
 function loadPhotoToCanvas(photo){
   if(!photo||!photo.url){toast("Нет файла","err");return}
   const img=new Image();
@@ -595,19 +544,13 @@ function loadPhotoToCanvas(photo){
 
       cropRect=null;cropDrag=null;cropEnabled=false;
       currentRatio="free";
-
       maskColor=null;wbGains=null;maskPoint=null;wbPoint=null;
-      stopPicking();
-      drawMarkers();
-      render();
-      updateGallery();
-      setStackRatio(w,h);
-
+      stopPicking();drawMarkers();render();
+      updateGallery();setStackRatio(w,h);
       $("emptyHint").style.display="none";
       toast("Загружено: "+photo.name,"good");
     }catch(err){
-      originalPixels=null;
-      toast("Ошибка: "+err.message,"err");
+      originalPixels=null;toast("Ошибка: "+err.message,"err");
     }
   };
   img.onerror=()=>toast("Не удалось прочитать файл","err");
@@ -619,7 +562,6 @@ function selectPhoto(id){
   if(photo)loadPhotoToCanvas(photo);
 }
 
-/* ---------- Add / remove ---------- */
 function addFiles(fileList){
   const files=Array.from(fileList||[]);
   if(!files.length)return;
@@ -670,7 +612,6 @@ function resetStage(){
   stopPicking();
 }
 
-/* ---------- Sliders ---------- */
 function getSliderValues(){const v={};Object.keys(defaults).forEach(k=>v[k]=Number($(k).value));return v}
 function setSliderValues(v){
   Object.keys(defaults).forEach(k=>{
@@ -704,7 +645,6 @@ function scheduleRender(){
 }
 Object.keys(defaults).forEach(k=>$(k).addEventListener("input",scheduleRender));
 
-/* ---------- Transform ---------- */
 function transformPixel(r,g,b,opts){
   const mode=opts.mode;
   if(mode==="negative"||mode==="mono"){
@@ -754,7 +694,6 @@ function render(){
   if(cropEnabled&&cropRect)drawCropRect();else drawMarkers();
 }
 
-/* ---------- Markers ---------- */
 function drawCross(ctx,point,color){
   if(!point)return;
   ctx.save();
@@ -772,7 +711,6 @@ function drawMarkers(){
   drawCross(resultOverlayCtx,wbPoint,"#4ade80");
 }
 
-/* ---------- Sample ---------- */
 function getCanvasPoint(event,canvas){
   const rect=canvas.getBoundingClientRect();
   return{
@@ -796,11 +734,8 @@ function samplePixel(canvas,point){
   return channels.map(a=>{a.sort((x,y)=>x-y);return a[Math.floor(a.length/2)]});
 }
 
-/* ---------- Loupe ---------- */
-const loupe=$("loupe");
-const loupeCanvas=$("loupeCanvas");
-const loupeCtx=loupeCanvas.getContext("2d");
-const loupeRgb=$("loupeRgb");
+const loupe=$("loupe"),loupeCanvas=$("loupeCanvas");
+const loupeCtx=loupeCanvas.getContext("2d"),loupeRgb=$("loupeRgb");
 const loupeZoom=6;
 
 function positionLoupe(px,py,areaRect){
@@ -810,12 +745,10 @@ function positionLoupe(px,py,areaRect){
   if(y<margin)y=py+60;
   x=Math.max(margin,Math.min(areaRect.width-size-margin,x));
   y=Math.max(margin,Math.min(areaRect.height-size-margin,y));
-  loupe.style.left=x+"px";
-  loupe.style.top=y+"px";
+  loupe.style.left=x+"px";loupe.style.top=y+"px";
 }
 function drawLoupe(srcCanvas,srcX,srcY){
-  const size=loupeCanvas.width;
-  const half=size/(2*loupeZoom);
+  const size=loupeCanvas.width,half=size/(2*loupeZoom);
   loupeCtx.clearRect(0,0,size,size);
   loupeCtx.fillStyle="#000";loupeCtx.fillRect(0,0,size,size);
   loupeCtx.imageSmoothingEnabled=false;
@@ -834,16 +767,13 @@ function showLoupe(srcCanvas,srcPoint,clientX,clientY){
 }
 function hideLoupe(){loupe.classList.remove("show")}
 
-/* ---------- Pickers ---------- */
-const topHint=$("topHint");
-const topHintText=$("topHintText");
+const topHint=$("topHint"),topHintText=$("topHintText");
 let pickDrag=null;
 
 function updatePickUI(){
   const maskOn=pickerMode==="mask";
   const wbOn=pickerMode==="wb";
-  const maskBtn=$("pickMaskBtn");
-  const wbBtn=$("pickWbBtn");
+  const maskBtn=$("pickMaskBtn"),wbBtn=$("pickWbBtn");
   if(maskBtn)maskBtn.classList.toggle("active-mode",maskOn);
   if(wbBtn)wbBtn.classList.toggle("active-mode",wbOn);
   topHint.classList.toggle("show",!!pickerMode);
@@ -921,7 +851,6 @@ result.addEventListener("click",e=>{
   drawMarkers();render();
 });
 
-/* ---------- Profiles ---------- */
 function currentProfile(){
   return{
     format:"FilmLabProfile",version:1,
@@ -958,7 +887,6 @@ function validProfile(p){
   return true;
 }
 
-/* ---------- Rotate / Crop ---------- */
 function showWorkingPixels(pixels){
   originalPixels=new ImageData(new Uint8ClampedArray(pixels.data),pixels.width,pixels.height);
   source.width=result.width=pixels.width;
@@ -983,17 +911,14 @@ function rotateImage(dir){
   ctx.rotate(dir*Math.PI/2);
   ctx.drawImage(src,-w/2,-h/2);
   showWorkingPixels(ctx.getImageData(0,0,temp.width,temp.height));
-  if(currentRatio!=="free"){
-    applyAspectRatio(currentRatio);
-  }
+  if(currentRatio!=="free")applyAspectRatio(currentRatio);
   toast("Повёрнуто","good");
 }
 
 function drawCropRect(){
   drawMarkers();
   if(!cropEnabled||!cropRect)return;
-  const ctx=sourceOverlayCtx;
-  const r=cropRect,w=source.width,h=source.height;
+  const ctx=sourceOverlayCtx,r=cropRect,w=source.width,h=source.height;
   const handle=Math.max(22,Math.min(w,h)*0.03);
   ctx.save();
   ctx.fillStyle="rgba(0,0,0,.5)";
@@ -1014,7 +939,6 @@ function drawCropRect(){
   ctx.restore();
 }
 
-/* ---------- Aspect ratio ---------- */
 function computeAspectRect(ratio, currentRect){
   if(!originalPixels)return currentRect;
   if(ratio==="free"||!ratio)return currentRect;
@@ -1022,23 +946,14 @@ function computeAspectRect(ratio, currentRect){
   if(!rw||!rh)return currentRect;
   const targetRatio=rw/rh;
   const imgW=originalPixels.width,imgH=originalPixels.height;
-
   let testW=Math.min(imgW,imgH*targetRatio);
   let testH=testW/targetRatio;
-
   let cx,cy;
-  if(currentRect){
-    cx=currentRect.x+currentRect.w/2;
-    cy=currentRect.y+currentRect.h/2;
-  }else{
-    cx=imgW/2;cy=imgH/2;
-  }
-
-  let testX=cx-testW/2;
-  let testY=cy-testH/2;
+  if(currentRect){cx=currentRect.x+currentRect.w/2;cy=currentRect.y+currentRect.h/2}
+  else{cx=imgW/2;cy=imgH/2}
+  let testX=cx-testW/2,testY=cy-testH/2;
   testX=Math.max(0,Math.min(imgW-testW,testX));
   testY=Math.max(0,Math.min(imgH-testH,testY));
-
   return {x:testX,y:testY,w:testW,h:testH};
 }
 
@@ -1050,10 +965,7 @@ function applyAspectRatio(ratio){
     b.classList.toggle("active",r===ratio);
   });
   if(!originalPixels)return;
-  if(ratio==="free"){
-    if(cropEnabled&&cropRect)drawCropRect();
-    return;
-  }
+  if(ratio==="free"){if(cropEnabled&&cropRect)drawCropRect();return}
   if(!cropEnabled){
     cropEnabled=true;
     if(!cropRect){
@@ -1067,7 +979,6 @@ function applyAspectRatio(ratio){
   drawCropRect();
 }
 
-/* ---------- Pinch to resize ---------- */
 function getPinchDistance(touches){
   const dx=touches[0].clientX-touches[1].clientX;
   const dy=touches[0].clientY-touches[1].clientY;
@@ -1084,7 +995,6 @@ function getPinchCenter(touches,canvas){
 }
 
 let pinchState=null;
-
 source.addEventListener("touchstart",e=>{
   if(!cropEnabled||!originalPixels||pickerMode)return;
   if(e.touches.length!==2)return;
@@ -1095,62 +1005,43 @@ source.addEventListener("touchstart",e=>{
     startCenter:getPinchCenter(e.touches,source)
   };
 },{passive:false});
-
 source.addEventListener("touchmove",e=>{
   if(!cropEnabled||!originalPixels||!pinchState)return;
   if(e.touches.length!==2)return;
   e.preventDefault();
-
   const dist=getPinchDistance(e.touches);
   const scale=dist/pinchState.startDist;
   const imgW=source.width,imgH=source.height;
   const startRect=pinchState.startRect;
-
-  let newW=startRect.w*scale;
-  let newH=startRect.h*scale;
-
+  let newW=startRect.w*scale,newH=startRect.h*scale;
   const minSize=20;
   if(newW<minSize)newW=minSize;
   if(newH<minSize)newH=minSize;
   if(newW>imgW)newW=imgW;
   if(newH>imgH)newH=imgH;
-
   if(currentRatio!=="free"){
     const [rw,rh]=currentRatio.split(":").map(Number);
     const targetRatio=rw/rh;
-    if(newW/newH>targetRatio){
-      newH=newW/targetRatio;
-    }else{
-      newW=newH*targetRatio;
-    }
-    if(newW>imgW){newW=imgW;newH=newW/targetRatio;}
-    if(newH>imgH){newH=imgH;newW=newH*targetRatio;}
+    if(newW/newH>targetRatio)newH=newW/targetRatio;
+    else newW=newH*targetRatio;
+    if(newW>imgW){newW=imgW;newH=newW/targetRatio}
+    if(newH>imgH){newH=imgH;newW=newH*targetRatio}
   }
-
   const center=pinchState.startCenter;
-  let newX=center.x-newW/2;
-  let newY=center.y-newH/2;
-
+  let newX=center.x-newW/2,newY=center.y-newH/2;
   newX=Math.max(0,Math.min(imgW-newW,newX));
   newY=Math.max(0,Math.min(imgH-newH,newY));
-
   cropRect={x:newX,y:newY,w:newW,h:newH};
   drawCropRect();
 },{passive:false});
+source.addEventListener("touchend",()=>{if(pinchState)pinchState=null},{passive:true});
+source.addEventListener("touchcancel",()=>{pinchState=null},{passive:true});
 
-source.addEventListener("touchend",e=>{
-  if(pinchState)pinchState=null;
-},{passive:true});
-source.addEventListener("touchcancel",e=>{pinchState=null},{passive:true});
-
-/* ---------- Crop gesture ---------- */
 source.style.touchAction="none";
-
 source.addEventListener("pointerdown",event=>{
   if(!cropEnabled||!originalPixels||pickerMode)return;
   if(event.pointerType==="touch"&&event.isPrimary===false)return;
-  const p=getCanvasPoint(event,source);
-  const r=cropRect;
+  const p=getCanvasPoint(event,source),r=cropRect;
   if(!r)return;
   const hitRadius=48;
   const corners=[
@@ -1172,13 +1063,11 @@ source.addEventListener("pointerdown",event=>{
   event.preventDefault();
   source.setPointerCapture(event.pointerId);
 });
-
 source.addEventListener("pointermove",event=>{
   if(!cropEnabled||!cropDrag||!originalPixels)return;
   event.preventDefault();
   const p=getCanvasPoint(event,source);
   const d=cropDrag,r=d.rect,minSize=20;
-
   if(d.type==="move"){
     cropRect={
       x:Math.max(0,Math.min(source.width-r.w,r.x+p.x-d.startX)),
@@ -1197,24 +1086,18 @@ source.addEventListener("pointermove",event=>{
     const targetRatio=rw/rh;
     const fixedX=d.corner.includes("l")?r.x+r.w:r.x;
     const fixedY=d.corner.includes("t")?r.y+r.h:r.y;
-
     const maxW=d.corner.includes("l")?fixedX:(source.width-fixedX);
     const maxH=d.corner.includes("t")?fixedY:(source.height-fixedY);
-
     let w=Math.min(Math.abs(p.x-fixedX),maxW);
     let h=Math.min(Math.abs(p.y-fixedY),maxH);
-    if(w/h>targetRatio)h=w/targetRatio;
-    else w=h*targetRatio;
-    if(w>maxW){w=maxW;h=w/targetRatio;}
-    if(h>maxH){h=maxH;w=h*targetRatio;}
-
-    if(w<minSize){w=minSize;h=w/targetRatio;}
-    if(h<minSize){h=minSize;w=h*targetRatio;}
-
+    if(w/h>targetRatio)h=w/targetRatio;else w=h*targetRatio;
+    if(w>maxW){w=maxW;h=w/targetRatio}
+    if(h>maxH){h=maxH;w=h*targetRatio}
+    if(w<minSize){w=minSize;h=w/targetRatio}
+    if(h<minSize){h=minSize;w=h*targetRatio}
     let newX,newY;
     if(d.corner.includes("l"))newX=fixedX-w;else newX=fixedX;
     if(d.corner.includes("t"))newY=fixedY-h;else newY=fixedY;
-
     cropRect={x:newX,y:newY,w,h};
   }
   drawCropRect();
@@ -1222,7 +1105,6 @@ source.addEventListener("pointermove",event=>{
 source.addEventListener("pointerup",()=>{cropDrag=null});
 source.addEventListener("pointercancel",()=>{cropDrag=null});
 
-/* ---------- Save ---------- */
 function downloadCanvas(canvas,filename){
   canvas.toBlob(blob=>{
     if(!blob){toast("Не удалось создать JPEG","err");return}
@@ -1238,7 +1120,6 @@ function saveCurrentJpeg(){
   toast("JPEG сохраняется","good");
 }
 
-/* ---------- Refresh UI ---------- */
 function refreshUIFromState(){
   updateSliderLabels();
   const seg=$("modeSeg");
@@ -1251,9 +1132,7 @@ function refreshUIFromState(){
     if(wbGains){
       const c=[0,1,2].map(i=>Math.round(255/Math.max(.01,wbGains[i])));
       ws.style.background="rgb("+c.join(",")+")";
-    }else{
-      ws.style.background="#333";
-    }
+    }else ws.style.background="#333";
   }
   const ml=$("maskLabel");if(ml)ml.textContent=maskColor?"RGB("+maskColor.join(", ")+")":"не выбрано";
   const wl=$("wbLabel");if(wl)wl.textContent=wbGains?"установлено":"не настроено";
@@ -1273,8 +1152,7 @@ function sliderHTML(id,label){
   </div>`;
 }
 function bindSlider(id){
-  const hidden=$(id);
-  const ui=$(`${id}_ui`);
+  const hidden=$(id),ui=$(`${id}_ui`);
   if(!ui)return;
   ui.value=hidden.value;
   ui.addEventListener("input",()=>{
@@ -1283,7 +1161,6 @@ function bindSlider(id){
     scheduleRender();
     const val=$(`${id}Val`);if(val)val.textContent=ui.value+(id==="maskStrength"?"%":"");
   });
-  // Сброс
   const resetBtn=document.querySelector(`[data-reset-slider="${id}"]`);
   if(resetBtn){
     resetBtn.onclick=()=>{
@@ -1294,10 +1171,8 @@ function bindSlider(id){
       toast("Сброшено");
     };
   }
-  // Замочек
   const lockBtn=document.querySelector(`[data-lock-slider="${id}"]`);
   if(lockBtn){
-    // восстановить состояние
     if(lockedSliders.has(id)){
       ui.disabled=true;
       lockBtn.classList.add("locked");
@@ -1321,7 +1196,6 @@ function bindSlider(id){
   }
 }
 
-/* ---------- Tools ---------- */
 function renderToolPanel(){
   const body=$("toolBody");
   body.replaceChildren();
@@ -1334,10 +1208,8 @@ function renderToolPanel(){
   refreshUIFromState();
 }
 
-/* --- CROP --- */
 function renderCropPanel(body){
   const g=document.createElement("div");g.className="group";
-
   const rotRow=document.createElement("div");
   rotRow.className="btn-row tight";
   rotRow.style.marginTop="8px";
@@ -1369,7 +1241,6 @@ function renderCropPanel(body){
       <span class="action-ico">✓</span>
       <span class="action-lbl">Готово</span>
     </button>
-
     <button class="ratio-cell ${currentRatio==="1:1"?"active":""}" data-ratio="1:1">
       <span class="ratio-icon" style="width:20px;height:20px"></span>
       <span class="ratio-lbl">1:1</span>
@@ -1409,8 +1280,7 @@ function renderCropPanel(body){
       cropped.data.set(originalPixels.data.subarray(from,from+w*4),row*w*4);
     }
     showWorkingPixels(cropped);
-    cropEnabled=false;
-    currentRatio="free";
+    cropEnabled=false;currentRatio="free";
     document.querySelectorAll(".ratio-cell").forEach(b=>{
       const r=b.dataset.ratio;
       if(!r||r==="apply"||r==="reset")return;
@@ -1419,12 +1289,10 @@ function renderCropPanel(body){
     setView("result");
     toast("Кадрирование применено","good");
   };
-
   $("geomResetBtn").onclick=()=>{
     if(!basePixels){toast("Нет фото","err");return}
     showWorkingPixels(basePixels);
-    cropEnabled=false;cropRect=null;cropDrag=null;
-    currentRatio="free";
+    cropEnabled=false;cropRect=null;cropDrag=null;currentRatio="free";
     document.querySelectorAll(".ratio-cell").forEach(b=>{
       const r=b.dataset.ratio;
       if(!r||r==="apply"||r==="reset")return;
@@ -1432,18 +1300,13 @@ function renderCropPanel(body){
     });
     toast("Сброшено","good");
   };
-
   document.querySelectorAll(".ratio-cell").forEach(btn=>{
     const r=btn.dataset.ratio;
     if(r==="apply"||r==="reset")return;
     btn.onclick=()=>{
       if(r===currentRatio&&cropEnabled){
-        cropEnabled=false;
-        cropRect=null;
-        cropDrag=null;
-        drawMarkers();
-        render();
-        currentRatio="free";
+        cropEnabled=false;cropRect=null;cropDrag=null;
+        drawMarkers();render();currentRatio="free";
         document.querySelectorAll(".ratio-cell").forEach(b=>{
           const rr=b.dataset.ratio;
           if(!rr||rr==="apply"||rr==="reset")return;
@@ -1456,12 +1319,10 @@ function renderCropPanel(body){
   });
 }
 
-/* --- TARGETS --- */
 function renderTargetsPanel(body){
   const wrap=document.createElement("div");
   wrap.className="group";
   wrap.style.padding="8px 8px 10px";
-
   const grid=document.createElement("div");
   grid.className="targets-grid";
   grid.innerHTML=`
@@ -1485,50 +1346,39 @@ function renderTargetsPanel(body){
       </div>
       <p class="status" id="wbInfo" style="display:none"></p>
     </div>`;
-  wrap.append(grid);
-  body.append(wrap);
-
-  refreshUIFromState();
-  updatePickUI();
+  wrap.append(grid);body.append(wrap);
+  refreshUIFromState();updatePickUI();
 
   $("pickMaskBtn").onclick=()=>{
-    pickerMode=pickerMode==="mask"?null:"mask";
-    updatePickUI();
+    pickerMode=pickerMode==="mask"?null:"mask";updatePickUI();
     if(pickerMode)toast("Тапни по основе","good");
   };
   $("pickWbBtn").onclick=()=>{
-    pickerMode=pickerMode==="wb"?null:"wb";
-    updatePickUI();
+    pickerMode=pickerMode==="wb"?null:"wb";updatePickUI();
     if(pickerMode)toast("Тапни по нейтральному","good");
   };
   $("resetMaskBtn").onclick=()=>{
-    maskColor=null;maskPoint=null;
-    setStatus("maskInfo","","");
+    maskColor=null;maskPoint=null;setStatus("maskInfo","","");
     drawMarkers();render();refreshUIFromState();
   };
   $("resetWbBtn").onclick=()=>{
-    wbGains=null;wbPoint=null;
-    setStatus("wbInfo","","");
+    wbGains=null;wbPoint=null;setStatus("wbInfo","","");
     drawMarkers();render();refreshUIFromState();
   };
 }
 
-/* --- LIGHT (переделан) --- */
 function renderLightPanel(body){
   const g=document.createElement("div");g.className="group";
   g.style.padding="8px 10px 10px";
 
-  // Переключатель режима
   const seg=document.createElement("div");
-  seg.className="segmented";
-  seg.id="modeSeg";
+  seg.className="segmented";seg.id="modeSeg";
   seg.innerHTML=`
     <button type="button" data-mode="negative">Негатив</button>
     <button type="button" data-mode="mono">Ч/Б</button>
     <button type="button" data-mode="slide">Слайд</button>`;
   g.append(seg);
 
-  // Ползунки
   const slidersWrap=document.createElement("div");
   slidersWrap.innerHTML=
     sliderHTML("exposure","Экспозиция")+
@@ -1537,53 +1387,35 @@ function renderLightPanel(body){
   g.append(slidersWrap);
   body.append(g);
 
-  // Логика
-  bindSlider("exposure");
-  bindSlider("contrast");
-  bindSlider("maskStrength");
+  bindSlider("exposure");bindSlider("contrast");bindSlider("maskStrength");
   document.querySelectorAll("#modeSeg [data-mode]").forEach(b=>{
     b.addEventListener("click",()=>{
       $("mode").value=b.dataset.mode;
-      scheduleRender();
-      refreshUIFromState();
+      scheduleRender();refreshUIFromState();
     });
   });
 }
 
-/* --- COLOR --- */
 function renderColorPanel(body){
   const g1=document.createElement("div");g1.className="group";
-  g1.innerHTML=`
-    ${sliderHTML("saturation","Насыщенность")}
-    ${sliderHTML("temperature","Температура")}`;
+  g1.style.padding="8px 10px 10px";
+  g1.innerHTML=
+    sliderHTML("saturation","Насыщенность")+
+    sliderHTML("temperature","Температура");
   body.append(g1);
 
   const g2=document.createElement("div");g2.className="group";
-  g2.innerHTML=`
-    ${sliderHTML("red","Красный")}
-    ${sliderHTML("green","Зелёный")}
-    ${sliderHTML("blue","Синий")}`;
+  g2.style.padding="8px 10px 10px";
+  g2.innerHTML=
+    sliderHTML("red","Красный")+
+    sliderHTML("green","Зелёный")+
+    sliderHTML("blue","Синий");
   body.append(g2);
 
-  const g3=document.createElement("div");
-  g3.innerHTML=`<button class="btn danger" id="resetAllBtn">Сбросить настройки</button>`;
-  body.append(g3);
-
-  bindSlider("saturation");
-  bindSlider("temperature");
+  bindSlider("saturation");bindSlider("temperature");
   bindSlider("red");bindSlider("green");bindSlider("blue");
-
-  $("resetAllBtn").onclick=()=>{
-    if(!confirm("Сбросить все настройки обработки?"))return;
-    setSliderValues(defaults);
-    maskColor=null;wbGains=null;maskPoint=null;wbPoint=null;
-    syncAllSlidersUI();
-    drawMarkers();render();refreshUIFromState();
-    toast("Сброшено","good");
-  };
 }
 
-/* --- PROFILES --- */
 function renderProfilesPanel(body){
   const g=document.createElement("div");g.className="group";
   g.innerHTML=`
@@ -1663,7 +1495,6 @@ function renderProfilesPanel(body){
   };
 }
 
-/* --- SAVE --- */
 function renderSavePanel(body){
   const gGal=document.createElement("div");gGal.className="group";
   gGal.innerHTML=`
@@ -1738,7 +1569,6 @@ function renderSavePanel(body){
   };
 }
 
-/* ---------- Navigation ---------- */
 function switchTool(tool){
   if(pickerMode&&tool!=="targets")stopPicking();
   activeTool=tool;
@@ -1751,7 +1581,6 @@ document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
   b.addEventListener("click",()=>switchTool(b.dataset.tool));
 });
 
-/* ---------- Init ---------- */
 setView("result");
 updateSliderLabels();
 refreshUIFromState();
