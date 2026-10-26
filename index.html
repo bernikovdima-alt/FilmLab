@@ -549,7 +549,13 @@ function render(){
   const p=transformPixel(src[i],src[i+1],src[i+2],opts);
   d[i]=p[0];d[i+1]=p[1];d[i+2]=p[2];d[i+3]=src[i+3];
  }
- resultCtx.putImageData(out,0,0);drawMarkers();
+ resultCtx.putImageData(out, 0, 0);
+
+if (cropEnabled && cropRect) {
+  drawCropRect();
+} else {
+  drawMarkers();
+}
 }
 
 function getCanvasPoint(event,canvas){
@@ -560,9 +566,14 @@ function getCanvasPoint(event,canvas){
  };
 }
 function samplePixel(canvas, point) {
- const w = originalPixels.width;
- const h = originalPixels.height;
- const data = originalPixels.data;
+ const ctx = canvas === result ? resultCtx : sourceCtx;
+const image = ctx.getImageData(
+  0, 0, canvas.width, canvas.height
+);
+
+const w = image.width;
+const h = image.height;
+const data = image.data;
  const radius = 5;
  const channels = [[], [], []];
 
@@ -906,6 +917,7 @@ function rotateImage(direction) {
 $("rotateLeft").addEventListener("click", () => rotateImage(-1));
 $("rotateRight").addEventListener("click", () => rotateImage(1));
 
+
 $("cropToggle").addEventListener("click", () => {
   if (!originalPixels) {
     setStatus("Сначала загрузи фотографию.");
@@ -913,89 +925,36 @@ $("cropToggle").addEventListener("click", () => {
   }
 
   cropEnabled = !cropEnabled;
+
+  if (cropEnabled) {
+    if (!cropRect) {
+      const w = originalPixels.width;
+      const h = originalPixels.height;
+      const marginX = Math.round(w * 0.08);
+      const marginY = Math.round(h * 0.08);
+
+      cropRect = {
+        x: marginX,
+        y: marginY,
+        w: w - marginX * 2,
+        h: h - marginY * 2
+      };
+    }
+  } else {
+    cropDrag = null;
+  }
+
   $("cropToggle").classList.toggle("active", cropEnabled);
   $("cropToggle").textContent = cropEnabled
-    ? "Выключить кадрирование"
+    ? "Скрыть рамку кадрирования"
     : "Включить кадрирование";
 
+  $("sourceWrap").classList.toggle("picking", cropEnabled);
   $("cropInfo").textContent = cropEnabled
-    ? "Протяни рамку на исходном изображении."
+    ? "Перетаскивай угловые маркеры рамки."
     : "Кадрирование выключено.";
 
-  $("sourceWrap").classList.toggle("picking", cropEnabled);
-});
-
-source.addEventListener("pointerdown", event => {
-  if (!cropEnabled || !originalPixels || pickerMode) return;
-
-  event.preventDefault();
-  const p = getCanvasPoint(event, source);
-
-  if (
-    cropRect &&
-    p.x >= cropRect.x &&
-    p.x <= cropRect.x + cropRect.w &&
-    p.y >= cropRect.y &&
-    p.y <= cropRect.y + cropRect.h
-  ) {
-    cropDrag = {
-      type: "move",
-      startX: p.x,
-      startY: p.y,
-      rect: { ...cropRect }
-    };
-  } else {
-    cropDrag = {
-      type: "draw",
-      startX: p.x,
-      startY: p.y
-    };
-    cropRect = { x: p.x, y: p.y, w: 1, h: 1 };
-  }
-
-  source.setPointerCapture(event.pointerId);
   drawCropRect();
-});
-
-source.addEventListener("pointermove", event => {
-  if (!cropEnabled || !cropDrag || !originalPixels) return;
-
-  const p = getCanvasPoint(event, source);
-
-  if (cropDrag.type === "move") {
-    const r = cropDrag.rect;
-    const x = Math.max(
-      0,
-      Math.min(originalPixels.width - r.w, r.x + p.x - cropDrag.startX)
-    );
-    const y = Math.max(
-      0,
-      Math.min(originalPixels.height - r.h, r.y + p.y - cropDrag.startY)
-    );
-    cropRect = { x, y, w: r.w, h: r.h };
-  } else {
-    const x1 = Math.min(cropDrag.startX, p.x);
-    const y1 = Math.min(cropDrag.startY, p.y);
-    cropRect = {
-      x: x1,
-      y: y1,
-      w: Math.max(1, Math.abs(p.x - cropDrag.startX)),
-      h: Math.max(1, Math.abs(p.y - cropDrag.startY))
-    };
-  }
-
-  drawCropRect();
-});
-
-source.addEventListener("pointerup", () => {
-  if (!cropDrag) return;
-  cropDrag = null;
-
-  if (cropRect) {
-    $("cropInfo").textContent =
-      "Область: " + Math.round(cropRect.w) +
-      " × " + Math.round(cropRect.h) + " пикс.";
-  }
 });
 
 function drawCropRect() {
@@ -1005,26 +964,152 @@ function drawCropRect() {
 
   const ctx = sourceOverlayCtx;
   const r = cropRect;
+  const w = source.width;
+  const h = source.height;
+  const handle = Math.max(18, Math.min(w, h) * 0.035);
 
   ctx.save();
+
   ctx.fillStyle = "rgba(0,0,0,0.48)";
-  ctx.fillRect(0, 0, source.width, r.y);
-  ctx.fillRect(0, r.y + r.h, source.width, source.height - r.y - r.h);
+  ctx.fillRect(0, 0, w, r.y);
+  ctx.fillRect(0, r.y + r.h, w, h - r.y - r.h);
   ctx.fillRect(0, r.y, r.x, r.h);
-  ctx.fillRect(r.x + r.w, r.y, source.width - r.x - r.w, r.h);
+  ctx.fillRect(r.x + r.w, r.y, w - r.x - r.w, r.h);
 
   ctx.strokeStyle = "#70ffb0";
-  ctx.lineWidth = Math.max(2, Math.min(source.width, source.height) / 400);
-  ctx.setLineDash([8, 5]);
-  ctx.strokeRect(r.x, r.y, r.w, r.h);
+  ctx.lineWidth = Math.max(2, Math.min(w, h) / 400);
   ctx.setLineDash([]);
+  ctx.strokeRect(r.x, r.y, r.w, r.h);
+
+  const corners = [
+    [r.x, r.y],
+    [r.x + r.w, r.y],
+    [r.x, r.y + r.h],
+    [r.x + r.w, r.y + r.h]
+  ];
+
+  corners.forEach(([x, y]) => {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x - handle / 2, y - handle / 2, handle, handle);
+    ctx.strokeStyle = "#16885b";
+    ctx.lineWidth = Math.max(2, handle / 8);
+    ctx.strokeRect(x - handle / 2, y - handle / 2, handle, handle);
+  });
 
   ctx.restore();
 }
 
+source.style.touchAction = "none";
+sourceOverlay.style.pointerEvents = "none";
+
+source.addEventListener("pointerdown", event => {
+  if (!cropEnabled || !originalPixels || pickerMode) return;
+
+  const p = getCanvasPoint(event, source);
+  const r = cropRect;
+  const hitRadius = 32;
+
+  const corners = [
+    { name: "tl", x: r.x, y: r.y },
+    { name: "tr", x: r.x + r.w, y: r.y },
+    { name: "bl", x: r.x, y: r.y + r.h },
+    { name: "br", x: r.x + r.w, y: r.y + r.h }
+  ];
+
+  let nearest = null;
+  let bestDistance = Infinity;
+
+  corners.forEach(c => {
+    const dx = (p.x - c.x) * source.getBoundingClientRect().width / source.width;
+    const dy = (p.y - c.y) * source.getBoundingClientRect().height / source.height;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      nearest = c;
+    }
+  });
+
+if (nearest && bestDistance <= hitRadius) {
+    cropDrag = {
+      type: "corner",
+      corner: nearest.name,
+      startX: p.x,
+      startY: p.y,
+      rect: { ...r }
+    };
+  } else if (
+    p.x >= r.x && p.x <= r.x + r.w &&
+    p.y >= r.y && p.y <= r.y + r.h
+  ) {
+    cropDrag = {
+      type: "move",
+      startX: p.x,
+      startY: p.y,
+      rect: { ...r }
+    };
+  } else {
+    return;
+  }
+
+  event.preventDefault();
+  source.setPointerCapture(event.pointerId);
+});
+
+source.addEventListener("pointermove", event => {
+  if (!cropEnabled || !cropDrag || !originalPixels) return;
+
+  event.preventDefault();
+
+  const p = getCanvasPoint(event, source);
+  const d = cropDrag;
+  const r = d.rect;
+  const minSize = 20;
+
+  if (d.type === "move") {
+    cropRect = {
+      x: Math.max(0, Math.min(source.width - r.w, r.x + p.x - d.startX)),
+      y: Math.max(0, Math.min(source.height - r.h, r.y + p.y - d.startY)),
+      w: r.w,
+      h: r.h
+    };
+  } else {
+    let left = r.x;
+    let right = r.x + r.w;
+    let top = r.y;
+    let bottom = r.y + r.h;
+
+    if (d.corner.includes("l")) left = Math.max(0, Math.min(right - minSize, p.x));
+    if (d.corner.includes("r")) right = Math.min(source.width, Math.max(left + minSize, p.x));
+    if (d.corner.includes("t")) top = Math.max(0, Math.min(bottom - minSize, p.y));
+    if (d.corner.includes("b")) bottom = Math.min(source.height, Math.max(top + minSize, p.y));
+
+    cropRect = {
+      x: left,
+      y: top,
+      w: right - left,
+      h: bottom - top
+    };
+  }
+
+  drawCropRect();
+
+  $("cropInfo").textContent =
+    "Область: " + Math.round(cropRect.w) +
+    " × " + Math.round(cropRect.h) + " пикс.";
+});
+
+source.addEventListener("pointerup", () => {
+  cropDrag = null;
+});
+
+source.addEventListener("pointercancel", () => {
+  cropDrag = null;
+});
+
 $("cropApply").addEventListener("click", () => {
   if (!originalPixels || !cropRect) {
-    setStatus("Сначала выдели область кадрирования.");
+    setStatus("Сначала включи кадрирование.");
     return;
   }
 
@@ -1034,26 +1119,29 @@ $("cropApply").addEventListener("click", () => {
   const h = Math.min(originalPixels.height - y, Math.floor(cropRect.h));
 
   if (w < 2 || h < 2) {
-    setStatus("Выделенная область слишком мала.");
+    setStatus("Область кадрирования слишком мала.");
     return;
   }
 
   const cropped = new ImageData(w, h);
-  const src = originalPixels.data;
 
   for (let row = 0; row < h; row++) {
     const from = ((y + row) * originalPixels.width + x) * 4;
-    const to = row * w * 4;
-    cropped.data.set(src.subarray(from, from + w * 4), to);
+    cropped.data.set(
+      originalPixels.data.subarray(from, from + w * 4),
+      row * w * 4
+    );
   }
 
   showWorkingPixels(cropped);
   cropEnabled = false;
+
   $("cropToggle").classList.remove("active");
   $("cropToggle").textContent = "Включить кадрирование";
   $("sourceWrap").classList.remove("picking");
   $("cropInfo").textContent = "Обрезка применена: " + w + " × " + h + " пикс.";
-  setStatus("Кадр обрезан. Цветокоррекция сохранена.", true);
+
+  setStatus("Кадрирование применено.", true);
 });
 
 $("geometryReset").addEventListener("click", () => {
@@ -1064,13 +1152,19 @@ $("geometryReset").addEventListener("click", () => {
 
   showWorkingPixels(basePixels);
   cropEnabled = false;
+  cropRect = null;
+  cropDrag = null;
+
   $("cropToggle").classList.remove("active");
   $("cropToggle").textContent = "Включить кадрирование";
   $("sourceWrap").classList.remove("picking");
   $("cropInfo").textContent = "Исходный кадр восстановлен.";
-  setStatus("Поворот и кадрирование сброшены.", true);
+
+  setStatus("Исходный кадр восстановлен.", true);
 });
 
+
+  
 /* Сохранение результатов. */
 function downloadCanvas(canvas,filename){
  canvas.toBlob(blob=>{
