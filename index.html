@@ -23,8 +23,8 @@
   --radius:14px;
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
-  --tool-h:42dvh;      /* высота панели инструмента */
-  --photo-h:58dvh;     /* высота области с фото */
+  --tool-h:42dvh;
+  --photo-h:58dvh;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -37,20 +37,12 @@ body{
 }
 button,input,select,textarea{font:inherit;color:inherit}
 
-/* =============== STAGE =============== */
-#stage{
-  position:fixed;inset:0;
-  display:flex;flex-direction:column;
-  background:#000;
-}
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;background:#000}
 
-/* ---------- Верх фото ---------- */
 #photoArea{
   flex:0 0 var(--photo-h);
-  position:relative;
-  display:flex;flex-direction:column;
-  overflow:hidden;
-  background:#000;
+  position:relative;display:flex;flex-direction:column;
+  overflow:hidden;background:#000;
 }
 #topbar{
   position:relative;z-index:3;
@@ -69,6 +61,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   cursor:pointer;
 }
 #topbar .tb-btn:active{background:rgba(255,255,255,.2)}
+#topbar .tb-btn:disabled{opacity:.35;cursor:not-allowed}
 #topbar .tb-btn.primary{background:var(--accent);color:#04121f}
 #topbar .tb-title{
   flex:1 1 auto;min-width:0;
@@ -77,13 +70,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 
 #viewTabs{
-  position:relative;z-index:3;
-  align-self:center;
-  display:inline-flex;
-  background:rgba(255,255,255,.12);
-  border-radius:999px;padding:2px;
-  margin:0 0 4px;
-  flex:0 0 auto;
+  position:relative;z-index:3;align-self:center;
+  display:inline-flex;background:rgba(255,255,255,.12);
+  border-radius:999px;padding:2px;margin:0 0 4px;flex:0 0 auto;
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
 #viewTabs button{
@@ -94,29 +83,22 @@ button,input,select,textarea{font:inherit;color:inherit}
 #viewTabs button.active{background:#fff;color:#04121f}
 
 #canvasArea{
-  position:relative;
-  flex:1 1 auto;min-height:0;
+  position:relative;flex:1 1 auto;min-height:0;
   display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
-  touch-action:none;
+  overflow:hidden;touch-action:none;
 }
 #canvasArea .canvas-wrap{
-  position:absolute;inset:0;
-  display:none;
-  align-items:center;justify-content:center;
-  padding:6px;
+  position:absolute;inset:0;display:none;
+  align-items:center;justify-content:center;padding:6px;
 }
 #canvasArea .canvas-wrap.visible{display:flex}
 #canvasArea canvas.base{
   max-width:100%;max-height:100%;
   width:auto;height:auto;display:block;
-  object-fit:contain;
-  box-shadow:0 4px 20px rgba(0,0,0,.55);
+  object-fit:contain;box-shadow:0 4px 20px rgba(0,0,0,.55);
 }
 #canvasArea canvas.overlay{
-  position:absolute;inset:0;
-  width:100%;height:100%;
-  pointer-events:none;
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
 }
 
 #emptyHint{
@@ -134,65 +116,38 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 #emptyHint label.ghost{background:rgba(255,255,255,.12);color:#fff}
 
-/* ---------- Лупа-прицел ---------- */
 #loupe{
-  position:absolute;
-  width:112px;height:112px;
-  border-radius:50%;
+  position:absolute;width:112px;height:112px;border-radius:50%;
   border:3px solid #fff;
-  box-shadow:0 0 0 2px rgba(0,0,0,.6), 0 8px 24px rgba(0,0,0,.65);
-  pointer-events:none;
-  z-index:20;
-  display:none;
-  background:#000;
-  overflow:hidden;
+  box-shadow:0 0 0 2px rgba(0,0,0,.6),0 8px 24px rgba(0,0,0,.65);
+  pointer-events:none;z-index:20;display:none;
+  background:#000;overflow:hidden;
 }
 #loupe.show{display:block}
-#loupe canvas{
-  display:block;
-  width:100%;height:100%;
-}
-#loupe .cross{
-  position:absolute;inset:0;
-  pointer-events:none;
-}
+#loupe canvas{display:block;width:100%;height:100%}
+#loupe .cross{position:absolute;inset:0;pointer-events:none}
 #loupe .cross::before,
-#loupe .cross::after{
-  content:"";position:absolute;background:rgba(255,80,80,.9);
-}
+#loupe .cross::after{content:"";position:absolute;background:rgba(255,80,80,.9)}
 #loupe .cross::before{left:50%;top:14%;bottom:14%;width:2px;transform:translateX(-50%)}
 #loupe .cross::after{top:50%;left:14%;right:14%;height:2px;transform:translateY(-50%)}
 #loupe .dot{
-  position:absolute;left:50%;top:50%;
-  width:8px;height:8px;border-radius:50%;
-  background:#ff5050;
-  transform:translate(-50%,-50%);
-  box-shadow:0 0 0 2px #fff;
+  position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;
+  background:#ff5050;transform:translate(-50%,-50%);box-shadow:0 0 0 2px #fff;
 }
 #loupe .rgb{
-  position:absolute;left:50%;bottom:4px;
-  transform:translateX(-50%);
-  background:rgba(0,0,0,.75);
-  color:#fff;font-size:10px;font-weight:700;
-  padding:2px 6px;border-radius:6px;
-  font-variant-numeric:tabular-nums;
-  white-space:nowrap;
+  position:absolute;left:50%;bottom:4px;transform:translateX(-50%);
+  background:rgba(0,0,0,.75);color:#fff;font-size:10px;font-weight:700;
+  padding:2px 6px;border-radius:6px;font-variant-numeric:tabular-nums;white-space:nowrap;
 }
 
-/* ---------- Подсказка вверху фото ---------- */
 #topHint{
   position:absolute;left:50%;top:calc(6px + var(--safe-t));
-  transform:translateX(-50%);
-  z-index:5;
-  display:none;
-  align-items:center;gap:8px;
-  padding:6px 10px;
-  border-radius:999px;
-  background:rgba(0,0,0,.75);color:#fff;
+  transform:translateX(-50%);z-index:5;display:none;
+  align-items:center;gap:8px;padding:6px 10px;
+  border-radius:999px;background:rgba(0,0,0,.75);color:#fff;
   font-size:12px;font-weight:600;
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  white-space:nowrap;
-  max-width:calc(100% - 20px);
+  white-space:nowrap;max-width:calc(100% - 20px);
 }
 #topHint.show{display:flex}
 #topHint .dotc{width:8px;height:8px;border-radius:50%;background:var(--warn)}
@@ -201,23 +156,17 @@ button,input,select,textarea{font:inherit;color:inherit}
   padding:4px 10px;border-radius:999px;font-weight:700;font-size:12px;cursor:pointer;
 }
 
-/* =============== TOOL PANEL (снизу) =============== */
 #toolPanel{
-  flex:0 0 var(--tool-h);
-  background:var(--panel);
+  flex:0 0 var(--tool-h);background:var(--panel);
   border-top:1px solid var(--line);
   display:flex;flex-direction:column;
-  padding-bottom:var(--safe-b);
-  overflow:hidden;
+  padding-bottom:var(--safe-b);overflow:hidden;
 }
 #toolHead{
-  flex:0 0 auto;
-  display:flex;align-items:center;gap:8px;
+  flex:0 0 auto;display:flex;align-items:center;gap:8px;
   padding:10px 14px 6px;
 }
-#toolHead h2{
-  flex:1 1 auto;margin:0;font-size:15px;font-weight:700;
-}
+#toolHead h2{flex:1 1 auto;margin:0;font-size:15px;font-weight:700}
 #toolHead button{
   height:34px;padding:0 12px;border-radius:10px;border:0;
   background:var(--panel-2);color:var(--text);
@@ -228,11 +177,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 #toolBody{
   flex:1 1 auto;min-height:0;
   overflow-y:auto;overscroll-behavior:contain;
-  padding:0 14px 14px;
-  -webkit-overflow-scrolling:touch;
+  padding:0 14px 14px;-webkit-overflow-scrolling:touch;
 }
 
-/* Нижняя навигация */
 #bottomNav{
   position:fixed;left:0;right:0;bottom:0;z-index:5;
   display:flex;align-items:stretch;justify-content:space-around;
@@ -242,10 +189,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
 }
 #bottomNav button{
-  flex:1 1 0;min-width:0;
-  border:0;background:transparent;color:var(--muted);
-  padding:6px 2px 4px;
-  display:flex;flex-direction:column;align-items:center;gap:3px;
+  flex:1 1 0;min-width:0;border:0;background:transparent;color:var(--muted);
+  padding:6px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;
   border-radius:10px;cursor:pointer;
 }
 #bottomNav button .ico{font-size:19px;line-height:1}
@@ -253,34 +198,23 @@ button,input,select,textarea{font:inherit;color:inherit}
 #bottomNav button.active{color:var(--accent)}
 #bottomNav button:active{background:rgba(255,255,255,.05)}
 
-/* =============== ПРИМИТИВЫ =============== */
-.group{
-  background:var(--bg-2);
-  border-radius:var(--radius);
-  padding:4px 12px;
-  margin:0 0 8px;
-}
+.group{background:var(--bg-2);border-radius:var(--radius);padding:4px 12px;margin:0 0 8px}
 .group-title{
-  font-size:10px;font-weight:700;
-  color:var(--muted);letter-spacing:.06em;text-transform:uppercase;
-  padding:8px 2px 2px;
+  font-size:10px;font-weight:700;color:var(--muted);
+  letter-spacing:.06em;text-transform:uppercase;padding:8px 2px 2px;
 }
 
 .slider{padding:8px 0 10px;user-select:none}
 .slider .row{
-  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
-  margin-bottom:4px;
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px;
 }
 .slider .row label{
   font-size:13px;font-weight:600;color:#cfd6e2;
-  flex:1 1 auto;min-width:0;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  cursor:pointer;
+  flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;
 }
 .slider .row .val{
   font-size:13px;font-weight:700;color:var(--accent);
-  font-variant-numeric:tabular-nums;
-  flex:0 0 auto;min-width:44px;text-align:right;
+  font-variant-numeric:tabular-nums;flex:0 0 auto;min-width:44px;text-align:right;
 }
 .slider input[type=range]{
   display:block;width:100%;height:26px;margin:0;
@@ -289,8 +223,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .slider input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line)}
 .slider input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line)}
 .slider input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;
-  width:22px;height:22px;margin-top:-9px;
+  -webkit-appearance:none;appearance:none;width:22px;height:22px;margin-top:-9px;
   border-radius:50%;background:#fff;border:3px solid var(--accent);
   box-shadow:0 2px 8px rgba(0,0,0,.5);
 }
@@ -328,28 +261,23 @@ select.input{
 }
 .file-btn{
   display:flex;align-items:center;justify-content:center;gap:8px;
-  height:42px;border-radius:12px;
-  border:1px dashed var(--line);background:var(--bg-3);color:var(--text);
+  height:42px;border-radius:12px;border:1px dashed var(--line);
+  background:var(--bg-3);color:var(--text);
   font-size:14px;font-weight:600;cursor:pointer;margin:6px 0;
 }
 
 .status{
   font-size:12px;color:var(--muted);line-height:1.4;
   background:var(--bg-3);border-radius:10px;
-  padding:8px 10px;margin:6px 0 0;
-  overflow-wrap:anywhere;
+  padding:8px 10px;margin:6px 0 0;overflow-wrap:anywhere;
 }
 .status.good{color:var(--good)}
 .status:empty{display:none}
 
-.segmented{
-  display:flex;background:var(--bg-3);border-radius:12px;
-  padding:3px;margin:0 0 8px;
-}
+.segmented{display:flex;background:var(--bg-3);border-radius:12px;padding:3px;margin:0 0 8px}
 .segmented button{
   flex:1 1 0;border:0;background:transparent;color:var(--muted);
-  padding:9px 6px;border-radius:9px;
-  font-size:13px;font-weight:600;cursor:pointer;
+  padding:9px 6px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;
 }
 .segmented button.active{background:var(--panel-2);color:var(--text)}
 
@@ -368,10 +296,7 @@ select.input{
 }
 #galleryEmpty{font-size:12px;color:var(--muted);padding:6px 2px 2px}
 
-/* --- Точки: мелкий контрол шага --- */
-.pick-panel-info{
-  display:flex;align-items:center;gap:8px;margin:4px 0 8px;
-}
+.pick-panel-info{display:flex;align-items:center;gap:8px;margin:4px 0 8px}
 .pick-panel-info .swatch{
   width:36px;height:36px;border-radius:10px;border:2px solid var(--line);
   flex:0 0 auto;background:#333;
@@ -387,11 +312,7 @@ select.input{
 }
 .pick-help b{color:var(--text)}
 
-/* Кнопки +/- для точной установки точки */
-.nudge{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:6px;margin:6px 0;
-}
+.nudge{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}
 .nudge button{
   height:40px;border-radius:10px;border:1px solid var(--line);
   background:var(--bg-3);color:var(--text);font-size:16px;font-weight:700;cursor:pointer;
@@ -403,14 +324,11 @@ select.input{
 .nudge .right{grid-column:3;grid-row:2}
 .nudge .down{grid-column:2;grid-row:3}
 
-/* ---------- Toast ---------- */
 #toast{
   position:fixed;left:50%;top:calc(6px + var(--safe-t));
-  transform:translateX(-50%) translateY(-16px);
-  z-index:50;
+  transform:translateX(-50%) translateY(-16px);z-index:50;
   background:rgba(20,24,32,.97);border:1px solid var(--line);
-  border-radius:12px;padding:9px 14px;
-  font-size:13px;font-weight:600;
+  border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;
   max-width:calc(100% - 32px);
   box-shadow:0 8px 24px rgba(0,0,0,.5);
   opacity:0;pointer-events:none;
@@ -422,8 +340,7 @@ select.input{
 #toast.err{border-color:var(--danger);color:#ffc0c0}
 
 #batchOverlay{
-  position:fixed;inset:0;z-index:60;
-  background:rgba(0,0,0,.78);
+  position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.78);
   display:none;align-items:center;justify-content:center;
   flex-direction:column;gap:12px;color:#fff;font-size:14px;
 }
@@ -444,12 +361,12 @@ select.input{
 <body>
 
 <div id="stage">
-
-  <!-- ======= ВЕРХ: фото ======= -->
   <div id="photoArea">
     <div id="topbar">
       <button class="tb-btn" id="btnGallery" type="button" aria-label="Галерея">☰</button>
       <div class="tb-title" id="photoTitle">FilmLab</div>
+      <button class="tb-btn" id="btnAutoTop" type="button" title="Автокоррекция" aria-label="Автокоррекция">✨</button>
+      <button class="tb-btn" id="btnUndoTop" type="button" title="Отменить авто" aria-label="Отменить авто" disabled>↺</button>
       <button class="tb-btn primary" id="btnSave" type="button">JPEG</button>
     </div>
 
@@ -475,7 +392,6 @@ select.input{
         <label class="ghost" for="cameraInput">📷 Снять</label>
       </div>
 
-      <!-- Лупа -->
       <div id="loupe">
         <canvas id="loupeCanvas" width="220" height="220"></canvas>
         <div class="cross"></div>
@@ -491,19 +407,15 @@ select.input{
     </div>
   </div>
 
-  <!-- ======= НИЗ: панель инструмента ======= -->
   <div id="toolPanel">
     <div id="toolHead">
       <h2 id="toolTitle">Кадр</h2>
-      <button type="button" id="toolAuto">✨ Авто</button>
       <button type="button" id="toolDone" class="primary">Готово</button>
     </div>
     <div id="toolBody"></div>
   </div>
-
 </div>
 
-<!-- Нижняя навигация -->
 <div id="bottomNav">
   <button type="button" data-tool="crop" class="active"><span class="ico">✂️</span><span class="lbl">Кадр</span></button>
   <button type="button" data-tool="light"><span class="ico">☀️</span><span class="lbl">Свет</span></button>
@@ -513,7 +425,6 @@ select.input{
   <button type="button" data-tool="save"><span class="ico">💾</span><span class="lbl">Файлы</span></button>
 </div>
 
-<!-- Служебные -->
 <div id="toast"></div>
 <div id="batchOverlay">
   <div class="spinner"></div>
@@ -523,7 +434,6 @@ select.input{
 <input id="fileInput" type="file" accept="image/*" multiple style="display:none">
 <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none">
 
-<!-- скрытые input'ы для слайдеров/селектов -->
 <div id="hiddenInputs" style="display:none">
   <input id="exposure" type="range" min="-100" max="100" value="0">
   <input id="contrast" type="range" min="-100" max="100" value="0">
@@ -575,6 +485,11 @@ function toast(msg,type){
 function setStatus(id,msg,good){
   const el=$(id);if(!el)return;
   el.textContent=msg;el.classList.toggle("good",!!good);
+}
+function updateUndoAvailability(){
+  const btn=$("btnUndoTop");
+  if(!btn)return;
+  btn.disabled=!autoSnapshot;
 }
 
 /* ---------- View tabs ---------- */
@@ -640,6 +555,7 @@ function loadPhotoToCanvas(photo){
       stopPicking();
       drawMarkers();
       render();
+      updateUndoAvailability();
 
       $("photoTitle").textContent=photo.name;
       $("emptyHint").style.display="none";
@@ -656,7 +572,7 @@ function selectPhoto(id){
   selectedId=id;updateGallery();
   const photo=photos.find(p=>p.id===selectedId);
   if(photo)loadPhotoToCanvas(photo);
-  renderToolPanel(); // обновить галерею в панели «Кадр»
+  renderToolPanel();
 }
 
 /* ---------- Add / remove ---------- */
@@ -708,6 +624,7 @@ function resetStage(){
   resultOverlayCtx.clearRect(0,0,resultOverlay.width,resultOverlay.height);
   $("emptyHint").style.display="flex";
   $("photoTitle").textContent="FilmLab";
+  autoSnapshot=null;updateUndoAvailability();
   stopPicking();
 }
 
@@ -726,6 +643,16 @@ function updateSliderLabels(){
     const out=$(k+"Val");
     if(out)out.textContent=$(k).value+(k==="maskStrength"?"%":"");
   });
+}
+function syncSliderUI(id){
+  const hidden=$(id);
+  const ui=document.getElementById(id+"_ui");
+  if(ui&&hidden)ui.value=hidden.value;
+  const v=document.getElementById(id+"Val");
+  if(v&&hidden)v.textContent=hidden.value+(id==="maskStrength"?"%":"");
+}
+function syncAllSlidersUI(){
+  ["exposure","contrast","maskStrength","saturation","red","green","blue","temperature"].forEach(syncSliderUI);
 }
 function scheduleRender(){
   updateSliderLabels();
@@ -827,61 +754,46 @@ function samplePixel(canvas,point){
   return channels.map(a=>{a.sort((x,y)=>x-y);return a[Math.floor(a.length/2)]});
 }
 
-/* ==========================================
-   ЛУПА-ПРИЦЕЛ
-   ========================================== */
+/* ---------- Loupe ---------- */
 const loupe=$("loupe");
 const loupeCanvas=$("loupeCanvas");
 const loupeCtx=loupeCanvas.getContext("2d");
 const loupeRgb=$("loupeRgb");
-const loupeZoom=6; // x6 увеличение
+const loupeZoom=6;
 
-// положение лупы относительно canvasArea
 function positionLoupe(px,py,areaRect){
   const size=112;
   const margin=8;
-  let x=px - size/2;
-  let y=py - size - 60; // над пальцем
-  if(y<margin) y = py + 60; // если места сверху нет — под пальцем
+  let x=px-size/2;
+  let y=py-size-60;
+  if(y<margin)y=py+60;
   x=Math.max(margin,Math.min(areaRect.width-size-margin,x));
   y=Math.max(margin,Math.min(areaRect.height-size-margin,y));
   loupe.style.left=x+"px";
   loupe.style.top=y+"px";
 }
-
 function drawLoupe(srcCanvas,srcX,srcY){
-  const size=loupeCanvas.width; // 220
+  const size=loupeCanvas.width;
   const half=size/(2*loupeZoom);
   loupeCtx.clearRect(0,0,size,size);
-  loupeCtx.fillStyle="#000";
-  loupeCtx.fillRect(0,0,size,size);
+  loupeCtx.fillStyle="#000";loupeCtx.fillRect(0,0,size,size);
   loupeCtx.imageSmoothingEnabled=false;
-  loupeCtx.drawImage(
-    srcCanvas,
-    srcX-half, srcY-half, half*2, half*2,
-    0,0,size,size
-  );
+  loupeCtx.drawImage(srcCanvas,srcX-half,srcY-half,half*2,half*2,0,0,size,size);
 }
-
 function showLoupe(srcCanvas,srcPoint,clientX,clientY){
   drawLoupe(srcCanvas,srcPoint.x,srcPoint.y);
-  // RGB под прицелом (из исходного, а не из лупы — точнее)
-  const ctx = srcCanvas===result ? resultCtx : sourceCtx;
+  const ctx=srcCanvas===result?resultCtx:sourceCtx;
   try{
-    const px = ctx.getImageData(srcPoint.x,srcPoint.y,1,1).data;
-    loupeRgb.textContent = "RGB("+px[0]+","+px[1]+","+px[2]+")";
+    const px=ctx.getImageData(srcPoint.x,srcPoint.y,1,1).data;
+    loupeRgb.textContent="RGB("+px[0]+","+px[1]+","+px[2]+")";
   }catch(e){loupeRgb.textContent="RGB —"}
   const areaRect=$("canvasArea").getBoundingClientRect();
-  positionLoupe(clientX-areaRect.left, clientY-areaRect.top, areaRect);
+  positionLoupe(clientX-areaRect.left,clientY-areaRect.top,areaRect);
   loupe.classList.add("show");
 }
-function hideLoupe(){
-  loupe.classList.remove("show");
-}
+function hideLoupe(){loupe.classList.remove("show")}
 
-/* ==========================================
-   ПИПЕТКИ (работают и через лупу, и через тап)
-   ========================================== */
+/* ---------- Pickers ---------- */
 const topHint=$("topHint");
 const topHintText=$("topHintText");
 let pickDrag=null;
@@ -889,18 +801,13 @@ let pickDrag=null;
 function updatePickUI(){
   const maskOn=pickerMode==="mask";
   const wbOn=pickerMode==="wb";
-  $("toolBody") && $("toolBody").querySelectorAll(".btn[data-pick]").forEach(b=>{
-    b.classList.toggle("active-mode",b.dataset.pick===pickerMode);
-  });
   $("pickMaskBtn")&&$("pickMaskBtn").classList.toggle("active-mode",maskOn);
   $("pickWbBtn")&&$("pickWbBtn").classList.toggle("active-mode",wbOn);
   topHint.classList.toggle("show",!!pickerMode);
-  if(maskOn){topHintText.textContent="Тапни или задержи на основе";setView("source")}
-  if(wbOn){topHintText.textContent="Тапни или задержи на нейтральном";setView("result")}
+  if(maskOn){topHintText.textContent="Задержи палец на основе";setView("source")}
+  if(wbOn){topHintText.textContent="Задержи палец на нейтральном";setView("result")}
 }
 function stopPicking(){pickerMode=null;hideLoupe();pickDrag=null;updatePickUI()}
-
-/* Обработчики на канвасах: pointerdown → показать лупу, pointermove → двигать, pointerup → зафиксировать */
 
 function attachPickerHandlers(canvas,type){
   canvas.style.touchAction="none";
@@ -925,12 +832,10 @@ function attachPickerHandlers(canvas,type){
     hideLoupe();
     pickDrag=null;
     if(type==="mask"){
-      maskPoint=p;
-      maskColor=samplePixel(source,p);
+      maskPoint=p;maskColor=samplePixel(source,p);
       setStatus("maskInfo","RGB("+maskColor.join(", ")+")","good");
       const sw=$("maskSwatch");if(sw)sw.style.background="rgb("+maskColor.join(",")+")";
-      const lb=$("maskLabel");
-      if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
+      const lb=$("maskLabel");if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
       drawMarkers();render();
     }else{
       wbPoint=p;
@@ -950,10 +855,8 @@ attachPickerHandlers(result,"wb");
 
 $("topHintDone").addEventListener("click",stopPicking);
 
-/* Простая кнопка "Тапни по фото" без лупы (для быстрого выбора) */
 source.addEventListener("click",e=>{
   if(pickerMode!=="mask"||!originalPixels)return;
-  // если до этого был drag — уже обработано в pointerup
   if(pickDrag)return;
   const p=getCanvasPoint(e,source);
   maskPoint=p;maskColor=samplePixel(source,p);
@@ -974,7 +877,7 @@ result.addEventListener("click",e=>{
   drawMarkers();render();
 });
 
-/* ---------- Auto ---------- */
+/* ---------- Auto analysis ---------- */
 function percentile(sorted,q){return sorted[Math.min(sorted.length-1,Math.max(0,Math.floor((sorted.length-1)*q)))]}
 function analyzeImage(){
   if(!originalPixels)return null;
@@ -1021,9 +924,11 @@ function restoreAutoState(s){
   wbGains=s.wbGains?[...s.wbGains]:null;
   maskPoint=s.maskPoint?{...s.maskPoint}:null;
   wbPoint=s.wbPoint?{...s.wbPoint}:null;
-  drawMarkers();render();
-  refreshUIFromState();
+  syncAllSlidersUI();
+  drawMarkers();render();refreshUIFromState();
 }
+
+/* --- Глобальный «Авто» (всё сразу) --- */
 function applyAuto(){
   if(!originalPixels){toast("Сначала добавь фото","err");return}
   autoSnapshot=snapshotAutoState();
@@ -1038,14 +943,54 @@ function applyAuto(){
   $("exposure").value=ec.exposure;$("contrast").value=ec.contrast;
   $("saturation").value=5;$("red").value=0;$("green").value=0;$("blue").value=0;
   wbGains=balancedGains(stats);wbPoint=null;
-  updateSliderLabels();
-  drawMarkers();render();
-  refreshUIFromState();
+  syncAllSlidersUI();
+  drawMarkers();render();refreshUIFromState();
+  updateUndoAvailability();
   toast("Автокоррекция применена","good");
 }
-$("toolAuto").addEventListener("click",applyAuto);
 
-/* ---------- Profiles ---------- */
+/* --- «Авто свет» (только экспо/контраст/основа) --- */
+function applyAutoLight(){
+  if(!originalPixels){toast("Сначала добавь фото","err");return}
+  if(!autoSnapshot)autoSnapshot=snapshotAutoState();
+  const stats=analyzeImage();
+  if(!stats){toast("Не удалось проанализировать","err");return}
+  const mode=$("mode").value;
+  if(mode==="negative"||mode==="mono"){
+    if(!maskColor)maskColor=estimateMask(stats);
+  }else maskColor=null;
+  $("maskStrength").value=(mode==="negative"||mode==="mono")?65:0;
+  const ec=autoExposureContrast(stats);
+  $("exposure").value=ec.exposure;
+  $("contrast").value=ec.contrast;
+  syncAllSlidersUI();
+  drawMarkers();render();refreshUIFromState();
+  updateUndoAvailability();
+  toast("Автосвет применён","good");
+}
+
+/* --- «Авто ББ» (только баланс белого) --- */
+function applyAutoWB(){
+  if(!originalPixels){toast("Сначала добавь фото","err");return}
+  if(!autoSnapshot)autoSnapshot=snapshotAutoState();
+  const stats=analyzeImage();
+  if(!stats){toast("Ошибка","err");return}
+  wbGains=balancedGains(stats);wbPoint=null;
+  drawMarkers();render();refreshUIFromState();
+  updateUndoAvailability();
+  toast("Автобаланс белого применён","good");
+}
+
+/* --- Отмена авто --- */
+function undoAuto(){
+  if(!autoSnapshot){toast("Нечего отменять","err");return}
+  restoreAutoState(autoSnapshot);
+  autoSnapshot=null;
+  updateUndoAvailability();
+  toast("Автокоррекция отменена","good");
+}
+
+/* ---------- Profile helpers ---------- */
 function currentProfile(){
   return{
     format:"FilmLabProfile",version:1,
@@ -1200,38 +1145,37 @@ $("btnSave").addEventListener("click",()=>{
   toast("JPEG сохраняется","good");
 });
 
-/* ==========================================
-   ПАНЕЛИ ИНСТРУМЕНТОВ
-   ========================================== */
+/* ---------- Верхние глобальные кнопки ---------- */
+$("btnAutoTop").addEventListener("click",applyAuto);
+$("btnUndoTop").addEventListener("click",undoAuto);
+
+/* ---------- Refresh UI state ---------- */
 function refreshUIFromState(){
   updateSliderLabels();
-  // обновить сегмент режима
   const seg=$("modeSeg");
   if(seg)seg.querySelectorAll("[data-mode]").forEach(b=>{
     b.classList.toggle("active",b.dataset.mode===$("mode").value);
   });
-  // обновить свотчи пипеток
   const ms=$("maskSwatch");if(ms)ms.style.background=maskColor?"rgb("+maskColor.join(",")+")":"#333";
   const ws=$("wbSwatch");if(ws)ws.style.background=wbGains?"rgb("+[1,1,1].map((v,i)=>Math.round(255/Math.max(.01,wbGains[i]))).join(",")+")":"#333";
   const ml=$("maskLabel");if(ml)ml.textContent=maskColor?"RGB("+maskColor.join(", ")+")":"Точка не выбрана";
   const wl=$("wbLabel");if(wl)wl.textContent=wbGains?"Баланс установлен":"Не настроен";
+  updateUndoAvailability();
 }
 
+/* ---------- Tool panels ---------- */
 const TOOL_TITLES={crop:"Кадр",light:"Свет",color:"Цвет",pick:"Точки",profiles:"Профили",save:"Файлы"};
 
 function renderToolPanel(){
   const body=$("toolBody");
   body.replaceChildren();
   $("toolTitle").textContent=TOOL_TITLES[activeTool]||"Настройки";
-  // Скрыть "Авто" для не-световых/не-цветовых вкладок? Оставим всегда, чтобы был под рукой
-
   if(activeTool==="crop")renderCropPanel(body);
   else if(activeTool==="light")renderLightPanel(body);
   else if(activeTool==="color")renderColorPanel(body);
   else if(activeTool==="pick")renderPickPanel(body);
   else if(activeTool==="profiles")renderProfilesPanel(body);
   else if(activeTool==="save")renderSavePanel(body);
-
   refreshUIFromState();
 }
 
@@ -1328,7 +1272,6 @@ function renderCropPanel(body){
     photos=[];selectedId=null;
     updateGallery();resetStage();
   };
-
   updateGallery();
 }
 
@@ -1349,17 +1292,16 @@ function renderLightPanel(body){
     <div class="group-title">Экспозиция</div>
     ${sliderHTML("exposure","Экспозиция")}
     ${sliderHTML("contrast","Контраст")}
-    ${sliderHTML("maskStrength","Удаление основы","maskStrength","%")}
-    `;
+    ${sliderHTML("maskStrength","Удаление основы")}`;
   body.append(g2);
 
   const g3=document.createElement("div");g3.className="group";
   g3.innerHTML=`
     <div class="btn-row">
-      <button class="btn" id="autoWbBtn">Автобаланс</button>
-      <button class="btn" id="autoResetBtn">Отменить авто</button>
+      <button class="btn primary" id="autoLightBtn">✨ Авто свет</button>
+      <button class="btn" id="autoUndoBtn">↺ Отменить</button>
     </div>
-    <p class="status" id="autoStatus">Автокоррекция не выполнялась.</p>`;
+    <p class="status" id="autoStatus">Автосвет не применялся.</p>`;
   body.append(g3);
 
   bindSlider("exposure");
@@ -1372,18 +1314,13 @@ function renderLightPanel(body){
       refreshUIFromState();
     });
   });
-  $("autoWbBtn").onclick=()=>{
-    if(!originalPixels){toast("Нет фото","err");return}
-    if(!autoSnapshot)autoSnapshot=snapshotAutoState();
-    const stats=analyzeImage();if(!stats){toast("Ошибка","err");return}
-    wbGains=balancedGains(stats);wbPoint=null;
-    drawMarkers();render();refreshUIFromState();
-    toast("Автобаланс применён","good");
+  $("autoLightBtn").onclick=()=>{
+    applyAutoLight();
+    setStatus("autoStatus","Автосвет применён.","good");
   };
-  $("autoResetBtn").onclick=()=>{
-    if(!autoSnapshot){toast("Нечего отменять","err");return}
-    restoreAutoState(autoSnapshot);autoSnapshot=null;
-    toast("Отменено","good");
+  $("autoUndoBtn").onclick=()=>{
+    undoAuto();
+    setStatus("autoStatus","Отменено.","");
   };
 }
 
@@ -1404,6 +1341,15 @@ function renderColorPanel(body){
     ${sliderHTML("blue","Синий")}`;
   body.append(g2);
 
+  const gBb=document.createElement("div");gBb.className="group";
+  gBb.innerHTML=`
+    <div class="group-title">Баланс белого</div>
+    <div class="btn-row">
+      <button class="btn" id="autoBbBtn">⚪ Авто ББ</button>
+      <button class="btn" id="autoBbUndoBtn">↺ Отменить</button>
+    </div>`;
+  body.append(gBb);
+
   const g3=document.createElement("div");
   g3.innerHTML=`<button class="btn block danger" id="resetAllBtn">Сбросить все настройки</button>`;
   body.append(g3);
@@ -1412,10 +1358,13 @@ function renderColorPanel(body){
   bindSlider("temperature");
   bindSlider("red");bindSlider("green");bindSlider("blue");
 
+  $("autoBbBtn").onclick=()=>applyAutoWB();
+  $("autoBbUndoBtn").onclick=()=>undoAuto();
   $("resetAllBtn").onclick=()=>{
     if(!confirm("Сбросить все настройки обработки?"))return;
     setSliderValues(defaults);
     maskColor=null;wbGains=null;maskPoint=null;wbPoint=null;autoSnapshot=null;
+    syncAllSlidersUI();
     drawMarkers();render();refreshUIFromState();
     toast("Сброшено","good");
   };
@@ -1476,14 +1425,12 @@ function renderPickPanel(body){
   $("pickMaskBtn").onclick=()=>{
     pickerMode=pickerMode==="mask"?null:"mask";
     updatePickUI();
-    if(!pickerMode)return;
-    toast("Задержи палец на основе","good");
+    if(pickerMode)toast("Задержи палец на основе","good");
   };
   $("pickWbBtn").onclick=()=>{
     pickerMode=pickerMode==="wb"?null:"wb";
     updatePickUI();
-    if(!pickerMode)return;
-    toast("Задержи палец на нейтральном","good");
+    if(pickerMode)toast("Задержи палец на нейтральном","good");
   };
   $("resetMaskBtn").onclick=()=>{
     maskColor=null;maskPoint=null;
@@ -1496,7 +1443,6 @@ function renderPickPanel(body){
     drawMarkers();render();refreshUIFromState();
   };
 
-  // Кнопки-нудж
   document.querySelectorAll("[data-mask-dir]").forEach(b=>{
     b.onclick=()=>nudgePoint("mask",b.dataset.maskDir);
   });
@@ -1573,6 +1519,7 @@ function renderProfilesPanel(body){
     maskColor=p.maskColor?[...p.maskColor]:null;
     wbGains=p.wbGains?[...p.wbGains]:null;
     maskPoint=null;wbPoint=null;autoSnapshot=null;
+    syncAllSlidersUI();
     drawMarkers();render();refreshUIFromState();
     toast('Профиль "'+name+'" применён',"good");
   };
@@ -1662,13 +1609,13 @@ function renderSavePanel(body){
   };
 }
 
-/* ---------- HTML-шаблоны слайдеров ---------- */
-function sliderHTML(id,label,suffix){
+/* ---------- Slider HTML/bind ---------- */
+function sliderHTML(id,label){
   return `
   <div class="slider">
     <div class="row">
       <label for="${id}">${label}</label>
-      <span class="val" id="${id}Val">${$(id).value}${suffix||""}</span>
+      <span class="val" id="${id}Val">${$(id).value}${id==="maskStrength"?"%":""}</span>
     </div>
     <input id="${id}_ui" type="range" min="${$(id).min}" max="${$(id).max}" value="${$(id).value}">
   </div>`;
@@ -1681,10 +1628,8 @@ function bindSlider(id){
   ui.addEventListener("input",()=>{
     hidden.value=ui.value;
     scheduleRender();
-    // обновить отображение значения, если label с id существует
     const val=$(`${id}Val`);if(val)val.textContent=ui.value+(id==="maskStrength"?"%":"");
   });
-  // Двойной тап по label = сброс
   const lbl=ui.parentElement.querySelector(`label[for="${id}"]`);
   if(lbl){
     let lastTap=0;
@@ -1702,11 +1647,8 @@ function bindSlider(id){
   }
 }
 
-/* ==========================================
-   НАВИГАЦИЯ ПО ИНСТРУМЕНТАМ
-   ========================================== */
+/* ---------- Navigation ---------- */
 function switchTool(tool){
-  // если была активная пипетка и переключили не на "Точки" — выключить
   if(pickerMode&&tool!=="pick")stopPicking();
   activeTool=tool;
   document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
@@ -1718,22 +1660,16 @@ document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
   b.addEventListener("click",()=>switchTool(b.dataset.tool));
 });
 $("toolDone").addEventListener("click",()=>{
-  // "Готово" = закрыть текущую панель и убрать пипетку
   if(pickerMode)stopPicking();
-  // Показ "сцены" — просто уйти на "Кадр" или оставить; сделаем сброс на Кадр
-  // Если хочется — можно сворачивать панель, но у нас фикс. layout, поэтому
-  // просто переключаемся в "Кадр" (галерея+сохранение)
   switchTool("crop");
 });
 $("btnGallery").addEventListener("click",()=>switchTool("crop"));
 
-/* ---------- Инициализация ---------- */
+/* ---------- Init ---------- */
 setView("result");
 updateSliderLabels();
 refreshUIFromState();
 switchTool("crop");
-
-// Восстановить сессию (профили) — можно добавить позже
 
 })();
 </script>
