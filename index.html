@@ -82,7 +82,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .rail-btn svg{width:26px;height:26px;display:block;transition:transform .2s}
 
 #addBtn{
-  /* верхняя — просто «+» */
   font-size:28px;line-height:1;font-weight:600;
 }
 
@@ -92,11 +91,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 #viewToggle.active svg{transform:rotate(180deg)}
 
-#saveBtn{
-  color:#fff;
-}
+#saveBtn{color:#fff}
 
-/* Простое меню «+» — открыть камеру / галерею */
+/* Меню «+» — открыть камеру / галерею */
 #addMenu{
   position:absolute;
   right:76px;top:50%;transform:translateY(-50%) scale(.9);
@@ -456,7 +453,6 @@ select.input{
         <label class="ghost" for="cameraInput">📷 Снять</label>
       </div>
 
-      <!-- П.4, П.5 — правая вертикальная панель: + / результат-скан / сохранить -->
       <div id="rightRail">
         <button id="addBtn" class="rail-btn" type="button" aria-label="Добавить">＋</button>
         <button id="viewToggle" class="rail-btn active" type="button" aria-label="Результат/Скан">
@@ -475,7 +471,6 @@ select.input{
         </button>
       </div>
 
-      <!-- Меню «+» -->
       <div id="addMenu">
         <button class="menu-btn" id="addCamera" type="button">📷 Камера</button>
         <button class="menu-btn" id="addGallery" type="button">🖼 Галерея</button>
@@ -553,9 +548,8 @@ const ALL_SLIDERS=["exposure","contrast","maskStrength","saturation","temperatur
 const MAX_PHOTOS = 24;
 
 let photos=[],selectedId=null,nextId=1;
-/* Активные пиксели активного фото */
 let originalPixels=null;   // рабочие пиксели (после поворота/кропа)
-let basePixels=null;       // исходные пиксели файла (для пипеток)
+let basePixels=null;       // исходные пиксели файла (для мишени плёнки)
 let cropEnabled=false,cropRect=null,cropDrag=null;
 let currentRatio="free";
 let maskColor=null,wbGains=null,maskPoint=null,wbPoint=null,pickerMode=null;
@@ -617,7 +611,7 @@ $("viewToggle").addEventListener("click",()=>{
   setView(currentView==="result"?"source":"result");
 });
 
-/* ---------- П.4 — «+» меню ---------- */
+/* ---------- «+» меню ---------- */
 const addMenu=$("addMenu");
 $("addBtn").addEventListener("click",e=>{
   e.stopPropagation();
@@ -637,7 +631,7 @@ $("addGallery").addEventListener("click",()=>{
   $("fileInput").click();
 });
 
-/* ---------- П.5 — сохранить с правой панели ---------- */
+/* ---------- Сохранить с правой панели ---------- */
 $("saveBtn").addEventListener("click",()=>saveCurrentJpeg());
 
 /* ---------- Галерея ---------- */
@@ -667,7 +661,7 @@ function updateGallery(){
 }
 
 /* ======================================================
-   НАСТРОЙКИ И РАБОЧИЕ ПИКСЕЛИ НА КАЖДОЕ ФОТО (П.1)
+   НАСТРОЙКИ И РАБОЧИЕ ПИКСЕЛИ НА КАЖДОЕ ФОТО
    ====================================================== */
 function snapshotCurrentSettings(){
   return {
@@ -685,15 +679,11 @@ function saveCurrentPhotoState(){
   if(!photo)return;
   photo.settings = snapshotCurrentSettings();
   photo.ratio = currentRatio;
-  photo.cropEnabled = false; // не сохраняем активную рамку — при возврате просто чистый кроп уже применён
-  /* ВАЖНО: рабочие пиксели сохраняем, чтобы вернуть кроп/поворот */
   if(originalPixels){
     photo.workingPixels = new ImageData(
       new Uint8ClampedArray(originalPixels.data),
       originalPixels.width, originalPixels.height
     );
-    photo.workingW = originalPixels.width;
-    photo.workingH = originalPixels.height;
   }
 }
 function applySettingsToUI(s){
@@ -722,7 +712,7 @@ function currentProfileSettingsTemplate(){
   };
 }
 
-/* ---------- Загрузка фото с fade-переходом (П.2) ---------- */
+/* ---------- Загрузка фото с fade-переходом ---------- */
 const fadeOverlay=$("fadeOverlay");
 function fadeOut(){return new Promise(r=>{fadeOverlay.classList.add("show");setTimeout(r,250)})}
 function fadeIn(){return new Promise(r=>{fadeOverlay.classList.remove("show");setTimeout(r,250)})}
@@ -730,7 +720,6 @@ function fadeIn(){return new Promise(r=>{fadeOverlay.classList.remove("show");se
 async function loadPhotoToCanvas(photo){
   if(!photo||!photo.url){toast("Нет файла","err");return}
 
-  // Очищаем текущее
   originalPixels = null;
   basePixels = null;
   cropRect=null;cropDrag=null;cropEnabled=false;
@@ -740,7 +729,6 @@ async function loadPhotoToCanvas(photo){
   await fadeOut();
 
   try{
-    // Загружаем оригинал, чтобы сделать basePixels (источник для пипеток)
     const img = await new Promise((resolve,reject)=>{
       const im=new Image();
       im.onload=()=>resolve(im);
@@ -754,14 +742,14 @@ async function loadPhotoToCanvas(photo){
     const baseW=Math.max(1,Math.round(img.naturalWidth*scale));
     const baseH=Math.max(1,Math.round(img.naturalHeight*scale));
 
-    // 1) basePixels — ИСХОДНЫЕ пиксели (для пипеток и для сброса кропа)
+    // basePixels — ИСХОДНЫЕ пиксели (для мишени плёнки и сброса кропа)
     const tmpCanvas=document.createElement("canvas");
     tmpCanvas.width=baseW;tmpCanvas.height=baseH;
     const tmpCtx=tmpCanvas.getContext("2d",{willReadFrequently:true});
     tmpCtx.drawImage(img,0,0,baseW,baseH);
     basePixels=tmpCtx.getImageData(0,0,baseW,baseH);
 
-    // 2) Восстанавливаем рабочие пиксели: если они сохранены у фото (после кропа/поворота)
+    // рабочие пиксели (после кропа/поворота) — если сохранены
     let workPixels, workW, workH;
     if(photo.workingPixels && photo.workingPixels.width && photo.workingPixels.height){
       workPixels = new ImageData(
@@ -783,7 +771,6 @@ async function loadPhotoToCanvas(photo){
     sourceCtx.putImageData(workPixels,0,0);
     originalPixels = workPixels;
 
-    // Настройки: сохранённые или шаблон
     applySettingsToUI(photo.settings || null);
     currentRatio = photo.ratio || "free";
 
@@ -988,7 +975,7 @@ function getCanvasPoint(event,canvas){
   };
 }
 
-/* П.3 — пипетки снимают показания с ИСХОДНЫХ пикселей (basePixels) */
+/* ---------- Сэмплер с исходного файла (для мишени плёнки) ---------- */
 function samplePixelFromBase(basePoint){
   if(!basePixels)return [0,0,0];
   const w=basePixels.width,h=basePixels.height,data=basePixels.data;
@@ -1006,14 +993,32 @@ function samplePixelFromBase(basePoint){
   return channels.map(a=>{a.sort((p,q)=>p-q);return a[Math.floor(a.length/2)]});
 }
 
-/* Преобразование координаты с рабочего холста в координаты исходного (base) */
+/* ---------- Сэмплер с рабочего холста (для точки белого) ---------- */
+function samplePixel(canvas,point){
+  const ctx=canvas===result?resultCtx:sourceCtx;
+  const radius=3;
+  const x0=Math.max(0,point.x-radius);
+  const y0=Math.max(0,point.y-radius);
+  const w=Math.min(canvas.width,point.x+radius+1)-x0;
+  const h=Math.min(canvas.height,point.y+radius+1)-y0;
+  if(w<=0||h<=0)return [0,0,0];
+  const image=ctx.getImageData(x0,y0,w,h);
+  const data=image.data;
+  const channels=[[],[],[]];
+  for(let i=0;i<data.length;i+=4){
+    if(data[i+3]<16)continue;
+    channels[0].push(data[i]);
+    channels[1].push(data[i+1]);
+    channels[2].push(data[i+2]);
+  }
+  if(!channels[0].length)return [0,0,0];
+  return channels.map(a=>{a.sort((p,q)=>p-q);return a[Math.floor(a.length/2)]});
+}
+
 function workPointToBasePoint(p){
   if(!originalPixels||!basePixels)return p;
   const wx=originalPixels.width, wy=originalPixels.height;
   const bx=basePixels.width, by=basePixels.height;
-  // рабочий холст может быть меньше исходного после кропа → масштабируем обратно
-  // но точное соответствие возможно только если кроп был 1:1 по пикселям
-  // Для общего случая: масштабируем пропорционально (лучшее приближение)
   const scaleX = bx / Math.max(1,wx);
   const scaleY = by / Math.max(1,wy);
   return { x: p.x * scaleX, y: p.y * scaleY };
@@ -1070,6 +1075,11 @@ function updatePickUI(){
 }
 function stopPicking(){pickerMode=null;hideLoupe();pickDrag=null;updatePickUI()}
 
+/* ================================================================
+   ПИПЕТКИ — работают на любом виде.
+   Маска: цвет с ИСХОДНОГО файла (basePixels).
+   Белый: цвет с РЕЗУЛЬТАТА (resultCtx) — как раньше.
+   ================================================================ */
 function attachPickerHandlers(canvas){
   canvas.style.touchAction="none";
 
@@ -1078,7 +1088,8 @@ function attachPickerHandlers(canvas){
     e.preventDefault();
     const p=getCanvasPoint(e,canvas);
     pickDrag = { canvas, mode: pickerMode };
-    showLoupe(canvas, p, e.clientX, e.clientY);
+    // лупа показывает тот холст, к которому относится активная пипетка
+    showLoupe(pickerMode==="mask" ? source : result, p, e.clientX, e.clientY);
     canvas.setPointerCapture(e.pointerId);
   });
 
@@ -1086,7 +1097,7 @@ function attachPickerHandlers(canvas){
     if(!pickDrag || !pickerMode || !originalPixels) return;
     e.preventDefault();
     const p=getCanvasPoint(e,canvas);
-    showLoupe(canvas, p, e.clientX, e.clientY);
+    showLoupe(pickerMode==="mask" ? source : result, p, e.clientX, e.clientY);
   });
 
   canvas.addEventListener("pointerup",e=>{
@@ -1096,12 +1107,10 @@ function attachPickerHandlers(canvas){
     const mode = pickDrag.mode;
     hideLoupe(); pickDrag=null;
 
-    // координата тапа → в координаты исходного файла
-    const baseP = workPointToBasePoint(p);
-    // П.3 — цвет всегда с basePixels (исходный первоначальный файл)
-    const s = samplePixelFromBase(baseP);
-
     if(mode==="mask"){
+      // Мишень плёнки — цвет с ИСХОДНОГО скана (basePixels)
+      const baseP = workPointToBasePoint(p);
+      const s = samplePixelFromBase(baseP);
       maskPoint = p;
       maskColor = s;
       setStatus("maskInfo","RGB("+maskColor.join(", ")+")","good");
@@ -1109,7 +1118,9 @@ function attachPickerHandlers(canvas){
       const lb=$("maskLabel");if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
       drawMarkers();render();
     }else{
+      // Точка белого — цвет с РЕЗУЛЬТАТА (позитива), как раньше
       wbPoint = p;
+      const s = samplePixel(result, p);
       const avg=(s[0]+s[1]+s[2])/3;
       wbGains=[s[0],s[1],s[2]].map(v=>Math.max(.25,Math.min(4,avg/Math.max(1,v))));
       setStatus("wbInfo","RGB("+s.join(", ")+")","good");
@@ -1174,7 +1185,6 @@ function showWorkingPixels(pixels){
   cropRect=null;cropDrag=null;cropEnabled=false;
   setStackRatio(pixels.width,pixels.height);
   drawMarkers();render();
-  // Сохранить как рабочие пиксели фото
   if(selectedId!==null){
     const photo=photos.find(p=>p.id===selectedId);
     if(photo){
@@ -1634,7 +1644,7 @@ function renderTargetsPanel(body){
         <button class="btn" id="pickMaskBtn" type="button">🎯 Пипетка</button>
         <button class="btn" id="resetMaskBtn" type="button">Сброс</button>
       </div>
-      <div class="target-hint" id="maskHint">Работает на любом виде. Смотри «Результат» — видно, как мишень влияет на позитив.</div>
+      <div class="target-hint" id="maskHint">Цвет с исходного файла. Тапать можно по любому виду.</div>
       <p class="status" id="maskInfo" style="display:none"></p>
     </div>
     <div class="target-col">
@@ -1645,7 +1655,7 @@ function renderTargetsPanel(body){
         <button class="btn" id="pickWbBtn" type="button">⚪ Пипетка</button>
         <button class="btn" id="resetWbBtn" type="button">Сброс</button>
       </div>
-      <div class="target-hint" id="wbHint">Работает на любом виде. Тапать можно и на «Скане» — цвет берётся с «Результата».</div>
+      <div class="target-hint" id="wbHint">Цвет с результата. Тапать можно по любому виду.</div>
       <p class="status" id="wbInfo" style="display:none"></p>
     </div>`;
   wrap.append(grid);body.append(wrap);
@@ -1866,11 +1876,9 @@ function renderSavePanel(body){
 
         bt.textContent="Обработка "+(n+1)+" из "+photos.length;
 
-        // Для каждого фото используем его рабочие пиксели (если есть), иначе — оригинал
         await new Promise(resolve=>{
           const processImg = (img)=>{
             try{
-              // Определяем, откуда брать пиксели: если есть рабочие — из них
               let w,h,pixData;
               if(photo.workingPixels){
                 w=photo.workingPixels.width; h=photo.workingPixels.height;
@@ -1901,7 +1909,6 @@ function renderSavePanel(body){
           };
 
           if(photo.workingPixels){
-            // не нужен Image — работаем с рабочими пикселями
             processImg(null);
           }else{
             const img=new Image();
