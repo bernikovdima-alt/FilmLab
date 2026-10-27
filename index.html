@@ -602,9 +602,13 @@ let currentView="result";
 let appliedProfile=null;
 let maskFromSlider=false;
 let baseBrightValue = 0;
-/* Режим удаления основы: "divide" (деление) | "subtract" (вычитание) */
-let maskMode = "divide";
+let maskMode = "divide"; // "divide" | "subtract"
 const lockedSliders=new Set(ALL_SLIDERS);
+
+/* ===== «Шаблон» — снимок настроек для новых фото.
+   Создаётся при старте, обновляется при любом изменении настроек на текущем фото,
+   при загрузке профиля. Именно он применяется к НОВЫМ фото. ===== */
+let settingsTemplate = null;
 
 const clamp=(v,a=0,b=255)=>Math.max(a,Math.min(b,v));
 
@@ -787,26 +791,34 @@ function updateGallery(){
   }
 }
 
+/* ===== Снимок текущих настроек (без геометрии) — сохраняется в шаблон ===== */
 function snapshotCurrentSettings(){
   return {
     settings: getSliderValues(),
     mode: $("mode").value,
     maskColor: maskColor?[...maskColor]:null,
     wbGains: wbGains?[...wbGains]:null,
-    maskPoint: maskPoint?{...maskPoint}:null,
-    wbPoint: wbPoint?{...wbPoint}:null,
-    baseOffsetX, baseOffsetY,
+    maskPoint: null,
+    wbPoint: null,
     maskFromSlider,
     baseTune: Number($("baseTune").value),
     baseBright: baseBrightValue,
     maskMode
   };
 }
+
+/* Обновить шаблон из текущих настроек — вызывается при любом изменении */
+function captureTemplate(){
+  settingsTemplate = snapshotCurrentSettings();
+}
+
 function saveCurrentPhotoState(){
   if(selectedId===null)return;
   const photo=photos.find(p=>p.id===selectedId);
   if(!photo)return;
   photo.settings = snapshotCurrentSettings();
+  photo.settings.baseOffsetX = baseOffsetX;
+  photo.settings.baseOffsetY = baseOffsetY;
   photo.ratio = currentRatio;
   if(originalPixels){
     photo.workingPixels = new ImageData(
@@ -819,33 +831,28 @@ function saveCurrentPhotoState(){
     photo.workingH = originalPixels.height;
   }
 }
+
 function applySettingsToUI(s){
-  const src = s || currentProfileSettingsTemplate();
+  const src = s || settingsTemplate || currentProfileSettingsTemplate();
   setSliderValues(src.settings);
   $("mode").value = src.mode || "negative";
   maskColor = src.maskColor?[...src.maskColor]:null;
   wbGains = src.wbGains?[...src.wbGains]:null;
   maskPoint = src.maskPoint?{...src.maskPoint}:null;
   wbPoint = src.wbPoint?{...src.wbPoint}:null;
-  baseOffsetX = src.baseOffsetX||0;
-  baseOffsetY = src.baseOffsetY||0;
+  baseOffsetX = (src.baseOffsetX !== undefined) ? src.baseOffsetX : 0;
+  baseOffsetY = (src.baseOffsetY !== undefined) ? src.baseOffsetY : 0;
   maskFromSlider = !!src.maskFromSlider;
   $("baseTune").value = (src.baseTune!==undefined && src.baseTune!==null) ? src.baseTune : 50;
   baseBrightValue = (src.baseBright!==undefined && src.baseBright!==null) ? src.baseBright : 0;
   $("baseBright").value = baseBrightValue;
-  maskMode = (src.maskMode === "subtract") ? "subtract" : "divide";
+  maskMode = (src.maskMode === "divide") ? "divide" : "subtract";
   syncAllSlidersUI();
   refreshUIFromState();
 }
+
 function currentProfileSettingsTemplate(){
-  if(appliedProfile) return {
-    settings:{...defaults, ...(appliedProfile.settings||{})},
-    mode: appliedProfile.mode||"negative",
-    maskColor: appliedProfile.maskColor?[...appliedProfile.maskColor]:null,
-    wbGains: appliedProfile.wbGains?[...appliedProfile.wbGains]:null,
-    maskPoint:null, wbPoint:null,
-    baseOffsetX:0, baseOffsetY:0, maskFromSlider:false, baseTune:50, baseBright:0, maskMode:"divide"
-  };
+  /* Дефолт при самом первом старте, если ещё нет шаблона */
   return {
     settings:{...defaults},
     mode:"negative",
@@ -915,8 +922,17 @@ async function loadPhotoToCanvas(photo){
     sourceCtx.putImageData(workPixels,0,0);
     originalPixels = workPixels;
 
-    applySettingsToUI(photo.settings || null);
+    /* Если у фото уже сохранены настройки — применяем их.
+       Иначе применяем ШАБЛОН (текущие настройки последнего обработанного фото / профиля). */
+    applySettingsToUI(photo.settings || settingsTemplate || null);
     currentRatio = photo.ratio || "free";
+
+    /* Если применили шаблон (без настроек у фото) — зафиксируем это в фото */
+    if(!photo.settings){
+      photo.settings = snapshotCurrentSettings();
+      photo.settings.baseOffsetX = baseOffsetX;
+      photo.settings.baseOffsetY = baseOffsetY;
+    }
 
     drawMarkers(); render();
     updateGallery(); setStackRatio(workW,workH);
@@ -1066,16 +1082,14 @@ function transformPixel(r,g,b,opts){
       const m=opts.mask;
 
       if(opts.maskMode==="subtract"){
-        // ВЫЧИТАНИЕ: сдвигаем канал на цвет основы, не масштабируя его.
         const maxM = Math.max(m[0], m[1], m[2]);
-        const dr = m[0] - maxM; // ≤ 0
+        const dr = m[0] - maxM;
         const dg = m[1] - maxM;
         const db = m[2] - maxM;
         r = clamp(r + dr * strength);
         g = clamp(g + dg * strength);
         b = clamp(b + db * strength);
       }else{
-        // ДЕЛЕНИЕ: прежний алгоритм
         const base=[Math.max(60,m[0]),Math.max(60,m[1]),Math.max(60,m[2])];
         const cr=clamp(r*255/base[0]),cg=clamp(g*255/base[1]),cb=clamp(b*255/base[2]);
         r=r*(1-strength)+cr*strength;
@@ -1226,7 +1240,6 @@ function getCanvasPoint(event,canvas){
   };
 }
 
-/* ===== МИШЕНЬ: окно 7×7 = 49 px, медиана верхнего квартиля (~12 px) ===== */
 function sampleMaskFromBase(basePoint, radius=3){
   if(!basePixels) return [0,0,0];
   const w=basePixels.width,h=basePixels.height,data=basePixels.data;
@@ -1269,8 +1282,6 @@ function isStableMaskSample(basePoint, radius=3){
   if(minL===Infinity)return false;
   return (maxL-minL) < 150;
 }
-
-/* ===== БЕЛОЕ: окно 3×3 = 9 px, медиана ===== */
 function samplePixel(canvas,point,radius=1){
   const ctx=canvas===result?resultCtx:sourceCtx;
   const x0=Math.max(0,point.x-radius);
@@ -1379,6 +1390,8 @@ function attachPickerHandlers(canvas){
       const sw=$("maskSwatch");if(sw)sw.style.background="rgb("+maskColor.join(",")+")";
       const lb=$("maskLabel");if(lb)lb.textContent="RGB("+maskColor.join(", ")+")";
       drawMarkers();render();refreshUIFromState();
+      captureTemplate();
+      saveCurrentPhotoState();
     }else{
       const prevWb = wbGains;
       wbGains = null;
@@ -1409,6 +1422,8 @@ function attachPickerHandlers(canvas){
       const sw=$("wbSwatch");if(sw)sw.style.background="rgb("+sample.join(",")+")";
       const lb=$("wbLabel");if(lb)lb.textContent="RGB("+sample.join(", ")+")";
       drawMarkers();render();
+      captureTemplate();
+      saveCurrentPhotoState();
     }
   });
 
@@ -1419,11 +1434,18 @@ attachPickerHandlers(result);
 
 $("topHintDone").addEventListener("click",stopPicking);
 
+/* ===== Профили: сохраняем всё, кроме геометрии ===== */
 function currentProfile(){
   return{
-    format:"FilmLabProfile",version:1,
-    settings:getSliderValues(),mode:$("mode").value,
-    maskColor:maskColor?[...maskColor]:null,wbGains:wbGains?[...wbGains]:null
+    format:"FilmLabProfile",version:2,
+    settings:getSliderValues(),
+    mode:$("mode").value,
+    maskColor:maskColor?[...maskColor]:null,
+    wbGains:wbGains?[...wbGains]:null,
+    maskMode,
+    maskFromSlider,
+    baseTune: Number($("baseTune").value),
+    baseBright: baseBrightValue
   };
 }
 function getProfiles(){
@@ -1452,6 +1474,12 @@ function validProfile(p){
   if(!p||typeof p!=="object"||Array.isArray(p)||!p.settings||typeof p.settings!=="object")return false;
   if(p.mode!==undefined&&!["negative","mono","slide"].includes(p.mode))return false;
   for(const k of Object.keys(defaults))if(!Number.isFinite(Number(p.settings[k])))return false;
+  if(p.maskMode!==undefined && !["divide","subtract"].includes(p.maskMode))return false;
+  if(p.baseTune!==undefined && !(Number.isFinite(Number(p.baseTune)) && Number(p.baseTune)>=0 && Number(p.baseTune)<=100))return false;
+  if(p.baseBright!==undefined && !(Number.isFinite(Number(p.baseBright)) && Number(p.baseBright)>=-100 && Number(p.baseBright)<=100))return false;
+  if(p.maskFromSlider!==undefined && typeof p.maskFromSlider!=="boolean")return false;
+  if(p.maskColor!==null&&p.maskColor!==undefined&&(!Array.isArray(p.maskColor)||p.maskColor.length!==3))return false;
+  if(p.wbGains!==null&&p.wbGains!==undefined&&(!Array.isArray(p.wbGains)||p.wbGains.length!==3))return false;
   return true;
 }
 
@@ -1781,6 +1809,8 @@ function bindSlider(id){
     hidden.value=ui.value;
     scheduleRender();
     const val=$(`${id}Val`);if(val)val.textContent=ui.value+(id==="maskStrength"?"%":"");
+    captureTemplate();
+    saveCurrentPhotoState();
   });
   const resetBtn=document.querySelector(`[data-reset-slider="${id}"]`);
   if(resetBtn){
@@ -1790,6 +1820,8 @@ function bindSlider(id){
       scheduleRender();
       const val=$(`${id}Val`);if(val)val.textContent=defaults[id]+(id==="maskStrength"?"%":"");
       toast("Сброшено");
+      captureTemplate();
+      saveCurrentPhotoState();
     };
   }
   const lockBtn=document.querySelector(`[data-lock-slider="${id}"]`);
@@ -2006,6 +2038,7 @@ function renderTargetsPanel(body){
     const b=$("maskModeBtn");
     if(b) b.textContent = (maskMode==="subtract") ? "−" : "÷";
     render();
+    captureTemplate();
     saveCurrentPhotoState();
     toast("Режим основы: " + (maskMode==="subtract" ? "вычитание" : "деление"), "good");
   };
@@ -2024,10 +2057,14 @@ function renderTargetsPanel(body){
     $("baseBright").value = 0;
     setStatus("maskInfo","","");
     drawMarkers();render();refreshUIFromState();
+    captureTemplate();
+    saveCurrentPhotoState();
   };
   $("resetWbBtn").onclick=()=>{
     wbGains=null;wbPoint=null;setStatus("wbInfo","","");
     drawMarkers();render();refreshUIFromState();
+    captureTemplate();
+    saveCurrentPhotoState();
   };
 
   const st=document.createElement("style");
@@ -2099,9 +2136,8 @@ function renderTargetsPanel(body){
     const lb=$("maskLabel");
     if(lb) lb.textContent="RGB("+maskColor.join(", ")+")";
     render();
-    if(selectedId!==null){
-      const p=photos.find(x=>x.id===selectedId); if(p)p.settings=snapshotCurrentSettings();
-    }
+    captureTemplate();
+    saveCurrentPhotoState();
   }
   function updateFromBrightSlider(){
     baseBrightValue = Number($("baseBright").value);
@@ -2112,9 +2148,8 @@ function renderTargetsPanel(body){
       preview.style.background="rgb("+eff.map(v=>Math.round(v)).join(",")+")";
     }
     render();
-    if(selectedId!==null){
-      const p=photos.find(x=>x.id===selectedId); if(p)p.settings=snapshotCurrentSettings();
-    }
+    captureTemplate();
+    saveCurrentPhotoState();
   }
 
   baseUi.addEventListener("input",()=>{
@@ -2169,6 +2204,8 @@ function renderLightPanel(body){
     b.addEventListener("click",()=>{
       $("mode").value=b.dataset.mode;
       scheduleRender();refreshUIFromState();
+      captureTemplate();
+      saveCurrentPhotoState();
     });
   });
 }
@@ -2242,15 +2279,35 @@ function renderProfilesPanel(body){
       wbGains:p.wbGains?[...p.wbGains]:null
     };
 
+    // слайдеры
     setSliderValues(p.settings);
+
+    // режим обработки
     $("mode").value=p.mode||"negative";
+
+    // маска и ББ
     maskColor=p.maskColor?[...p.maskColor]:null;
     wbGains=p.wbGains?[...p.wbGains]:null;
-    maskPoint=null;wbPoint=null;
-    maskFromSlider = false;
-    syncAllSlidersUI();
-    drawMarkers();render();refreshUIFromState();
+    maskPoint=null; wbPoint=null;
 
+    // новые поля профиля
+    maskMode = (p.maskMode === "divide") ? "divide" : "subtract";
+    maskFromSlider = !!p.maskFromSlider;
+
+    const bt = (p.baseTune !== undefined && p.baseTune !== null) ? Number(p.baseTune) : 50;
+    $("baseTune").value = Math.max(0, Math.min(100, bt));
+
+    baseBrightValue = (p.baseBright !== undefined && p.baseBright !== null) ? Number(p.baseBright) : 0;
+    baseBrightValue = Math.max(-100, Math.min(100, baseBrightValue));
+    $("baseBright").value = baseBrightValue;
+
+    syncAllSlidersUI();
+    drawMarkers();
+    render();
+    refreshUIFromState();
+
+    // шаблон = применённый профиль (чтобы новые фото тоже его подхватили)
+    captureTemplate();
     saveCurrentPhotoState();
 
     toast('Профиль "'+name+'" применён','good');
@@ -2264,11 +2321,11 @@ function renderProfilesPanel(body){
   $("exportProfileBtn").onclick=()=>{
     const name=$("profiles").value;if(!name){alert("Выбери профиль");return}
     const p=getProfiles()[name];if(!p)return;
-    downloadJSON({format:"FilmLabProfile",version:1,profiles:{[name]:p}},safeProfileFilename(name)+".json");
+    downloadJSON({format:"FilmLabProfile",version:2,profiles:{[name]:p}},safeProfileFilename(name)+".json");
   };
   $("exportAllBtn").onclick=()=>{
     const p=getProfiles();if(!Object.keys(p).length){alert("Нет профилей");return}
-    downloadJSON({format:"FilmLabBackup",version:1,profiles:p},"FilmLab_backup.json");
+    downloadJSON({format:"FilmLabBackup",version:2,profiles:p},"FilmLab_backup.json");
   };
   $("importProfileFile").onchange=async e=>{
     const file=e.target.files[0];e.target.value="";if(!file)return;
@@ -2335,10 +2392,10 @@ function renderSavePanel(body){
     try{
       for(let n=0;n<photos.length;n++){
         const photo=photos[n];
-        const s = photo.settings || currentProfileSettingsTemplate();
+        const s = photo.settings || settingsTemplate || currentProfileSettingsTemplate();
         const opts = {...s.settings, mode:s.mode,
           mask:s.maskColor?[...s.maskColor]:null,
-          maskMode: s.maskMode === "subtract" ? "subtract" : "divide",
+          maskMode: s.maskMode === "divide" ? "divide" : "subtract",
           wb:s.wbGains?[...s.wbGains]:null};
 
         bt.textContent="Обработка "+(n+1)+" из "+photos.length;
@@ -2454,9 +2511,12 @@ document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
   });
 })();
 
+/* Init: шаблон = текущие настройки (дефолты). Дальше он обновляется при
+   любом изменении настроек на текущем фото и при загрузке профиля. */
 setView("result");
 updateSliderLabels();
 refreshUIFromState();
+captureTemplate();
 switchTool("crop");
 setTimeout(resizeAllStacks,50);
 
