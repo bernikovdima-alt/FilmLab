@@ -1208,8 +1208,8 @@ function getCanvasPoint(event,canvas){
   };
 }
 
-/* ===== ПИПЕТКА МИШЕНИ: окно 5×5 = 25 px, из них ~5 самых ярких ===== */
-function sampleMaskFromBase(basePoint, radius=2){
+/* ===== ПИПЕТКА МИШЕНИ: окно 7×7 = 49 px, медиана верхнего квартиля (~12 px) ===== */
+function sampleMaskFromBase(basePoint, radius=3){
   if(!basePixels) return [0,0,0];
   const w=basePixels.width,h=basePixels.height,data=basePixels.data;
   const x=Math.max(0,Math.min(w-1,Math.round(basePoint.x)));
@@ -1226,13 +1226,15 @@ function sampleMaskFromBase(basePoint, radius=2){
   }
   if(!list.length)return [0,0,0];
   list.sort((a,b)=>b.lum-a.lum);
-  const n=Math.max(1,Math.floor(list.length*0.2));
-  let sr=0,sg=0,sb=0;
-  for(let i=0;i<n;i++){sr+=list[i].r;sg+=list[i].g;sb+=list[i].b}
-  return [Math.round(sr/n),Math.round(sg/n),Math.round(sb/n)];
+  const top = Math.max(3, Math.floor(list.length * 0.25));
+  const slice = list.slice(0, top);
+  const midR = slice.map(o=>o.r).sort((a,b)=>a-b)[Math.floor(slice.length/2)];
+  const midG = slice.map(o=>o.g).sort((a,b)=>a-b)[Math.floor(slice.length/2)];
+  const midB = slice.map(o=>o.b).sort((a,b)=>a-b)[Math.floor(slice.length/2)];
+  return [midR, midG, midB];
 }
-/* Проверка стабильности: окно 5×5 */
-function isStableMaskSample(basePoint, radius=2){
+/* Проверка стабильности мишени: окно 7×7, порог 150 */
+function isStableMaskSample(basePoint, radius=3){
   if(!basePixels) return false;
   const w=basePixels.width,h=basePixels.height,data=basePixels.data;
   const x=Math.max(0,Math.min(w-1,Math.round(basePoint.x)));
@@ -1248,10 +1250,10 @@ function isStableMaskSample(basePoint, radius=2){
     }
   }
   if(minL===Infinity)return false;
-  return (maxL-minL) < 120;
+  return (maxL-minL) < 150;
 }
 
-/* ===== ПИПЕТКА БЕЛОГО: окно 3×3 = 9 px, медиана ===== */
+/* ===== ПИПЕТКА БЕЛОГО: окно 3×3 = 9 px, медиана (без изменений) ===== */
 function samplePixel(canvas,point,radius=1){
   const ctx=canvas===result?resultCtx:sourceCtx;
   const x0=Math.max(0,point.x-radius);
@@ -1348,11 +1350,11 @@ function attachPickerHandlers(canvas){
     if(mode==="mask"){
       const bx = baseOffsetX + p.x;
       const by = baseOffsetY + p.y;
-      if(!isStableMaskSample({x:bx,y:by},2)){
+      if(!isStableMaskSample({x:bx,y:by},3)){
         toast("Похоже, попал на границу кадра. Выбери однородную светлую основу.","err");
         return;
       }
-      const s = sampleMaskFromBase({x:bx,y:by}, 2);
+      const s = sampleMaskFromBase({x:bx,y:by}, 3);
       maskPoint = p;
       maskColor = s;
       maskFromSlider = false;
