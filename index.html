@@ -1090,13 +1090,11 @@ function currentTransformOptions(){
   return {...v,mode:$("mode").value,mask:effectiveMask(),wb:wbGains?[...wbGains]:null};
 }
 
-/* П.1: резкость (малый радиус) и чёткость (большой радиус + защита от пересвета) */
 function boxBlur(src, w, h, radius){
   if(radius <= 0) return new Uint8ClampedArray(src);
   const out = new Uint8ClampedArray(src.length);
   const tmp = new Uint8ClampedArray(src.length);
   const r = radius;
-  // горизонталь
   for(let y=0;y<h;y++){
     let sR=0,sG=0,sB=0,n=0;
     const rowOff = y*w*4;
@@ -1116,9 +1114,7 @@ function boxBlur(src, w, h, radius){
         sR-=src[i];sG-=src[i+1];sB-=src[i+2];n--;
       }
     }
-    // n=0 не бывает из-за условия
   }
-  // вертикаль
   for(let x=0;x<w;x++){
     let sR=0,sG=0,sB=0,n=0;
     for(let y=0;y<h + r;y++){
@@ -1148,7 +1144,7 @@ function applySharpenClarity(data, w, h, sharpenAmt, clarityAmt){
 
   if(doSharpen){
     const blurred = boxBlur(data, w, h, 1);
-    const k = sharpenAmt / 100 * 1.4; // сила
+    const k = sharpenAmt / 100 * 1.4;
     for(let i=0;i<data.length;i+=4){
       data[i]   = clamp(data[i]   + (data[i]   - blurred[i])   * k);
       data[i+1] = clamp(data[i+1] + (data[i+1] - blurred[i+1]) * k);
@@ -1159,10 +1155,9 @@ function applySharpenClarity(data, w, h, sharpenAmt, clarityAmt){
     const blurred = boxBlur(data, w, h, 4);
     const k = clarityAmt / 100 * 0.9;
     for(let i=0;i<data.length;i+=4){
-      // защита: сильнее проявляем в средних тонах, слабее в тенях/светах
       const lum = 0.2126*data[i] + 0.7152*data[i+1] + 0.0722*data[i+2];
       const norm = lum / 255;
-      const weight = 1 - Math.abs(norm - 0.5) * 1.4; // 1 в середине, ~0.3 по краям
+      const weight = 1 - Math.abs(norm - 0.5) * 1.4;
       const wClamp = Math.max(0.15, weight);
       data[i]   = clamp(data[i]   + (data[i]   - blurred[i])   * k * wClamp);
       data[i+1] = clamp(data[i+1] + (data[i+1] - blurred[i+1]) * k * wClamp);
@@ -1180,7 +1175,6 @@ function render(){
     const p=transformPixel(src[i],src[i+1],src[i+2],opts);
     d[i]=p[0];d[i+1]=p[1];d[i+2]=p[2];d[i+3]=src[i+3];
   }
-  // Резкость + чёткость
   const sharpenAmt = Number($("sharpness").value);
   const clarityAmt = Number($("clarity").value);
   applySharpenClarity(d, w, h, sharpenAmt, clarityAmt);
@@ -1214,7 +1208,8 @@ function getCanvasPoint(event,canvas){
   };
 }
 
-function sampleMaskFromBase(basePoint, radius=5){
+/* ===== ПИПЕТКА МИШЕНИ: окно 5×5 = 25 px, из них ~5 самых ярких ===== */
+function sampleMaskFromBase(basePoint, radius=2){
   if(!basePixels) return [0,0,0];
   const w=basePixels.width,h=basePixels.height,data=basePixels.data;
   const x=Math.max(0,Math.min(w-1,Math.round(basePoint.x)));
@@ -1236,7 +1231,8 @@ function sampleMaskFromBase(basePoint, radius=5){
   for(let i=0;i<n;i++){sr+=list[i].r;sg+=list[i].g;sb+=list[i].b}
   return [Math.round(sr/n),Math.round(sg/n),Math.round(sb/n)];
 }
-function isStableMaskSample(basePoint, radius=5){
+/* Проверка стабильности: окно 5×5 */
+function isStableMaskSample(basePoint, radius=2){
   if(!basePixels) return false;
   const w=basePixels.width,h=basePixels.height,data=basePixels.data;
   const x=Math.max(0,Math.min(w-1,Math.round(basePoint.x)));
@@ -1255,7 +1251,8 @@ function isStableMaskSample(basePoint, radius=5){
   return (maxL-minL) < 120;
 }
 
-function samplePixel(canvas,point,radius=4){
+/* ===== ПИПЕТКА БЕЛОГО: окно 3×3 = 9 px, медиана ===== */
+function samplePixel(canvas,point,radius=1){
   const ctx=canvas===result?resultCtx:sourceCtx;
   const x0=Math.max(0,point.x-radius);
   const y0=Math.max(0,point.y-radius);
@@ -1351,11 +1348,11 @@ function attachPickerHandlers(canvas){
     if(mode==="mask"){
       const bx = baseOffsetX + p.x;
       const by = baseOffsetY + p.y;
-      if(!isStableMaskSample({x:bx,y:by},5)){
+      if(!isStableMaskSample({x:bx,y:by},2)){
         toast("Похоже, попал на границу кадра. Выбери однородную светлую основу.","err");
         return;
       }
-      const s = sampleMaskFromBase({x:bx,y:by}, 5);
+      const s = sampleMaskFromBase({x:bx,y:by}, 2);
       maskPoint = p;
       maskColor = s;
       maskFromSlider = false;
@@ -1367,7 +1364,7 @@ function attachPickerHandlers(canvas){
       const prevWb = wbGains;
       wbGains = null;
       render();
-      const sample = samplePixel(result, p, 4);
+      const sample = samplePixel(result, p, 1);
       wbGains = prevWb;
 
       const safe = v => Math.max(16, v);
@@ -2336,7 +2333,6 @@ function renderSavePanel(body){
                 const p=transformPixel(d[i],d[i+1],d[i+2],opts);
                 d[i]=p[0];d[i+1]=p[1];d[i+2]=p[2];
               }
-              // резкость/чёткость в пакете тоже применяем
               applySharpenClarity(d, w, h,
                 Number(opts.sharpness||0), Number(opts.clarity||0));
               const out=document.createElement("canvas");
