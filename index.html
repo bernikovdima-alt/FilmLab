@@ -390,7 +390,6 @@ select.input{
 .target-btns .btn.active-mode{background:var(--warn);border-color:transparent;color:#1a1200}
 .target-btns .btn.icononly{width:30px;padding:0}
 
-/* Ползунки «Оттенок основы» и «Яркость основы» */
 .base-slider-wrap{margin:4px 0 2px;padding:0}
 .base-slider-wrap .row{
   display:flex;align-items:center;gap:8px;margin-bottom:1px;
@@ -558,6 +557,8 @@ select.input{
   <input id="green" type="range" min="-100" max="100" value="0">
   <input id="blue" type="range" min="-100" max="100" value="0">
   <input id="maskStrength" type="range" min="0" max="100" value="100">
+  <input id="sharpness" type="range" min="-100" max="100" value="0">
+  <input id="clarity" type="range" min="-100" max="100" value="0">
   <input id="baseTune" type="range" min="0" max="100" value="50">
   <input id="baseBright" type="range" min="-100" max="100" value="0">
   <select id="mode">
@@ -578,8 +579,8 @@ const sourceOverlay=$("sourceOverlay"),resultOverlay=$("resultOverlay");
 const sourceOverlayCtx=sourceOverlay.getContext("2d");
 const resultOverlayCtx=resultOverlay.getContext("2d");
 
-const defaults={maskStrength:100,temperature:0,exposure:0,contrast:0,saturation:0,red:0,green:0,blue:0};
-const ALL_SLIDERS=["exposure","contrast","maskStrength","saturation","temperature","red","green","blue"];
+const defaults={maskStrength:100,temperature:0,exposure:0,contrast:0,saturation:0,red:0,green:0,blue:0,sharpness:0,clarity:0};
+const ALL_SLIDERS=["exposure","contrast","maskStrength","saturation","temperature","red","green","blue","sharpness","clarity"];
 const MAX_PHOTOS = 24;
 
 const BASE_LINE_START = [140,175,130];
@@ -599,7 +600,6 @@ let activeTool="crop";
 let currentView="result";
 let appliedProfile=null;
 let maskFromSlider=false;
-/* П.2: яркость основы — коэффициент-сдвиг маски */
 let baseBrightValue = 0;
 const lockedSliders=new Set(ALL_SLIDERS);
 
@@ -661,7 +661,6 @@ sheetToggle.addEventListener("click",()=>{
   setTimeout(resizeAllStacks,280);
 });
 
-/* ===== Масштабирование ===== */
 let zoomState={scale:1, x:0, y:0};
 function applyZoom(){
   const visibleStack = currentView==="result" ? $("resultStack") : $("sourceStack");
@@ -1038,14 +1037,9 @@ function scheduleRender(){
 }
 Object.keys(defaults).forEach(k=>$(k).addEventListener("input",scheduleRender));
 
-/* effectiveMask: пресет/слайдер нормируем к PRESET_TARGET_LUM.
-   Дополнительно — сдвиг яркости от baseBrightValue (±0.9 в степени 2). */
 function effectiveMask(){
   if(!maskColor) return null;
-
   let m = [...maskColor];
-
-  // если оттенок выставлен слайдером — нормируем среднюю яркость к PRESET_TARGET_LUM
   if(maskFromSlider){
     const Lp = 0.2126*m[0]+0.7152*m[1]+0.0722*m[2];
     if(Lp > 1){
@@ -1053,12 +1047,9 @@ function effectiveMask(){
       m = [clamp(m[0]*k,8,255), clamp(m[1]*k,8,255), clamp(m[2]*k,8,255)];
     }
   }
-
-  // П.2: яркость основы — экспоненциальный сдвиг ±0.9
   const t = baseBrightValue / 100;
   const k = Math.pow(2, t * 0.9);
   m = [clamp(m[0]*k,8,255), clamp(m[1]*k,8,255), clamp(m[2]*k,8,255)];
-
   return m;
 }
 
@@ -1098,6 +1089,88 @@ function currentTransformOptions(){
   const v=getSliderValues();
   return {...v,mode:$("mode").value,mask:effectiveMask(),wb:wbGains?[...wbGains]:null};
 }
+
+/* П.1: резкость (малый радиус) и чёткость (большой радиус + защита от пересвета) */
+function boxBlur(src, w, h, radius){
+  if(radius <= 0) return new Uint8ClampedArray(src);
+  const out = new Uint8ClampedArray(src.length);
+  const tmp = new Uint8ClampedArray(src.length);
+  const r = radius;
+  // горизонталь
+  for(let y=0;y<h;y++){
+    let sR=0,sG=0,sB=0,n=0;
+    const rowOff = y*w*4;
+    for(let x=0;x<w + r;x++){
+      if(x<w){
+        const i = rowOff + x*4;
+        sR+=src[i];sG+=src[i+1];sB+=src[i+2];n++;
+      }
+      if(x>=r){
+        const xx = x - r;
+        const i = rowOff + xx*4;
+        tmp[i] = sR/n; tmp[i+1] = sG/n; tmp[i+2] = sB/n; tmp[i+3] = src[i+3];
+      }
+      if(x>=2*r && x - 2*r < w){
+        const xx = x - 2*r;
+        const i = rowOff + xx*4;
+        sR-=src[i];sG-=src[i+1];sB-=src[i+2];n--;
+      }
+    }
+    // n=0 не бывает из-за условия
+  }
+  // вертикаль
+  for(let x=0;x<w;x++){
+    let sR=0,sG=0,sB=0,n=0;
+    for(let y=0;y<h + r;y++){
+      if(y<h){
+        const i = (y*w + x)*4;
+        sR+=tmp[i];sG+=tmp[i+1];sB+=tmp[i+2];n++;
+      }
+      if(y>=r){
+        const yy = y - r;
+        const i = (yy*w + x)*4;
+        out[i] = sR/n; out[i+1] = sG/n; out[i+2] = sB/n; out[i+3] = tmp[i+3];
+      }
+      if(y>=2*r && y - 2*r < h){
+        const yy = y - 2*r;
+        const i = (yy*w + x)*4;
+        sR-=tmp[i];sG-=tmp[i+1];sB-=tmp[i+2];n--;
+      }
+    }
+  }
+  return out;
+}
+
+function applySharpenClarity(data, w, h, sharpenAmt, clarityAmt){
+  const doSharpen = Math.abs(sharpenAmt) > 0.5;
+  const doClarity = Math.abs(clarityAmt) > 0.5;
+  if(!doSharpen && !doClarity) return;
+
+  if(doSharpen){
+    const blurred = boxBlur(data, w, h, 1);
+    const k = sharpenAmt / 100 * 1.4; // сила
+    for(let i=0;i<data.length;i+=4){
+      data[i]   = clamp(data[i]   + (data[i]   - blurred[i])   * k);
+      data[i+1] = clamp(data[i+1] + (data[i+1] - blurred[i+1]) * k);
+      data[i+2] = clamp(data[i+2] + (data[i+2] - blurred[i+2]) * k);
+    }
+  }
+  if(doClarity){
+    const blurred = boxBlur(data, w, h, 4);
+    const k = clarityAmt / 100 * 0.9;
+    for(let i=0;i<data.length;i+=4){
+      // защита: сильнее проявляем в средних тонах, слабее в тенях/светах
+      const lum = 0.2126*data[i] + 0.7152*data[i+1] + 0.0722*data[i+2];
+      const norm = lum / 255;
+      const weight = 1 - Math.abs(norm - 0.5) * 1.4; // 1 в середине, ~0.3 по краям
+      const wClamp = Math.max(0.15, weight);
+      data[i]   = clamp(data[i]   + (data[i]   - blurred[i])   * k * wClamp);
+      data[i+1] = clamp(data[i+1] + (data[i+1] - blurred[i+1]) * k * wClamp);
+      data[i+2] = clamp(data[i+2] + (data[i+2] - blurred[i+2]) * k * wClamp);
+    }
+  }
+}
+
 function render(){
   if(!originalPixels)return;
   const w=originalPixels.width,h=originalPixels.height,src=originalPixels.data;
@@ -1107,6 +1180,11 @@ function render(){
     const p=transformPixel(src[i],src[i+1],src[i+2],opts);
     d[i]=p[0];d[i+1]=p[1];d[i+2]=p[2];d[i+3]=src[i+3];
   }
+  // Резкость + чёткость
+  const sharpenAmt = Number($("sharpness").value);
+  const clarityAmt = Number($("clarity").value);
+  applySharpenClarity(d, w, h, sharpenAmt, clarityAmt);
+
   resultCtx.putImageData(out,0,0);
   if(cropEnabled&&cropRect)drawCropRect();else drawMarkers();
 }
@@ -1636,7 +1714,6 @@ function refreshUIFromState(){
   const preview=$("basePreview");
   if(preview){
     if(maskColor){
-      // показываем эффективный цвет (с учётом яркости) — так нагляднее
       const eff = effectiveMask() || maskColor;
       preview.style.background="rgb("+eff.map(v=>Math.round(v)).join(",")+")";
     }else{
@@ -1875,7 +1952,6 @@ function renderTargetsPanel(body){
     </div>`;
   wrap.append(grid);
 
-  // П.2: два ползунка — оттенок и яркость основы
   const baseBlock=document.createElement("div");
   baseBlock.className="base-slider-wrap";
   baseBlock.innerHTML=`
@@ -1924,7 +2000,6 @@ function renderTargetsPanel(body){
     drawMarkers();render();refreshUIFromState();
   };
 
-  // CSS-треки для ползунков основы
   const st=document.createElement("style");
   st.textContent=`
     #baseTune_ui::-webkit-slider-runnable-track{
@@ -1993,7 +2068,6 @@ function renderTargetsPanel(body){
     if(sw) sw.style.background="rgb("+maskColor.join(",")+")";
     const lb=$("maskLabel");
     if(lb) lb.textContent="RGB("+maskColor.join(", ")+")";
-
     render();
     if(selectedId!==null){
       const p=photos.find(x=>x.id===selectedId); if(p)p.settings=snapshotCurrentSettings();
@@ -2049,12 +2123,18 @@ function renderLightPanel(body){
   const slidersWrap=document.createElement("div");
   slidersWrap.innerHTML=
     sliderHTML("exposure","Экспозиция")+
+    sliderHTML("sharpness","Резкость")+
+    sliderHTML("clarity","Чёткость")+
     sliderHTML("contrast","Контраст")+
     sliderHTML("maskStrength","Удаление основы");
   g.append(slidersWrap);
   body.append(g);
 
-  bindSlider("exposure");bindSlider("contrast");bindSlider("maskStrength");
+  bindSlider("exposure");
+  bindSlider("sharpness");
+  bindSlider("clarity");
+  bindSlider("contrast");
+  bindSlider("maskStrength");
   document.querySelectorAll("#modeSeg [data-mode]").forEach(b=>{
     b.addEventListener("click",()=>{
       $("mode").value=b.dataset.mode;
@@ -2256,6 +2336,9 @@ function renderSavePanel(body){
                 const p=transformPixel(d[i],d[i+1],d[i+2],opts);
                 d[i]=p[0];d[i+1]=p[1];d[i+2]=p[2];
               }
+              // резкость/чёткость в пакете тоже применяем
+              applySharpenClarity(d, w, h,
+                Number(opts.sharpness||0), Number(opts.clarity||0));
               const out=document.createElement("canvas");
               out.width=w;out.height=h;
               out.getContext("2d").putImageData(pixData,0,0);
