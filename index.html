@@ -449,6 +449,17 @@ select.input{
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
+#batchOverlay .sub-text{
+  font-size:12px;opacity:.75;min-height:14px;text-align:center;
+}
+#batchOverlay .progress-wrap{
+  width:220px;max-width:70vw;height:6px;background:rgba(255,255,255,.15);
+  border-radius:3px;overflow:hidden;margin-top:2px;
+}
+#batchOverlay .progress-fill{
+  height:100%;width:0;background:var(--accent);transition:width .25s ease;
+}
+
 @media (max-height:640px){
   #bottomNav button .lbl{display:none}
   #bottomNav button{padding:8px 2px}
@@ -544,6 +555,8 @@ select.input{
 <div id="batchOverlay">
   <div class="spinner"></div>
   <div id="batchText">Обработка…</div>
+  <div class="sub-text" id="batchSubText"></div>
+  <div class="progress-wrap"><div class="progress-fill" id="batchProgressFill"></div></div>
 </div>
 
 <input id="fileInput" type="file" accept="image/*" multiple style="display:none">
@@ -612,13 +625,13 @@ let settingsTemplate = null;
 
 const clamp=(v,a=0,b=255)=>Math.max(a,Math.min(b,v));
 
-function toast(msg,type){
+function toast(msg,type,duration){
   const t=$("toast");
   t.textContent=msg;t.className="";
   if(type)t.classList.add(type);
   t.classList.add("show");
   clearTimeout(t._tid);
-  t._tid=setTimeout(()=>t.classList.remove("show"),2200);
+  t._tid=setTimeout(()=>t.classList.remove("show"), duration || 2200);
 }
 function setStatus(id,msg,good){
   const el=$(id);if(!el)return;
@@ -689,11 +702,29 @@ function resetZoom(){
 const canvasArea=$("canvasArea");
 let zoomPinch=null;
 let panState=null;
+let swipeState=null;
 let lastTapTime=0;
+
+/* ===== Навигация свайпом по фото ===== */
+function goToNextPhoto(){
+  if(photos.length <= 1 || selectedId === null) return;
+  const i = photos.findIndex(p=>p.id===selectedId);
+  if(i < 0) return;
+  const next = photos[(i+1) % photos.length];
+  if(next && next.id !== selectedId) selectPhoto(next.id);
+}
+function goToPrevPhoto(){
+  if(photos.length <= 1 || selectedId === null) return;
+  const i = photos.findIndex(p=>p.id===selectedId);
+  if(i < 0) return;
+  const prev = photos[(i-1+photos.length) % photos.length];
+  if(prev && prev.id !== selectedId) selectPhoto(prev.id);
+}
 
 canvasArea.addEventListener("touchstart",e=>{
   if(pickerMode) return;
   if(cropEnabled) return;
+  const onControl = e.target.closest && e.target.closest("#rightRail, #addMenu, #sheetToggle, #topHint, #loupe, #emptyHint");
   if(e.touches.length===2){
     e.preventDefault();
     const t1=e.touches[0],t2=e.touches[1];
@@ -717,6 +748,16 @@ canvasArea.addEventListener("touchstart",e=>{
         origX:zoomState.x,
         origY:zoomState.y
       };
+      if(!onControl && zoomState.scale <= 1.01 && photos.length > 1){
+        const stack = currentView==="result" ? $("resultStack") : $("sourceStack");
+        if(stack) stack.style.transition = "";
+        swipeState = {
+          startX: e.touches[0].clientX,
+          startY: e.touches[0].clientY,
+          startTime: now,
+          stack
+        };
+      }
     }
   }
 },{passive:false});
@@ -739,11 +780,78 @@ canvasArea.addEventListener("touchmove",e=>{
     zoomState.x = panState.origX + dx;
     zoomState.y = panState.origY + dy;
     applyZoom();
+  }else if(swipeState && e.touches.length===1){
+    const dx = e.touches[0].clientX - swipeState.startX;
+    const dy = e.touches[0].clientY - swipeState.startY;
+    if(Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)){
+      e.preventDefault();
+      if(swipeState.stack){
+        swipeState.stack.style.transition = "none";
+        swipeState.stack.style.transform = `translate(${dx}px, 0) scale(1)`;
+        swipeState.stack.style.opacity = String(Math.max(0.35, 1 - Math.abs(dx)/400));
+      }
+    }
   }
 },{passive:false});
 
-canvasArea.addEventListener("touchend",()=>{zoomPinch=null;panState=null});
-canvasArea.addEventListener("touchcancel",()=>{zoomPinch=null;panState=null});
+canvasArea.addEventListener("touchend",e=>{
+  let isDrag = false;
+  const t = e.changedTouches && e.changedTouches[0];
+  if(t){
+    if(swipeState){
+      const dx = t.clientX - swipeState.startX;
+      const dy = t.clientY - swipeState.startY;
+      if(Math.abs(dx) > 10 || Math.abs(dy) > 10) isDrag = true;
+    } else if(panState){
+      const dx = t.clientX - panState.startX;
+      const dy = t.clientY - panState.startY;
+      if(Math.abs(dx) > 10 || Math.abs(dy) > 10) isDrag = true;
+    }
+  }
+
+  if(swipeState){
+    let isSwipe = false;
+    let dir = 0;
+    if(t){
+      const dx = t.clientX - swipeState.startX;
+      const dy = t.clientY - swipeState.startY;
+      const dt = Date.now() - swipeState.startTime;
+      isSwipe = Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)*1.2 && dt < 800;
+      dir = dx < 0 ? 1 : -1;
+      const stack = swipeState.stack;
+      if(stack){
+        if(isSwipe){
+          stack.style.transition = "none";
+          stack.style.transform = "";
+          stack.style.opacity = "1";
+        } else {
+          stack.style.transition = "transform .18s ease, opacity .18s ease";
+          stack.style.transform = "";
+          stack.style.opacity = "1";
+          setTimeout(()=>{ if(stack) stack.style.transition = ""; }, 220);
+        }
+      }
+    }
+    swipeState = null;
+    if(isDrag) lastTapTime = 0;
+    if(isSwipe){
+      if(dir > 0) goToNextPhoto();
+      else goToPrevPhoto();
+    }
+  } else if(panState && isDrag){
+    lastTapTime = 0;
+  }
+
+  zoomPinch=null;panState=null;
+});
+canvasArea.addEventListener("touchcancel",()=>{
+  if(swipeState && swipeState.stack){
+    swipeState.stack.style.transition = "transform .18s ease, opacity .18s ease";
+    swipeState.stack.style.transform = "";
+    swipeState.stack.style.opacity = "1";
+  }
+  zoomPinch=null;panState=null;swipeState=null;
+});
 
 const addMenu=$("addMenu");
 $("addBtn").addEventListener("click",e=>{
@@ -755,12 +863,22 @@ document.addEventListener("click",e=>{
   if(addMenu.contains(e.target) || e.target.closest("#addBtn"))return;
   addMenu.classList.remove("show");
 });
+
+function ensureCanAdd(){
+  if(photos.length >= MAX_PHOTOS){
+    toast("Достигнут лимит: "+MAX_PHOTOS+" фото. Удали лишние, чтобы добавить новые.","err",4500);
+    return false;
+  }
+  return true;
+}
 $("addCamera").addEventListener("click",()=>{
   addMenu.classList.remove("show");
+  if(!ensureCanAdd()) return;
   $("cameraInput").click();
 });
 $("addGallery").addEventListener("click",()=>{
   addMenu.classList.remove("show");
+  if(!ensureCanAdd()) return;
   $("fileInput").click();
 });
 
@@ -956,14 +1074,14 @@ function addFiles(fileList){
   const files=Array.from(fileList||[]);
   if(!files.length)return;
 
-  const remaining = MAX_PHOTOS - photos.length;
-  if(remaining <= 0){
-    toast("Достигнут лимит: "+MAX_PHOTOS+" фото. Удали что-нибудь.","err");
+  if(photos.length >= MAX_PHOTOS){
+    toast("Достигнут лимит: "+MAX_PHOTOS+" фото. Удали лишние, чтобы добавить новые.","err",4500);
     return;
   }
 
+  const remaining = MAX_PHOTOS - photos.length;
   const accepted = files.slice(0, remaining);
-  const overflow = files.length - accepted.length;
+  const skipped = files.length - accepted.length;
 
   let added=0;const errs=[];
   for(const f of accepted){
@@ -989,10 +1107,12 @@ function addFiles(fileList){
     selectPhoto(newPhoto.id);
 
     let msg="Добавлено: "+added;
-    if(overflow>0)msg+=". Пропущено (лимит "+MAX_PHOTOS+"): "+overflow;
-    toast(msg, overflow||errs.length ? "" : "good");
+    if(skipped>0) msg+=". Не поместилось: "+skipped+" (лимит "+MAX_PHOTOS+")";
+    toast(msg, (skipped||errs.length) ? "err" : "good", (skipped||errs.length) ? 4000 : 2200);
+  } else if(skipped>0){
+    toast("Не поместилось: "+skipped+" файлов. Лимит: "+MAX_PHOTOS,"err",4500);
   }
-  if(errs.length && !overflow)toast("Не добавлено: "+errs.length,"err");
+  if(errs.length && !skipped)toast("Не добавлено: "+errs.length,"err");
 }
 function connectFileInput(id){
   const input=$(id);
@@ -1716,19 +1836,78 @@ source.addEventListener("pointermove",event=>{
 source.addEventListener("pointerup",()=>{cropDrag=null});
 source.addEventListener("pointercancel",()=>{cropDrag=null});
 
+/* ===== Скачивание (промис-версия) ===== */
 function downloadCanvas(canvas,filename){
-  canvas.toBlob(blob=>{
-    if(!blob){toast("Не удалось создать JPEG","err");return}
-    const url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),2000);
-  },"image/jpeg",.95);
+  return new Promise(resolve=>{
+    canvas.toBlob(blob=>{
+      if(!blob){toast("Не удалось создать JPEG","err");resolve();return}
+      const url=URL.createObjectURL(blob),a=document.createElement("a");
+      a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),2000);
+      resolve();
+    },"image/jpeg",.95);
+  });
 }
 function safeFilename(name){return name.replace(/\.[^.]+$/,"").replace(/[<>:"/\\|?*\x00-\x1F]/g,"_")||"FilmLab"}
-function saveCurrentJpeg(){
+
+/* ===== Прогресс-оверлей ===== */
+function showProgress(title, sub, progress){
+  const bt=$("batchText");
+  const st=$("batchSubText");
+  const fill=$("batchProgressFill");
+  if(bt) bt.textContent = title || "Обработка…";
+  if(st) st.textContent = sub || "";
+  if(fill) fill.style.width = (typeof progress === "number" ? Math.max(0,Math.min(100,progress)) : 0) + "%";
+  $("batchOverlay").classList.add("show");
+}
+function hideProgress(){
+  $("batchOverlay").classList.remove("show");
+}
+
+async function saveCurrentJpeg(){
   if(!originalPixels){toast("Нет фото","err");return}
-  downloadCanvas(result,safeFilename(photos.find(p=>p.id===selectedId)?.name||"FilmLab")+"_positive.jpg");
-  toast("JPEG сохраняется","good");
+  const t0 = Date.now();
+  showProgress("Сохранение JPEG…", "", 40);
+  await downloadCanvas(result, safeFilename(photos.find(p=>p.id===selectedId)?.name||"FilmLab")+"_positive.jpg");
+  showProgress("Сохранение JPEG…", "Готово", 100);
+  const elapsed = Date.now() - t0;
+  setTimeout(()=>{
+    hideProgress();
+    toast("JPEG сохранён","good");
+  }, Math.max(0, 350 - elapsed));
+}
+
+async function processPhotoToCanvas(photo, opts){
+  let w,h,pixData;
+  if(photo.workingPixels){
+    w=photo.workingPixels.width; h=photo.workingPixels.height;
+    pixData = new ImageData(new Uint8ClampedArray(photo.workingPixels.data), w, h);
+  }else{
+    const img = await new Promise((resolve,reject)=>{
+      const im = new Image();
+      im.onload=()=>resolve(im);
+      im.onerror=()=>reject(new Error("Не удалось загрузить фото"));
+      im.src=photo.url;
+    });
+    const scale=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));
+    w=Math.max(1,Math.round(img.naturalWidth*scale));
+    h=Math.max(1,Math.round(img.naturalHeight*scale));
+    const t=document.createElement("canvas");
+    t.width=w;t.height=h;
+    const tc=t.getContext("2d",{willReadFrequently:true});
+    tc.drawImage(img,0,0,w,h);
+    pixData=tc.getImageData(0,0,w,h);
+  }
+  const d=pixData.data;
+  for(let i=0;i<d.length;i+=4){
+    const p=transformPixel(d[i],d[i+1],d[i+2],opts);
+    d[i]=p[0];d[i+1]=p[1];d[i+2]=p[2];
+  }
+  applySharpenClarity(d, w, h, Number(opts.sharpness||0), Number(opts.clarity||0));
+  const out=document.createElement("canvas");
+  out.width=w;out.height=h;
+  out.getContext("2d").putImageData(pixData,0,0);
+  return out;
 }
 
 function refreshUIFromState(){
@@ -2381,71 +2560,40 @@ function renderSavePanel(body){
   $("saveJpegBtn").onclick=saveCurrentJpeg;
   $("batchBtn").onclick=async()=>{
     if(!photos.length){toast("Нет фото","err");return}
-    if(!confirm("Сохранить обработанные копии всех фото?"))return;
+    if(!confirm("Сохранить обработанные копии всех фото?\n\nБраузер может запросить разрешение на множественные загрузки — разрешите."))return;
 
     saveCurrentPhotoState();
-    const overlay=$("batchOverlay"),bt=$("batchText");
-    overlay.classList.add("show");
-
     const currentPhotoId = selectedId;
+    const total = photos.length;
+    showProgress("Подготовка…", "0 из "+total, 0);
 
     try{
-      for(let n=0;n<photos.length;n++){
+      for(let n=0;n<total;n++){
         const photo=photos[n];
+        const remaining = total - n - 1;
         const s = photo.settings || settingsTemplate || currentProfileSettingsTemplate();
         const opts = {...s.settings, mode:s.mode,
           mask:s.maskColor?[...s.maskColor]:null,
           maskMode: s.maskMode === "divide" ? "divide" : "subtract",
           wb:s.wbGains?[...s.wbGains]:null};
 
-        bt.textContent="Обработка "+(n+1)+" из "+photos.length;
+        showProgress("Сохранение " + (n+1) + " из " + total,
+          remaining > 0 ? ("Осталось: " + remaining) : "Завершение…",
+          (n/total)*100);
 
-        await new Promise(resolve=>{
-          const processImg = (img)=>{
-            try{
-              let w,h,pixData;
-              if(photo.workingPixels){
-                w=photo.workingPixels.width; h=photo.workingPixels.height;
-                pixData = new ImageData(
-                  new Uint8ClampedArray(photo.workingPixels.data), w, h
-                );
-              }else{
-                const scale=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));
-                w=Math.max(1,Math.round(img.naturalWidth*scale));
-                h=Math.max(1,Math.round(img.naturalHeight*scale));
-                const t=document.createElement("canvas");
-                t.width=w;t.height=h;
-                const tc=t.getContext("2d",{willReadFrequently:true});
-                tc.drawImage(img,0,0,w,h);
-                pixData=tc.getImageData(0,0,w,h);
-              }
-              const d=pixData.data;
-              for(let i=0;i<d.length;i+=4){
-                const p=transformPixel(d[i],d[i+1],d[i+2],opts);
-                d[i]=p[0];d[i+1]=p[1];d[i+2]=p[2];
-              }
-              applySharpenClarity(d, w, h,
-                Number(opts.sharpness||0), Number(opts.clarity||0));
-              const out=document.createElement("canvas");
-              out.width=w;out.height=h;
-              out.getContext("2d").putImageData(pixData,0,0);
-              downloadCanvas(out,safeFilename(photo.name)+"_positive.jpg");
-            }catch(err){console.error(err)}
-            resolve();
-          };
+        try{
+          const canvas = await processPhotoToCanvas(photo, opts);
+          if(canvas) await downloadCanvas(canvas, safeFilename(photo.name)+"_positive.jpg");
+        }catch(err){console.error(err)}
 
-          if(photo.workingPixels){
-            processImg(null);
-          }else{
-            const img=new Image();
-            img.onload=()=>processImg(img);
-            img.onerror=()=>resolve();
-            img.src=photo.url;
-          }
-        });
+        showProgress("Сохранение " + (n+1) + " из " + total,
+          remaining > 0 ? ("Осталось: " + remaining) : "Завершение…",
+          ((n+1)/total)*100);
+
+        if(remaining > 0) await new Promise(r=>setTimeout(r, 350));
       }
     }finally{
-      overlay.classList.remove("show");
+      hideProgress();
     }
 
     if(currentPhotoId!==null && photos.some(p=>p.id===currentPhotoId)){
