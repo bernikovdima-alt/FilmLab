@@ -448,7 +448,6 @@ select.input{
   animation:spin 1s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-
 #batchOverlay .sub-text{
   font-size:12px;opacity:.75;min-height:14px;text-align:center;
 }
@@ -500,7 +499,7 @@ select.input{
             <circle cx="9" cy="9" r="1.5"/>
           </svg>
         </button>
-        <button id="saveBtn" class="rail-btn" type="button" aria-label="Сохранить JPEG">
+        <button id="saveBtn" class="rail-btn" type="button" aria-label="Сохранить">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
             <polyline points="17 21 17 13 7 13 7 21"/>
@@ -616,11 +615,10 @@ let appliedProfile=null;
 let maskFromSlider=false;
 let baseBrightValue = 0;
 let maskMode = "divide"; // "divide" | "subtract"
+let saveFormat = "jpeg"; // "jpeg" (q=1.0, макс. качество) | "png" (истинно без потерь)
 const lockedSliders=new Set(ALL_SLIDERS);
 
-/* ===== «Шаблон» — снимок настроек для новых фото.
-   Создаётся при старте, обновляется при любом изменении настроек на текущем фото,
-   при загрузке профиля. Именно он применяется к НОВЫМ фото. ===== */
+/* ===== «Шаблон» — снимок настроек для новых фото. ===== */
 let settingsTemplate = null;
 
 const clamp=(v,a=0,b=255)=>Math.max(a,Math.min(b,v));
@@ -705,7 +703,6 @@ let panState=null;
 let swipeState=null;
 let lastTapTime=0;
 
-/* ===== Навигация свайпом по фото ===== */
 function goToNextPhoto(){
   if(photos.length <= 1 || selectedId === null) return;
   const i = photos.findIndex(p=>p.id===selectedId);
@@ -909,7 +906,6 @@ function updateGallery(){
   }
 }
 
-/* ===== Снимок текущих настроек (без геометрии) — сохраняется в шаблон ===== */
 function snapshotCurrentSettings(){
   return {
     settings: getSliderValues(),
@@ -925,7 +921,6 @@ function snapshotCurrentSettings(){
   };
 }
 
-/* Обновить шаблон из текущих настроек — вызывается при любом изменении */
 function captureTemplate(){
   settingsTemplate = snapshotCurrentSettings();
 }
@@ -970,7 +965,6 @@ function applySettingsToUI(s){
 }
 
 function currentProfileSettingsTemplate(){
-  /* Дефолт при самом первом старте, если ещё нет шаблона */
   return {
     settings:{...defaults},
     mode:"negative",
@@ -1005,10 +999,12 @@ async function loadPhotoToCanvas(photo){
     });
 
     if(!img.naturalWidth||!img.naturalHeight)throw new Error("Размер 0");
-    const maxDim=1800;
-    const scale=Math.min(1,maxDim/Math.max(img.naturalWidth,img.naturalHeight));
-    const baseW=Math.max(1,Math.round(img.naturalWidth*scale));
-    const baseH=Math.max(1,Math.round(img.naturalHeight*scale));
+    /* ПОЛНОЕ РАЗРЕШЕНИЕ — без даунсемплинга. Качество 1:1 с исходником. */
+    const baseW=img.naturalWidth;
+    const baseH=img.naturalHeight;
+    if(baseW*baseH > 40e6){
+      toast("Большое фото ("+baseW+"×"+baseH+") — обработка может быть медленной","",4000);
+    }
 
     const tmpCanvas=document.createElement("canvas");
     tmpCanvas.width=baseW;tmpCanvas.height=baseH;
@@ -1040,12 +1036,9 @@ async function loadPhotoToCanvas(photo){
     sourceCtx.putImageData(workPixels,0,0);
     originalPixels = workPixels;
 
-    /* Если у фото уже сохранены настройки — применяем их.
-       Иначе применяем ШАБЛОН (текущие настройки последнего обработанного фото / профиля). */
     applySettingsToUI(photo.settings || settingsTemplate || null);
     currentRatio = photo.ratio || "free";
 
-    /* Если применили шаблон (без настроек у фото) — зафиксируем это в фото */
     if(!photo.settings){
       photo.settings = snapshotCurrentSettings();
       photo.settings.baseOffsetX = baseOffsetX;
@@ -1554,7 +1547,6 @@ attachPickerHandlers(result);
 
 $("topHintDone").addEventListener("click",stopPicking);
 
-/* ===== Профили: сохраняем всё, кроме геометрии ===== */
 function currentProfile(){
   return{
     format:"FilmLabProfile",version:2,
@@ -1836,16 +1828,19 @@ source.addEventListener("pointermove",event=>{
 source.addEventListener("pointerup",()=>{cropDrag=null});
 source.addEventListener("pointercancel",()=>{cropDrag=null});
 
-/* ===== Скачивание (промис-версия) ===== */
-function downloadCanvas(canvas,filename){
+/* ===== Скачивание с выбором формата ===== */
+function downloadCanvas(canvas, filename, format){
+  const fmt = format || saveFormat;
+  const mime = fmt === "png" ? "image/png" : "image/jpeg";
+  const q = fmt === "png" ? undefined : 1.0;
   return new Promise(resolve=>{
     canvas.toBlob(blob=>{
-      if(!blob){toast("Не удалось создать JPEG","err");resolve();return}
+      if(!blob){toast("Не удалось создать файл","err");resolve();return}
       const url=URL.createObjectURL(blob),a=document.createElement("a");
       a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(url),2000);
       resolve();
-    },"image/jpeg",.95);
+    }, mime, q);
   });
 }
 function safeFilename(name){return name.replace(/\.[^.]+$/,"").replace(/[<>:"/\\|?*\x00-\x1F]/g,"_")||"FilmLab"}
@@ -1863,21 +1858,33 @@ function showProgress(title, sub, progress){
 function hideProgress(){
   $("batchOverlay").classList.remove("show");
 }
+const yieldFrame = () => new Promise(r => setTimeout(r, 0));
 
 async function saveCurrentJpeg(){
   if(!originalPixels){toast("Нет фото","err");return}
   const t0 = Date.now();
-  showProgress("Сохранение JPEG…", "", 40);
-  await downloadCanvas(result, safeFilename(photos.find(p=>p.id===selectedId)?.name||"FilmLab")+"_positive.jpg");
-  showProgress("Сохранение JPEG…", "Готово", 100);
+  const ext = saveFormat === "png" ? ".png" : ".jpg";
+  const fmtLabel = saveFormat === "png" ? "PNG (без потерь)" : "JPEG q=1.0 (макс.)";
+  showProgress(
+    "Сохранение " + saveFormat.toUpperCase() + "…",
+    fmtLabel + " · " + originalPixels.width + "×" + originalPixels.height,
+    40
+  );
+  await yieldFrame();
+  const baseName = safeFilename(photos.find(p=>p.id===selectedId)?.name||"FilmLab");
+  await downloadCanvas(result, baseName + "_positive" + ext);
+  showProgress("Сохранение " + saveFormat.toUpperCase() + "…", "Готово", 100);
   const elapsed = Date.now() - t0;
   setTimeout(()=>{
     hideProgress();
-    toast("JPEG сохранён","good");
+    toast(saveFormat.toUpperCase() + " сохранён (1:1 с исходником)","good",3000);
   }, Math.max(0, 350 - elapsed));
 }
 
 async function processPhotoToCanvas(photo, opts){
+  // Даём браузеру отрисовать прогресс до синхронной обработки
+  await yieldFrame();
+
   let w,h,pixData;
   if(photo.workingPixels){
     w=photo.workingPixels.width; h=photo.workingPixels.height;
@@ -1889,9 +1896,9 @@ async function processPhotoToCanvas(photo, opts){
       im.onerror=()=>reject(new Error("Не удалось загрузить фото"));
       im.src=photo.url;
     });
-    const scale=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));
-    w=Math.max(1,Math.round(img.naturalWidth*scale));
-    h=Math.max(1,Math.round(img.naturalHeight*scale));
+    // Полное разрешение — без даунсемплинга
+    w=img.naturalWidth;
+    h=img.naturalHeight;
     const t=document.createElement("canvas");
     t.width=w;t.height=h;
     const tc=t.getContext("2d",{willReadFrequently:true});
@@ -2458,18 +2465,11 @@ function renderProfilesPanel(body){
       wbGains:p.wbGains?[...p.wbGains]:null
     };
 
-    // слайдеры
     setSliderValues(p.settings);
-
-    // режим обработки
     $("mode").value=p.mode||"negative";
-
-    // маска и ББ
     maskColor=p.maskColor?[...p.maskColor]:null;
     wbGains=p.wbGains?[...p.wbGains]:null;
     maskPoint=null; wbPoint=null;
-
-    // новые поля профиля
     maskMode = (p.maskMode === "divide") ? "divide" : "subtract";
     maskFromSlider = !!p.maskFromSlider;
 
@@ -2485,7 +2485,6 @@ function renderProfilesPanel(body){
     render();
     refreshUIFromState();
 
-    // шаблон = применённый профиль (чтобы новые фото тоже его подхватили)
     captureTemplate();
     saveCurrentPhotoState();
 
@@ -2539,15 +2538,41 @@ function renderSavePanel(body){
     </div>`;
   body.append(gGal);
 
+  const gFormat=document.createElement("div");gFormat.className="group";
+  gFormat.style.padding="8px 10px";
+  gFormat.innerHTML=`
+    <div style="font-size:12px;font-weight:600;color:#cfd6e2;margin-bottom:6px">Формат сохранения</div>
+    <div class="segmented" id="saveFormatSeg">
+      <button type="button" data-format="jpeg" class="${saveFormat==='jpeg'?'active':''}">JPEG q=1.0</button>
+      <button type="button" data-format="png" class="${saveFormat==='png'?'active':''}">PNG — без потерь</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.4;padding:4px 2px 0">
+      Разрешение сохраняется 1:1 с исходником (без уменьшения). <b>JPEG q=1.0</b> — визуально без потерь, файл ~ как исходник. <b>PNG</b> — истинно без потерь, но файл в 3–8 раз больше.
+    </div>`;
+  body.append(gFormat);
+
   const gSave=document.createElement("div");gSave.className="group";
   gSave.innerHTML=`
     <div class="btn-row tight">
-      <button class="btn primary" id="saveJpegBtn">💾 JPEG</button>
+      <button class="btn primary" id="saveJpegBtn">💾 Сохранить</button>
       <button class="btn" id="batchBtn">Все фото</button>
     </div>`;
   body.append(gSave);
 
   updateGallery();
+
+  document.querySelectorAll("#saveFormatSeg [data-format]").forEach(b=>{
+    b.onclick=()=>{
+      saveFormat=b.dataset.format;
+      document.querySelectorAll("#saveFormatSeg [data-format]").forEach(x=>{
+        x.classList.toggle("active", x.dataset.format===saveFormat);
+      });
+      toast(saveFormat==="png"
+        ? "PNG: без потерь, файлы будут большими"
+        : "JPEG q=1.0: визуально без потерь, размер близок к исходнику",
+        "good", 3000);
+    };
+  });
 
   $("delBtn").onclick=()=>{if(selectedId!==null)removePhoto(selectedId)};
   $("clearBtn").onclick=()=>{
@@ -2565,7 +2590,9 @@ function renderSavePanel(body){
     saveCurrentPhotoState();
     const currentPhotoId = selectedId;
     const total = photos.length;
+    const ext = saveFormat === "png" ? ".png" : ".jpg";
     showProgress("Подготовка…", "0 из "+total, 0);
+    await yieldFrame();
 
     try{
       for(let n=0;n<total;n++){
@@ -2583,7 +2610,7 @@ function renderSavePanel(body){
 
         try{
           const canvas = await processPhotoToCanvas(photo, opts);
-          if(canvas) await downloadCanvas(canvas, safeFilename(photo.name)+"_positive.jpg");
+          if(canvas) await downloadCanvas(canvas, safeFilename(photo.name)+"_positive"+ext);
         }catch(err){console.error(err)}
 
         showProgress("Сохранение " + (n+1) + " из " + total,
@@ -2659,8 +2686,6 @@ document.querySelectorAll("#bottomNav [data-tool]").forEach(b=>{
   });
 })();
 
-/* Init: шаблон = текущие настройки (дефолты). Дальше он обновляется при
-   любом изменении настроек на текущем фото и при загрузке профиля. */
 setView("result");
 updateSliderLabels();
 refreshUIFromState();
